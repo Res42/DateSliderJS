@@ -1,0 +1,22 @@
+{
+  "name": "dateslider",
+  "description": "A JavaScript date/time selector with sliders.",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "author": {
+    "name": "Adam Reisinger"
+  },
+  "devDependencies": {
+    "@types/jasmine": "^2.5.43",
+    "gulp": "^3.9.1",
+    "gulp-sourcemaps": "^2.4.1",
+    "gulp-typescript": "^3.1.5",
+    "jasmine": "^2.5.3",
+    "karma": "^1.4.1",
+    "karma-chrome-launcher": "^2.0.0",
+    "karma-jasmine": "^1.1.0",
+    "merge2": "^1.0.3",
+    "typescript": "^2.1.6"
+  },
+  "private": true
+}

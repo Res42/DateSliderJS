@@ -1,0 +1,17 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "module": "amd",
+        "declaration": false,
+        "typeRoots": [
+            "../node_modules/@types/"
+        ],
+        "outFile": "tests.js"
+    },
+    "compileOnSave": true,
+    "include": [
+        "**/*.ts",
+        "**/*.d.ts"
+        //"./date-slider.d.ts"
+    ]
+}

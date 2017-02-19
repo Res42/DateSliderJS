@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "amd",
+        "sourceMap": true,
+        "alwaysStrict": true,
+        "declaration": true,
+        "noEmitOnError": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "strictNullChecks": true,
+        "outFile": "date-slider.js",
+        "watch": true
+    },
+    "compileOnSave": true,
+    "include": [
+        "src/**/*.ts"
+    ]
+}

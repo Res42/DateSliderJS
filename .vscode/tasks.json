@@ -1,0 +1,30 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "0.1.0",
+    "isShellCommand": true,
+    "suppressTaskName": true,
+    "showOutput": "silent",
+    "tasks": [
+        {
+            "taskName": "Build TypeScript Files",
+            "command": "gulp",
+            "args": ["--no-color"],
+            "problemMatcher": [
+                "$gulp-tsc",
+                "$tsc",
+                "$tsc-watch"
+            ],
+            "isBuildCommand": true,
+            "isShellCommand": true
+        },
+        {
+            "taskName": "Run Karma",
+            "command": "karma",
+            "args": ["start", "--single-run"],
+            // "problemMatcher": "$tsc",
+            "isTestCommand": true,
+            "isShellCommand": true
+        }
+    ]
+}
