@@ -16,7 +16,7 @@ gulp.task("app", function () {
     ]);
 });
 
-gulp.task("test", function () {
+gulp.task("test", ["app"], function () {
     return testTsProject.src()
         .pipe(sourcemaps.init())
         .pipe(testTsProject()).js
