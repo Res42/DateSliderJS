@@ -44,6 +44,8 @@ var DateSlider;
         };
         DateSliderInstance.prototype.setOptions = function () {
         };
+        DateSliderInstance.prototype.on = function (eventName, callback) {
+        };
         return DateSliderInstance;
     }());
     DateSlider.DateSliderInstance = DateSliderInstance;
@@ -72,10 +74,14 @@ var DateSlider;
 "use strict";
 var DateSlider;
 (function (DateSlider) {
+    DateSlider.defaults = {};
     function create(element, options) {
-        return new DateSlider.DateSliderInstance(element, options);
+        return new DateSlider.DateSliderInstance(element, mergeOptions(options, DateSlider.defaults));
     }
     DateSlider.create = create;
+    function mergeOptions(instanceOptions, defaultOptions) {
+        return instanceOptions;
+    }
 })(DateSlider || (DateSlider = {}));
 "use strict";
 var DateSlider;

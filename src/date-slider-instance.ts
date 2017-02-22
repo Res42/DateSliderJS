@@ -22,5 +22,9 @@ module DateSlider {
         public setOptions(): void {
 
         }
+
+        public on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void {
+
+        }
     }
 }

@@ -18,16 +18,16 @@ module DateSlider {
             valueDisplay?: string;
         };
         callback?: {
-            onSliderBoxGrabbed?: () => void;
-            onSliderBoxReleased?: () => void;
-            onSliderBoxMoved?: () => void;
+            onSliderBoxGrabbed?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onSliderBoxReleased?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onSliderBoxMoved?: (context: DateSliderEventContext) => DateSliderEventContext;
 
-            onValueChanged?: () => void;
+            onValueChanged?: (context: DateSliderEventContext) => DateSliderEventContext;
 
-            onPopupBeforeOpen?: () => void;
-            onPopupAfterOpen?: () => void;
-            onPopupBeforeClose?: () => void;
-            onPopupAfterClose?: () => void;
+            onPopupBeforeOpen?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onPopupAfterOpen?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onPopupBeforeClose?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onPopupAfterClose?: (context: DateSliderEventContext) => DateSliderEventContext;
         };
     }
 }

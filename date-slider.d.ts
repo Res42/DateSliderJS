@@ -23,6 +23,7 @@ declare module DateSlider {
         setValue(input: any): void;
         getOptions(): DateSliderOptions;
         setOptions(): void;
+        on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void;
     }
 }
 declare module DateSlider {
@@ -62,18 +63,19 @@ declare module DateSlider {
             valueDisplay?: string;
         };
         callback?: {
-            onSliderBoxGrabbed?: () => void;
-            onSliderBoxReleased?: () => void;
-            onSliderBoxMoved?: () => void;
-            onValueChanged?: () => void;
-            onPopupBeforeOpen?: () => void;
-            onPopupAfterOpen?: () => void;
-            onPopupBeforeClose?: () => void;
-            onPopupAfterClose?: () => void;
+            onSliderBoxGrabbed?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onSliderBoxReleased?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onSliderBoxMoved?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onValueChanged?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onPopupBeforeOpen?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onPopupAfterOpen?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onPopupBeforeClose?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onPopupAfterClose?: (context: DateSliderEventContext) => DateSliderEventContext;
         };
     }
 }
 declare module DateSlider {
+    let defaults: DateSliderOptions;
     function create(element: HTMLElement, options: DateSliderOptions): DateSliderInstance;
 }
 declare module DateSlider.Formatter {
