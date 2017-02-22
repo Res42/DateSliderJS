@@ -13,8 +13,6 @@ gulp.task("app", function () {
         .pipe(sourcemaps.init())
         .pipe(appTsProject());
 
-    
-
     return merge([
         app.dts.pipe(gulp.dest(".")),
         app.js.pipe(sourcemaps.write(".")).pipe(gulp.dest("."))
