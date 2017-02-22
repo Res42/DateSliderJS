@@ -1,9 +1,11 @@
-module DateSliderTest.Parser {
-    describe("Unix timestamp (in seconds) parser.", () => {
+module DateSliderTest.Integration.ParseFormat {
+    describe("Unix timestamp parsing and formatting.", () => {
         let parser: DateSlider.Parser.UnixTimestampParser;
+        let formatter: DateSlider.Formatter.UnixTimestampFormatter;
 
         beforeEach(() => {
             parser = new DateSlider.Parser.UnixTimestampParser();
+            formatter = new DateSlider.Formatter.UnixTimestampFormatter();
         });
 
         let runs = [
@@ -15,17 +17,17 @@ module DateSliderTest.Parser {
             { input: "",        output: null, description: "Invalid timestamp: empty string." },
             { input: {} as any, output: null, description: "Invalid timestamp: object." },
             { input: function() {} as any, output: null, description: "Invalid timestamp: function." },
-            { input: -100,  output: new DateSlider.DateSliderModel(1969, 12, 31, 23, 58, 20), description: "Valid timestamp: -100." },
-            { input: -1,    output: new DateSlider.DateSliderModel(1969, 12, 31, 23, 59, 59), description: "Valid timestamp: -1." },
-            { input: 0,     output: new DateSlider.DateSliderModel(1970, 1, 1, 0, 0, 0),      description: "Valid timestamp: 0." },
-            { input: 1,     output: new DateSlider.DateSliderModel(1970, 1, 1, 0, 0, 1),      description: "Valid timestamp: 1." },
-            { input: 100,   output: new DateSlider.DateSliderModel(1970, 1, 1, 1, 40, 0),     description: "Valid timestamp: 100." },
-            { input: "100", output: new DateSlider.DateSliderModel(1970, 1, 1, 1, 40, 0),     description: "Valid timestamp: number as a string." },
+            { input: -31536000, output: -31536000, description: "Valid timestamp: negative." },
+            { input: 0,         output: 0,         description: "Valid timestamp." },
+            { input: 946684800, output: 946684800, description: "Valid timestamp." },
+            { input: 978220800, output: 978220800, description: "Valid timestamp." },
+            { input: 946729830, output: 946729830, description: "Valid timestamp." },
+            { input: 946771199, output: 946771199, description: "Valid timestamp." },
         ];
 
         runs.forEach((run) => {
             it(run.description, () => {
-                expect(parser.parse(run.input)).toBe(run.output);
+                expect(formatter.format(parser.parse(run.input), null)).toBe(run.output);
             });
         });
     });
