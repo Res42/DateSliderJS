@@ -12,6 +12,5 @@
     "include": [
         "**/*.ts",
         "**/*.d.ts"
-        //"./date-slider.d.ts"
     ]
 }
