@@ -1,7 +1,0 @@
-dev npm modules to install:
-npm install gulp-cli --global
-npm install karma-cli --global
-
-maybe:
-npm install typings --global
-npm install tslint --global

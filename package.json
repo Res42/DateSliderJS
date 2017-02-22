@@ -9,13 +9,16 @@
   "devDependencies": {
     "@types/jasmine": "^2.5.43",
     "gulp": "^3.9.1",
+    "gulp-cli": "^1.2.2",
     "gulp-sourcemaps": "^2.4.1",
     "gulp-typescript": "^3.1.5",
     "jasmine": "^2.5.3",
     "karma": "^1.4.1",
     "karma-chrome-launcher": "^2.0.0",
+    "karma-cli": "^1.0.1",
     "karma-jasmine": "^1.1.0",
     "merge2": "^1.0.3",
+    "tslint": "^4.4.2",
     "typescript": "^2.1.6"
   },
   "private": true
