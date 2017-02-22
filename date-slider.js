@@ -82,6 +82,16 @@ var DateSlider;
     function mergeOptions(instanceOptions, defaultOptions) {
         return instanceOptions;
     }
+    // TODO
+    // should we store the raw value?
+    // return raw value if it is invalid?
+    // date parse/format: utc, local?
+    // file: 'unix-timestamp-ms-formatter.ts'
+    // severity: 'Error'
+    // message: 'A class must be declared after its base class.'
+    // at: '2,51'
+    // source: 'ts'
+    //  Date.parse() or write own implementation to parse from formats
 })(DateSlider || (DateSlider = {}));
 "use strict";
 var DateSlider;
@@ -116,7 +126,6 @@ var DateSlider;
              * Formats a Date object from a DateSliderModel object.
              */
             DateFormatter.prototype.formatInput = function (input) {
-                // TODO: utc, local? as
                 return new Date();
             };
             return DateFormatter;
@@ -171,11 +180,6 @@ var DateSlider;
 (function (DateSlider) {
     var Formatter;
     (function (Formatter) {
-        // TODO: file: 'unix-timestamp-ms-formatter.ts'
-        // severity: 'Error'
-        // message: 'A class must be declared after its base class.'
-        // at: '2,51'
-        // source: 'ts'
         var UnixTimestampMsFormatter = (function (_super) {
             __extends(UnixTimestampMsFormatter, _super);
             function UnixTimestampMsFormatter() {
@@ -200,7 +204,6 @@ var DateSlider;
         var DateParser = (function () {
             function DateParser() {
             }
-            // TODO?: what to do with timezone info?
             DateParser.prototype.parse = function (input) {
                 return new DateSlider.DateSliderModel();
             };
@@ -218,7 +221,6 @@ var DateSlider;
         var StringParser = (function () {
             function StringParser() {
             }
-            // TODO?: Date.parse() or write own implementation to parse from formats
             StringParser.prototype.parse = function (input, format, culture) {
                 return new DateSlider.DateSliderModel();
             };

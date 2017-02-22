@@ -4,7 +4,6 @@ module DateSlider.Formatter {
          * Formats a Date object from a DateSliderModel object.
          */
         public formatInput(input: DateSliderModel): Date | DateSliderInvalidOutput {
-            // TODO: utc, local? as
             return new Date();
         }
     }
