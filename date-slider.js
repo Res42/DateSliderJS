@@ -1,3 +1,30 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+"use strict";
+"use strict";
+var DateSlider;
+(function (DateSlider) {
+    var DateSliderEventContext = (function () {
+        function DateSliderEventContext() {
+            this._isPropagationStopped = false;
+        }
+        Object.defineProperty(DateSliderEventContext.prototype, "isPropagationStopped", {
+            get: function () {
+                return this._isPropagationStopped;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        DateSliderEventContext.prototype.stopPropagation = function () {
+            this._isPropagationStopped = true;
+        };
+        return DateSliderEventContext;
+    }());
+    DateSlider.DateSliderEventContext = DateSliderEventContext;
+})(DateSlider || (DateSlider = {}));
 "use strict";
 var DateSlider;
 (function (DateSlider) {
@@ -51,6 +78,114 @@ var DateSlider;
     DateSlider.create = create;
 })(DateSlider || (DateSlider = {}));
 "use strict";
+var DateSlider;
+(function (DateSlider) {
+    var Formatter;
+    (function (Formatter) {
+        var AbstractFormatter = (function () {
+            function AbstractFormatter() {
+            }
+            AbstractFormatter.prototype.format = function (input, invalidValueOption, format, culture) {
+                if (input === null) {
+                    return invalidValueOption;
+                }
+                return this.formatInput(input, format, culture);
+            };
+            return AbstractFormatter;
+        }());
+        Formatter.AbstractFormatter = AbstractFormatter;
+    })(Formatter = DateSlider.Formatter || (DateSlider.Formatter = {}));
+})(DateSlider || (DateSlider = {}));
+"use strict";
+var DateSlider;
+(function (DateSlider) {
+    var Formatter;
+    (function (Formatter) {
+        var DateFormatter = (function (_super) {
+            __extends(DateFormatter, _super);
+            function DateFormatter() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            /**
+             * Formats a Date object from a DateSliderModel object.
+             */
+            DateFormatter.prototype.formatInput = function (input) {
+                // TODO: utc, local? as
+                return new Date();
+            };
+            return DateFormatter;
+        }(Formatter.AbstractFormatter));
+        Formatter.DateFormatter = DateFormatter;
+    })(Formatter = DateSlider.Formatter || (DateSlider.Formatter = {}));
+})(DateSlider || (DateSlider = {}));
+"use strict";
+var DateSlider;
+(function (DateSlider) {
+    var Formatter;
+    (function (Formatter) {
+        var StringFormatter = (function (_super) {
+            __extends(StringFormatter, _super);
+            function StringFormatter() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            /**
+             * Formats a string from a DateSliderModel object.
+             */
+            StringFormatter.prototype.formatInput = function (input, format, culture) {
+                return null;
+            };
+            return StringFormatter;
+        }(Formatter.AbstractFormatter));
+        Formatter.StringFormatter = StringFormatter;
+    })(Formatter = DateSlider.Formatter || (DateSlider.Formatter = {}));
+})(DateSlider || (DateSlider = {}));
+"use strict";
+var DateSlider;
+(function (DateSlider) {
+    var Formatter;
+    (function (Formatter) {
+        var UnixTimestampFormatter = (function (_super) {
+            __extends(UnixTimestampFormatter, _super);
+            function UnixTimestampFormatter() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            /**
+             * Formats a unix timestamp (in seconds) from a DateSliderModel object.
+             */
+            UnixTimestampFormatter.prototype.formatInput = function (input) {
+                return null;
+            };
+            return UnixTimestampFormatter;
+        }(Formatter.AbstractFormatter));
+        Formatter.UnixTimestampFormatter = UnixTimestampFormatter;
+    })(Formatter = DateSlider.Formatter || (DateSlider.Formatter = {}));
+})(DateSlider || (DateSlider = {}));
+"use strict";
+var DateSlider;
+(function (DateSlider) {
+    var Formatter;
+    (function (Formatter) {
+        // TODO: file: 'unix-timestamp-ms-formatter.ts'
+        // severity: 'Error'
+        // message: 'A class must be declared after its base class.'
+        // at: '2,51'
+        // source: 'ts'
+        var UnixTimestampMsFormatter = (function (_super) {
+            __extends(UnixTimestampMsFormatter, _super);
+            function UnixTimestampMsFormatter() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            /**
+             * Formats a unix timestamp (in seconds) from a DateSliderModel object.
+             */
+            UnixTimestampMsFormatter.prototype.formatInput = function (input) {
+                return null;
+            };
+            return UnixTimestampMsFormatter;
+        }(Formatter.AbstractFormatter));
+        Formatter.UnixTimestampMsFormatter = UnixTimestampMsFormatter;
+    })(Formatter = DateSlider.Formatter || (DateSlider.Formatter = {}));
+})(DateSlider || (DateSlider = {}));
 "use strict";
 var DateSlider;
 (function (DateSlider) {
@@ -59,6 +194,7 @@ var DateSlider;
         var DateParser = (function () {
             function DateParser() {
             }
+            // TODO?: what to do with timezone info?
             DateParser.prototype.parse = function (input) {
                 return new DateSlider.DateSliderModel();
             };
@@ -76,6 +212,7 @@ var DateSlider;
         var StringParser = (function () {
             function StringParser() {
             }
+            // TODO?: Date.parse() or write own implementation to parse from formats
             StringParser.prototype.parse = function (input, format, culture) {
                 return new DateSlider.DateSliderModel();
             };

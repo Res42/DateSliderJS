@@ -1,22 +1,22 @@
 module DateSlider {
     export interface DateSliderOptions {
         culture?: string;
-        show?: ("year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time")[];
-        appendTo?: "body" | "replaceElement" | "afterElement";
-        type?: "popup" | "inline";
-        inputParseType?: "timestamp" | "timestampMs" | "formattedString" | "date" | "custom";
+        show?: DateSliderType[];
+        appendTo?: DateSliderLocation;
+        type?: DateSliderDisplayType;
+        inputParseType?: DateSliderFormat;
         inputStringFormat?: string;
-        inputCustomParser?: Parser.Parser;
-        outputFormatType?: "timestamp" | "timestampMs" | "formattedString" | "date" | "custom";
+        inputCustomParser?: Parser.IParser;
+        outputFormatType?: DateSliderFormat;
         outputStringFormat?: string;
-        outputCustomFormatter?: Formatter.Formatter;
-        outputInvalid?: string | number | null | undefined | Object;
+        outputCustomFormatter?: Formatter.AbstractFormatter;
+        outputInvalid?: DateSliderInvalidOutput;
         template?: {
             header?: string;
             footer?: string;
             sliderBox?: string;
             valueDisplay?: string;
-        }
+        };
         callback?: {
             onSliderBoxGrabbed?: () => void;
             onSliderBoxReleased?: () => void;
@@ -28,6 +28,6 @@ module DateSlider {
             onPopupAfterOpen?: () => void;
             onPopupBeforeClose?: () => void;
             onPopupAfterClose?: () => void;
-        }
+        };
     }
 }
