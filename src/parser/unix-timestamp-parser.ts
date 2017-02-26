@@ -1,11 +1,15 @@
 module DateSlider.Parser {
+    export class UnixTimestampParserOptions {
+        constructor(
+            public type: "milliseconds" | "seconds",
+        ) {
+        }
+    }
+
     export class UnixTimestampParser implements IParser {
-        /**
-         * Parses a unix timestamp (in seconds)
-         * from a number or a string which can be parsed as a number.
-         */
-        public parse(input: number | string): DateSliderModel {
-            return new DateSliderModel();
+        /** Parses a unix timestamp from a number. */
+        public parse(input: number, options: UnixTimestampParserOptions): DateSliderModel {
+            return new DateSliderModel(null, input);
         }
     }
 }

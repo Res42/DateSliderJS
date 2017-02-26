@@ -1,9 +1,16 @@
 module DateSlider.Formatter {
-    export class DateFormatter extends AbstractFormatter {
+    export class DateFormatterOptions {
+        constructor(
+            public type: "local" | "utc",
+        ) {
+        }
+    }
+
+    export class DateFormatter implements IFormatter {
         /**
          * Formats a Date object from a DateSliderModel object.
          */
-        public formatInput(input: DateSliderModel): Date | DateSliderInvalidOutput {
+        public format(input: DateSliderModel, options: DateFormatterOptions): Date {
             return new Date();
         }
     }

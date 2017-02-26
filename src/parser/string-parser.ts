@@ -1,7 +1,15 @@
 module DateSlider.Parser {
+    export class StringParserOptions {
+        constructor(
+            public format: string,
+            public culture: string,
+        ) {
+        }
+    }
+
     export class StringParser implements IParser {
-        public parse(input: string, format: string, culture?: string): DateSliderModel {
-            return new DateSliderModel();
+        public parse(input: string, options: StringParserOptions): DateSliderModel {
+            return new DateSliderModel(null, input);
         }
     }
 }

@@ -4,13 +4,10 @@ module DateSlider {
         show?: DateSliderType[];
         appendTo?: DateSliderLocation;
         type?: DateSliderDisplayType;
-        inputParseType?: DateSliderFormat;
-        inputStringFormat?: string;
-        inputCustomParser?: Parser.IParser;
-        outputFormatType?: DateSliderFormat;
-        outputStringFormat?: string;
-        outputCustomFormatter?: Formatter.AbstractFormatter;
-        outputInvalid?: DateSliderInvalidOutput;
+        parser?: DateSliderParserFormat;
+        parserOptions?: any;
+        formatter?: DateSliderFormatterFormat;
+        formatterOptions?: any;
         template?: {
             header?: string;
             footer?: string;

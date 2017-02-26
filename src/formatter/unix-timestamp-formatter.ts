@@ -1,10 +1,17 @@
 module DateSlider.Formatter {
-    export class UnixTimestampFormatter extends AbstractFormatter {
+    export class UnixTimestampFormatterOptions {
+        constructor(
+            public type: "milliseconds" | "seconds",
+        ) {
+        }
+    }
+
+    export class UnixTimestampFormatter implements IFormatter {
         /**
          * Formats a unix timestamp (in seconds) from a DateSliderModel object.
          */
-        public formatInput(input: DateSliderModel): number | DateSliderInvalidOutput {
-            return null;
+        public format(input: DateSliderModel, options: UnixTimestampFormatterOptions): number {
+            return 0;
         }
     }
 }

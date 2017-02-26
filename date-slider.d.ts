@@ -2,8 +2,8 @@ declare module DateSlider {
     type DateSliderType = "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
     type DateSliderLocation = "body" | "replaceElement" | "afterElement";
     type DateSliderDisplayType = "popup" | "inline";
-    type DateSliderInvalidOutput = string | number | null | undefined | Object;
-    type DateSliderFormat = "timestamp" | "timestampMs" | "formattedString" | "date" | "custom";
+    type DateSliderParserFormat = "timestamp" | "string" | "date" | ((input: any, format?: string, culture?: string) => DateSliderModel);
+    type DateSliderFormatterFormat = "timestamp" | "string" | "date" | ((input: DateSliderModel, format?: string, culture?: string) => any);
     type DateSliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged" | "onPopupBeforeOpen" | "onPopupAfterOpen" | "onPopupBeforeClose" | "onPopupAfterClose";
 }
 declare module DateSlider {
@@ -28,6 +28,11 @@ declare module DateSlider {
 }
 declare module DateSlider {
     class DateSliderModel {
+        model: InnerModel | null;
+        rawValue: any;
+        constructor(model: InnerModel | null, rawValue: any);
+    }
+    class InnerModel {
         year: number;
         /** In the range [1, 12]. */
         month: number;
@@ -36,11 +41,12 @@ declare module DateSlider {
         hour: number;
         minute: number;
         second: number;
+        timezone: string;
         constructor(year?: number, 
             /** In the range [1, 12]. */
             month?: number, 
             /** In the range of [1, 31]. */
-            day?: number, hour?: number, minute?: number, second?: number);
+            day?: number, hour?: number, minute?: number, second?: number, timezone?: string);
     }
 }
 declare module DateSlider {
@@ -49,13 +55,10 @@ declare module DateSlider {
         show?: DateSliderType[];
         appendTo?: DateSliderLocation;
         type?: DateSliderDisplayType;
-        inputParseType?: DateSliderFormat;
-        inputStringFormat?: string;
-        inputCustomParser?: Parser.IParser;
-        outputFormatType?: DateSliderFormat;
-        outputStringFormat?: string;
-        outputCustomFormatter?: Formatter.AbstractFormatter;
-        outputInvalid?: DateSliderInvalidOutput;
+        parser?: DateSliderParserFormat;
+        parserOptions?: any;
+        formatter?: DateSliderFormatterFormat;
+        formatterOptions?: any;
         template?: {
             header?: string;
             footer?: string;
@@ -79,8 +82,19 @@ declare module DateSlider {
     function create(element: HTMLElement, options: DateSliderOptions): DateSliderInstance;
 }
 declare module DateSlider.Formatter {
-    abstract class AbstractFormatter {
-        format(input: DateSliderModel, invalidValueOption: DateSliderInvalidOutput, format?: string, culture?: string): any | DateSliderInvalidOutput;
+    class DateFormatterOptions {
+        type: "local" | "utc";
+        constructor(type: "local" | "utc");
+    }
+    class DateFormatter implements IFormatter {
+        /**
+         * Formats a Date object from a DateSliderModel object.
+         */
+        format(input: DateSliderModel, options: DateFormatterOptions): Date;
+    }
+}
+declare module DateSlider.Formatter {
+    interface IFormatter {
         /**
          * Formats a DateSliderModel by a format and a culture.
          * @argument input
@@ -88,44 +102,41 @@ declare module DateSlider.Formatter {
          * @argument culture The culture from DateSliderOptions.culture.
          * @returns A custom thing representing a date/time.
          */
-        protected abstract formatInput(input: DateSliderModel, format?: string, culture?: string): any;
+        format(input: DateSliderModel, options: any): any;
     }
 }
 declare module DateSlider.Formatter {
-    class DateFormatter extends AbstractFormatter {
-        /**
-         * Formats a Date object from a DateSliderModel object.
-         */
-        formatInput(input: DateSliderModel): Date | DateSliderInvalidOutput;
+    class StringFormatterOptions {
+        format: string;
+        culture: string;
+        constructor(format: string, culture: string);
     }
-}
-declare module DateSlider.Formatter {
-    class StringFormatter extends AbstractFormatter {
+    class StringFormatter implements IFormatter {
         /**
          * Formats a string from a DateSliderModel object.
          */
-        formatInput(input: DateSliderModel, format?: string, culture?: string): string | DateSliderInvalidOutput;
+        format(input: DateSliderModel, options: StringFormatterOptions): string;
     }
 }
 declare module DateSlider.Formatter {
-    class UnixTimestampFormatter extends AbstractFormatter {
-        /**
-         * Formats a unix timestamp (in seconds) from a DateSliderModel object.
-         */
-        formatInput(input: DateSliderModel): number | DateSliderInvalidOutput;
+    class UnixTimestampFormatterOptions {
+        type: "milliseconds" | "seconds";
+        constructor(type: "milliseconds" | "seconds");
     }
-}
-declare module DateSlider.Formatter {
-    class UnixTimestampMsFormatter extends AbstractFormatter {
+    class UnixTimestampFormatter implements IFormatter {
         /**
          * Formats a unix timestamp (in seconds) from a DateSliderModel object.
          */
-        formatInput(input: DateSliderModel): number | DateSliderInvalidOutput;
+        format(input: DateSliderModel, options: UnixTimestampFormatterOptions): number;
     }
 }
 declare module DateSlider.Parser {
+    class DateParserOptions {
+        type: "local" | "utc";
+        constructor(type: "local" | "utc");
+    }
     class DateParser implements IParser {
-        parse(input: Date): DateSliderModel;
+        parse(input: Date, options: DateParserOptions): DateSliderModel;
     }
 }
 declare module DateSlider.Parser {
@@ -133,29 +144,29 @@ declare module DateSlider.Parser {
         /**
          * Parses a date/time input by a format and a culture.
          * @argument input
-         * @argument format Optional. The format from DateSliderOptions.inputStringFormat.
-         * @argument culture Optional. The culture from DateSliderOptions.culture.
+         * @argument options
          * @returns A DateSliderModel object representing a date/time. If the input is invalid it returns null.
          */
-        parse(input: any, format?: string, culture?: string): DateSliderModel;
+        parse(input: any, options: any): DateSliderModel;
     }
 }
 declare module DateSlider.Parser {
+    class StringParserOptions {
+        format: string;
+        culture: string;
+        constructor(format: string, culture: string);
+    }
     class StringParser implements IParser {
-        parse(input: string, format: string, culture?: string): DateSliderModel;
+        parse(input: string, options: StringParserOptions): DateSliderModel;
     }
 }
 declare module DateSlider.Parser {
-    class UnixTimestampMsParser implements IParser {
-        parse(input: number | string): DateSliderModel;
+    class UnixTimestampParserOptions {
+        type: "milliseconds" | "seconds";
+        constructor(type: "milliseconds" | "seconds");
     }
-}
-declare module DateSlider.Parser {
     class UnixTimestampParser implements IParser {
-        /**
-         * Parses a unix timestamp (in seconds)
-         * from a number or a string which can be parsed as a number.
-         */
-        parse(input: number | string): DateSliderModel;
+        /** Parses a unix timestamp from a number. */
+        parse(input: number, options: UnixTimestampParserOptions): DateSliderModel;
     }
 }

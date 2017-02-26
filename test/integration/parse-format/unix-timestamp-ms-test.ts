@@ -1,22 +1,18 @@
 module DateSliderTest.Integration.ParseFormat {
     describe("Unix timestamp in milliseconds parsing and formatting.", () => {
-        let parser: DateSlider.Parser.UnixTimestampMsParser;
-        let formatter: DateSlider.Formatter.UnixTimestampMsFormatter;
+        let parser: DateSlider.Parser.UnixTimestampParser;
+        let formatter: DateSlider.Formatter.UnixTimestampFormatter;
+        let parserOptions: DateSlider.Parser.UnixTimestampParserOptions;
+        let formatterOptions: DateSlider.Formatter.UnixTimestampFormatterOptions;
 
         beforeEach(() => {
-            parser = new DateSlider.Parser.UnixTimestampMsParser();
-            formatter = new DateSlider.Formatter.UnixTimestampMsFormatter();
+            parser = new DateSlider.Parser.UnixTimestampParser();
+            formatter = new DateSlider.Formatter.UnixTimestampFormatter();
+            parserOptions = new DateSlider.Parser.UnixTimestampParserOptions("milliseconds");
+            formatterOptions = new DateSlider.Formatter.UnixTimestampFormatterOptions("milliseconds");
         });
 
         let runs = [
-            { input: null,      output: null, description: "Invalid timestamp: null." },
-            { input: true,      output: null, description: "Invalid timestamp: true." },
-            { input: false,     output: null, description: "Invalid timestamp: false." },
-            { input: undefined, output: null, description: "Invalid timestamp: undefined." },
-            { input: "alma",    output: null, description: "Invalid timestamp: string." },
-            { input: "",        output: null, description: "Invalid timestamp: empty string." },
-            { input: {} as any, output: null, description: "Invalid timestamp: object." },
-            { input: function() {} as any, output: null, description: "Invalid timestamp: function." },
             { input: -31536000, output: -31536000, description: "Valid timestamp: negative." },
             { input: 0,         output: 0,         description: "Valid timestamp." },
             { input: 946684800, output: 946684800, description: "Valid timestamp." },
@@ -27,7 +23,7 @@ module DateSliderTest.Integration.ParseFormat {
 
         runs.forEach((run) => {
             it(run.description, () => {
-                expect(formatter.format(parser.parse(run.input), null)).toBe(run.input);
+                expect(formatter.format(parser.parse(run.input, parserOptions), formatterOptions)).toBe(run.input);
             });
         });
     });
