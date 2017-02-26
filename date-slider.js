@@ -1,8 +1,13 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 "use strict";
 "use strict";
 var DateSlider;
@@ -83,16 +88,17 @@ var DateSlider;
         return instanceOptions;
     }
     // TODO
-    // should we store the raw value?
-    // return raw value if it is invalid?
-    // date parse/format: utc, local?
-    // use abstractformatter or not? writing own formatter may be a hassle if used
+    // should we store the raw value? -> yes
+    // return raw value if it is invalid? -> throw
+    // date parse/format: utc, local? -> timezone to model
+    // use abstractformatter or not? writing own formatter may be a hassle if used -> CustomFormatter/Parser should take the callback as constructor param
     // file: 'unix-timestamp-ms-formatter.ts'
     // severity: 'Error'
     // message: 'A class must be declared after its base class.'
     // at: '2,51'
-    // source: 'ts'
-    //  Date.parse() or write own implementation to parse from formats
+    // source: 'ts' -> ///<reference ...
+    //  Date.parse() or write own implementation to parse from formats -> own
+    // next week -> create demo page, create DOM elements, hooks
 })(DateSlider || (DateSlider = {}));
 "use strict";
 var DateSlider;

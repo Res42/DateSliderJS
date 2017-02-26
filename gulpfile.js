@@ -37,9 +37,9 @@ gulp.task("test", ["app"], function () {
         .pipe(gulp.dest("./test"));
 });
 
-gulp.task("build", ["app", "test", "css"]);
+gulp.task("default", ["app", "test", "css"]);
 
-gulp.task("default", ["build"], function() {
+gulp.task("watch", function() {
     gulp.watch("src/**/*.ts", ["app"]);
     gulp.watch("test/**/*.ts", ["test"]);
     gulp.watch("src/**/*.less", ["css"]);

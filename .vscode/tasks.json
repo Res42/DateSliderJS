@@ -7,22 +7,34 @@
     "showOutput": "silent",
     "tasks": [
         {
-            "taskName": "Build TypeScript Files",
+            "taskName": "build",
             "command": "gulp",
             "args": ["--no-color"],
             "problemMatcher": [
                 "$gulp-tsc",
                 "$tsc",
-                "$tsc-watch"
+                "$lessCompile"
             ],
             "isBuildCommand": true,
             "isShellCommand": true
         },
         {
-            "taskName": "Run Karma",
+            "taskName": "watch",
+            "command": "gulp",
+            "args": ["watch"],
+            "problemMatcher": [
+                "$tsc-watch",
+                "$gulp-tsc",
+                "$tsc",
+                "$lessCompile"
+            ],
+            "isShellCommand": true,
+            "isBackground": true
+        },
+        {
+            "taskName": "test",
             "command": "karma",
             "args": ["start", "--single-run"],
-            // "problemMatcher": "$tsc",
             "isTestCommand": true,
             "isShellCommand": true
         }
