@@ -9,7 +9,6 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 "use strict";
-"use strict";
 var DateSlider;
 (function (DateSlider) {
     var DateSliderEventContext = (function () {

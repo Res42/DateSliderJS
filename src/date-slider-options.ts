@@ -1,12 +1,15 @@
 module DateSlider {
+    export type DateSliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged" |
+                                  "onPopupBeforeOpen" | "onPopupAfterOpen" | "onPopupBeforeClose" | "onPopupAfterClose";
+
     export interface DateSliderOptions {
         culture?: string;
         sliders?: SliderOptions[];
-        appendTo?: DateSliderLocation;
-        displayType?: DateSliderDisplayType;
-        parser?: DateSliderParserFormat;
+        appendTo?: "body" | "replaceElement" | "afterElement" | "insideElement";
+        displayType?: "popup" | "inline";
+        parser?: "timestamp" | "string" | "date" | ((input: any, options: any) => DateSliderModel);
         parserOptions?: any;
-        formatter?: DateSliderFormatterFormat;
+        formatter?: "timestamp" | "string" | "date" | ((input: DateSliderModel, options: any) => any);
         formatterOptions?: any;
         callback?: {
             onValueChanged?: (context: DateSliderEventContext) => void;
@@ -18,7 +21,7 @@ module DateSlider {
     }
 
     export interface SliderOptions {
-        type?: DateSliderType;
+        type?: "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
         template?: {
             header?: string;
             footer?: string;
