@@ -1,13 +1,24 @@
 module DateSlider {
     export interface DateSliderOptions {
         culture?: string;
-        show?: DateSliderType[];
+        sliders?: SliderOptions[];
         appendTo?: DateSliderLocation;
-        type?: DateSliderDisplayType;
+        displayType?: DateSliderDisplayType;
         parser?: DateSliderParserFormat;
         parserOptions?: any;
         formatter?: DateSliderFormatterFormat;
         formatterOptions?: any;
+        callback?: {
+            onValueChanged?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onPopupBeforeOpen?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onPopupAfterOpen?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onPopupBeforeClose?: (context: DateSliderEventContext) => DateSliderEventContext;
+            onPopupAfterClose?: (context: DateSliderEventContext) => DateSliderEventContext;
+        };
+    }
+
+    export interface SliderOptions {
+        type?: DateSliderType[];
         template?: {
             header?: string;
             footer?: string;
@@ -18,13 +29,7 @@ module DateSlider {
             onSliderBoxGrabbed?: (context: DateSliderEventContext) => DateSliderEventContext;
             onSliderBoxReleased?: (context: DateSliderEventContext) => DateSliderEventContext;
             onSliderBoxMoved?: (context: DateSliderEventContext) => DateSliderEventContext;
-
             onValueChanged?: (context: DateSliderEventContext) => DateSliderEventContext;
-
-            onPopupBeforeOpen?: (context: DateSliderEventContext) => DateSliderEventContext;
-            onPopupAfterOpen?: (context: DateSliderEventContext) => DateSliderEventContext;
-            onPopupBeforeClose?: (context: DateSliderEventContext) => DateSliderEventContext;
-            onPopupAfterClose?: (context: DateSliderEventContext) => DateSliderEventContext;
-        };
+        }
     }
 }

@@ -5,6 +5,9 @@ module DateSlider {
             private options: DateSliderOptions,
             private value?: DateSliderModel,
         ) {
+            if (options.appendTo === "replaceElement") {
+                
+            }
         }
 
         public getValue(): any {

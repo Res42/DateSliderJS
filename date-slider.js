@@ -28,6 +28,8 @@ var DateSlider;
             this.element = element;
             this.options = options;
             this.value = value;
+            if (options.appendTo === "replaceElement") {
+            }
         }
         DateSliderInstance.prototype.getValue = function () {
             return null;
@@ -241,6 +243,39 @@ var DateSlider;
         }());
         Parser.UnixTimestampParser = UnixTimestampParser;
     })(Parser = DateSlider.Parser || (DateSlider.Parser = {}));
+})(DateSlider || (DateSlider = {}));
+"use strict";
+var DateSlider;
+(function (DateSlider) {
+    var Slider;
+    (function (Slider) {
+        var SliderInstance = (function () {
+            function SliderInstance(options) {
+                this.options = options;
+            }
+            return SliderInstance;
+        }());
+        Slider.SliderInstance = SliderInstance;
+    })(Slider = DateSlider.Slider || (DateSlider.Slider = {}));
+})(DateSlider || (DateSlider = {}));
+"use strict";
+var DateSlider;
+(function (DateSlider) {
+    var Slider;
+    (function (Slider) {
+        function create(options) {
+            if (!options.sliders) {
+                throw new Error("Cannot create sliders because options.sliders is not set.");
+            }
+            var sliders = [];
+            for (var _i = 0, _a = options.sliders; _i < _a.length; _i++) {
+                var sliderOptions = _a[_i];
+                sliders.push(new Slider.SliderInstance(sliderOptions));
+            }
+            return sliders;
+        }
+        Slider.create = create;
+    })(Slider = DateSlider.Slider || (DateSlider.Slider = {}));
 })(DateSlider || (DateSlider = {}));
 
 //# sourceMappingURL=date-slider.js.map
