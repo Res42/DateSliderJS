@@ -1,3 +1,32 @@
-.teszt2 {
-    color: blue;
+.slider {
+    .slider-control {
+        position: relative;
+        height: 60px;
+        background-color: lightgray;
+
+        .slider-control-line {
+            position: absolute;
+            .vertical-center();
+            height: 3px;
+            left: 20px;
+            right: 20px;
+            background-color: limegreen;
+        }
+
+        .slider-handle {
+            position: absolute;
+            .vertical-center();
+            width: 20px;
+            height: 40px;
+            background-color: gray;
+            border-radius: 4px;
+        }
+    }
+
+    .vertical-center() {
+        position: absolute;
+        margin: auto;
+        top: 0;
+        bottom: 0;
+    }
 }

@@ -8,7 +8,6 @@
         "noEmitOnError": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,
-        "strictNullChecks": true,
         "outFile": "date-slider.js",
         "watch": true
     },

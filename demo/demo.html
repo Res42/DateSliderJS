@@ -11,10 +11,29 @@
         <script src="../date-slider.js"></script>
     </head>
     <body>
-        <div id="demo1"></div>
+        <div id="demo1" class="this-will-be-deleted"></div>
+        <input type="number" id="model" />
 
         <script type="text/javascript">
-            DateSlider.create(document.getElementById("demo1"), {});
+            var options = {
+                appendTo: "replaceElement", 
+                sliders: [{
+                    type: "month", 
+                    callback: { 
+                        onValueChanged: function(context) {
+                            if (document.getElementById("model").value != context.newValue) {
+                                document.getElementById("model").value = context.newValue;
+                            }
+                            
+                        } 
+                    }
+                }]
+            };
+            var instance = DateSlider.create(document.getElementById("demo1"), options);
+
+            document.getElementById("model").addEventListener("change", function(event) {
+                instance.sliders[0].setValue(parseInt(event.currentTarget.value));
+            });
         </script>
     </body>
 </html>
