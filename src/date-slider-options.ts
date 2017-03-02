@@ -5,7 +5,7 @@ module DateSlider {
     export interface DateSliderOptions {
         culture?: string;
         sliders?: SliderOptions[];
-        appendTo?: "body" | "replaceElement" | "afterElement" | "insideElement";
+        appendTo?: "body" | "replaceElement" | "afterElement" | "insideElement" | "onElement";
         displayType?: "popup" | "inline";
         parser?: "timestamp" | "string" | "date" | ((input: any, options: any) => DateSliderModel);
         parserOptions?: any;
@@ -27,7 +27,7 @@ module DateSlider {
             footer?: string;
             sliderBox?: string;
             valueDisplay?: string;
-        };
+        } | HTMLElement;
         callback?: {
             onValueChanged?: (context: DateSliderEventContext) => void;
             onSliderBoxGrabbed?: (context: DateSliderEventContext) => void;
