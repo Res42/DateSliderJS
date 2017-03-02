@@ -23,4 +23,6 @@ module DateSlider {
     // template
     // demo: out of the box, full customization
     // timestamp parse/format
+    // instance.refresh
+    // on creation getter setter for outside model
 }
