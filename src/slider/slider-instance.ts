@@ -107,7 +107,9 @@ module DateSlider.Slider {
 
         private registerListeners(): void {
             this.handleElement.addEventListener("mousedown", this.handleMouseDown, false);
+            this.handleElement.addEventListener("touchstart", (e) => {this.handleMouseDown(); e.preventDefault(); }, false);
             window.addEventListener("mouseup", this.handleMouseUp, false);
+            window.addEventListener("touchend", (e) => {this.handleMouseUp(); e.preventDefault(); }, false);
 
             window.addEventListener("load", this.updateHandlePosition);
             window.addEventListener("resize", this.updateHandlePosition);
@@ -135,19 +137,23 @@ module DateSlider.Slider {
 
         private destroy = (): void => {
             window.removeEventListener("mouseup", this.handleMouseUp, false);
+            window.addEventListener("touchend", (e) => {this.handleMouseUp(); e.preventDefault(); }, false);
             window.removeEventListener("load", this.updateHandlePosition);
             window.removeEventListener("resize", this.updateHandlePosition);
             window.removeEventListener("mousemove", this.handleMouseMove, true);
+            window.removeEventListener("touchmove", (e) => {this.handleMouseMove(); e.preventDefault(); }, true);
             if (this.observer) {
                 this.observer.disconnect();
             }
         }
 
         private handleMouseDown = (): void => {
+            window.addEventListener("touchmove", (e) => {this.handleMouseMove(); e.preventDefault(); }, true);
             window.addEventListener("mousemove", this.handleMouseMove, true);
         }
 
         private handleMouseUp = (): void => {
+            window.removeEventListener("touchmove", (e) => {this.handleMouseMove(); e.preventDefault(); }, true);
             window.removeEventListener("mousemove", this.handleMouseMove, true);
         }
 

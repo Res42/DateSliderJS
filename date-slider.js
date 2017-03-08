@@ -154,6 +154,7 @@ var DateSlider;
     // timestamp parse/format
     // instance.refresh
     // on creation getter setter for outside model
+    // Unable to preventDefault inside passive event listener due to target being treated as passive. See https://www.chromestatus.com/features/5093566007214080
 })(DateSlider || (DateSlider = {}));
 "use strict";
 var DateSlider;
@@ -320,17 +321,21 @@ var DateSlider;
                 this.onValueChangeEvent = new DateSlider.DateSliderEventHandler();
                 this.destroy = function () {
                     window.removeEventListener("mouseup", _this.handleMouseUp, false);
+                    window.addEventListener("touchend", function (e) { _this.handleMouseUp(); e.preventDefault(); }, false);
                     window.removeEventListener("load", _this.updateHandlePosition);
                     window.removeEventListener("resize", _this.updateHandlePosition);
                     window.removeEventListener("mousemove", _this.handleMouseMove, true);
+                    window.removeEventListener("touchmove", function (e) { _this.handleMouseMove(); e.preventDefault(); }, true);
                     if (_this.observer) {
                         _this.observer.disconnect();
                     }
                 };
                 this.handleMouseDown = function () {
+                    window.addEventListener("touchmove", function (e) { _this.handleMouseMove(); e.preventDefault(); }, true);
                     window.addEventListener("mousemove", _this.handleMouseMove, true);
                 };
                 this.handleMouseUp = function () {
+                    window.removeEventListener("touchmove", function (e) { _this.handleMouseMove(); e.preventDefault(); }, true);
                     window.removeEventListener("mousemove", _this.handleMouseMove, true);
                 };
                 this.handleMouseMove = function () {
@@ -419,7 +424,9 @@ var DateSlider;
             SliderInstance.prototype.registerListeners = function () {
                 var _this = this;
                 this.handleElement.addEventListener("mousedown", this.handleMouseDown, false);
+                this.handleElement.addEventListener("touchstart", function (e) { _this.handleMouseDown(); e.preventDefault(); }, false);
                 window.addEventListener("mouseup", this.handleMouseUp, false);
+                window.addEventListener("touchend", function (e) { _this.handleMouseUp(); e.preventDefault(); }, false);
                 window.addEventListener("load", this.updateHandlePosition);
                 window.addEventListener("resize", this.updateHandlePosition);
                 if (window.MutationObserver && this.element.parentNode) {

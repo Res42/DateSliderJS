@@ -22,4 +22,6 @@ module DateSlider {
     // timestamp parse/format
     // instance.refresh
     // on creation getter setter for outside model
+
+    // Unable to preventDefault inside passive event listener due to target being treated as passive. See https://www.chromestatus.com/features/5093566007214080
 }
