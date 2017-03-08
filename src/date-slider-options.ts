@@ -1,6 +1,5 @@
 module DateSlider {
-    export type DateSliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged" |
-                                  "onPopupBeforeOpen" | "onPopupAfterOpen" | "onPopupBeforeClose" | "onPopupAfterClose";
+    export type DateSliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
 
     export interface DateSliderOptions {
         culture?: string;

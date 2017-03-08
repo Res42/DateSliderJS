@@ -34,34 +34,34 @@ module DateSliderTest.Parser {
         });
 
         let secondRuns = [
-            { input: -100,  output: new DateSlider.InnerModel(1969, 12, 31, 23, 58, 20), description: "Valid timestamp: -100." },
-            { input: -1,    output: new DateSlider.InnerModel(1969, 12, 31, 23, 59, 59), description: "Valid timestamp: -1." },
-            { input: 0,     output: new DateSlider.InnerModel(1970, 1, 1, 0, 0, 0),      description: "Valid timestamp: 0." },
-            { input: 1,     output: new DateSlider.InnerModel(1970, 1, 1, 0, 0, 1),      description: "Valid timestamp: 1." },
-            { input: 100,   output: new DateSlider.InnerModel(1970, 1, 1, 1, 40, 0),     description: "Valid timestamp: 100." },
+            { input: -100,  output: new DateSlider.InnerModel(1969, 12, 31, 23, 58, 20), description: "Valid second timestamp: -100." },
+            { input: -1,    output: new DateSlider.InnerModel(1969, 12, 31, 23, 59, 59), description: "Valid second timestamp: -1." },
+            { input: 0,     output: new DateSlider.InnerModel(1970, 1, 1, 0, 0, 0),      description: "Valid second timestamp: 0." },
+            { input: 1,     output: new DateSlider.InnerModel(1970, 1, 1, 0, 0, 1),      description: "Valid second timestamp: 1." },
+            { input: 100,   output: new DateSlider.InnerModel(1970, 1, 1, 0, 1, 40),     description: "Valid second timestamp: 100." },
         ];
 
         secondRuns.forEach((run) => {
             it(run.description, () => {
-                expect(parser.parse(run.input, secondOptions).model).toBe(run.output);
+                expect(parser.parse(run.input, secondOptions).model).toEqual(run.output);
             });
         });
 
         let msRuns = [
-            { input: -100000,   output: new DateSlider.InnerModel(1969, 12, 31, 23, 58, 20), description: "Valid timestamp: < -1000." },
-            { input: -1000,     output: new DateSlider.InnerModel(1969, 12, 31, 23, 59, 59), description: "Valid timestamp: -1000." },
-            { input: -999,      output: new DateSlider.InnerModel(1969, 12, 31, 23, 59, 59), description: "Valid timestamp: -999." },
-            { input: -1,        output: new DateSlider.InnerModel(1969, 12, 31, 23, 59, 59), description: "Valid timestamp: -1." },
-            { input: 0,         output: new DateSlider.InnerModel(1970, 1, 1, 0, 0, 0),      description: "Valid timestamp: 0." },
-            { input: 1,         output: new DateSlider.InnerModel(1970, 1, 1, 0, 0, 0),      description: "Valid timestamp: 1." },
-            { input: 999,       output: new DateSlider.InnerModel(1970, 1, 1, 0, 0, 0),      description: "Valid timestamp: 999." },
-            { input: 1000,      output: new DateSlider.InnerModel(1970, 1, 1, 0, 0, 1),      description: "Valid timestamp: 1000." },
-            { input: 100000,    output: new DateSlider.InnerModel(1970, 1, 1, 1, 40, 0),     description: "Valid timestamp: > 1000." },
+            { input: -100000,   output: new DateSlider.InnerModel(1969, 12, 31, 23, 58, 20), description: "Valid millisecond timestamp: < -1000." },
+            { input: -1000,     output: new DateSlider.InnerModel(1969, 12, 31, 23, 59, 59), description: "Valid millisecond timestamp: -1000." },
+            { input: -999,      output: new DateSlider.InnerModel(1969, 12, 31, 23, 59, 59), description: "Valid millisecond timestamp: -999." },
+            { input: -1,        output: new DateSlider.InnerModel(1969, 12, 31, 23, 59, 59), description: "Valid millisecond timestamp: -1." },
+            { input: 0,         output: new DateSlider.InnerModel(1970, 1, 1, 0, 0, 0),      description: "Valid millisecond timestamp: 0." },
+            { input: 1,         output: new DateSlider.InnerModel(1970, 1, 1, 0, 0, 0),      description: "Valid millisecond timestamp: 1." },
+            { input: 999,       output: new DateSlider.InnerModel(1970, 1, 1, 0, 0, 0),      description: "Valid millisecond timestamp: 999." },
+            { input: 1000,      output: new DateSlider.InnerModel(1970, 1, 1, 0, 0, 1),      description: "Valid millisecond timestamp: 1000." },
+            { input: 100000,    output: new DateSlider.InnerModel(1970, 1, 1, 0, 1, 40),     description: "Valid millisecond timestamp: > 1000." },
         ];
 
         msRuns.forEach((run) => {
             it(run.description, () => {
-                expect(parser.parse(run.input, msOptions).model).toBe(run.output);
+                expect(parser.parse(run.input, msOptions).model).toEqual(run.output);
             });
         });
     });

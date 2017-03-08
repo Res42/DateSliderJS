@@ -300,7 +300,12 @@ var DateSlider;
             }
             /** Parses a unix timestamp from a number. */
             UnixTimestampParser.prototype.parse = function (input, options) {
-                return new DateSlider.DateSliderModel(null, input);
+                if (typeof input !== "number") {
+                    throw new Error("Cannot parse non-number to unix timestamp.");
+                }
+                var date = new Date(input * (options.type === "seconds" ? 1000 : 1));
+                var model = new DateSlider.InnerModel(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+                return new DateSlider.DateSliderModel(model, input);
             };
             return UnixTimestampParser;
         }());
