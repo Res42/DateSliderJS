@@ -14,16 +14,20 @@ declare module DateSlider {
 }
 declare module DateSlider {
     class DateSliderInstance {
-        private element;
+        element: HTMLElement;
         private options;
         private value;
         sliders: Slider.SliderInstance[];
+        parser: Parser.IParser;
+        formatter: Formatter.IFormatter;
         constructor(element: HTMLElement, options: DateSliderOptions, value?: DateSliderModel);
         getValue(): any;
         setValue(input: any): void;
         getOptions(): DateSliderOptions;
         setOptions(): void;
         on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void;
+        private bindFormatter();
+        private bindParser();
         private createWrapper(sliders);
     }
 }
@@ -88,6 +92,12 @@ declare module DateSlider {
     function create(element: HTMLElement, options: DateSliderOptions): DateSliderInstance;
 }
 declare module DateSlider.Formatter {
+    class CustomFormatter implements IFormatter {
+        format: (input: DateSliderModel, options: any) => any;
+        constructor(format: (input: DateSliderModel, options: any) => any);
+    }
+}
+declare module DateSlider.Formatter {
     class DateFormatterOptions {
         type: "local" | "utc";
         constructor(type: "local" | "utc");
@@ -134,6 +144,12 @@ declare module DateSlider.Formatter {
          * Formats a unix timestamp (in seconds) from a DateSliderModel object.
          */
         format(input: DateSliderModel, options: UnixTimestampFormatterOptions): number;
+    }
+}
+declare module DateSlider.Parser {
+    class CustomParser implements IParser {
+        parse: (input: any, options: any) => DateSliderModel;
+        constructor(parse: (input: any, options: any) => DateSliderModel);
     }
 }
 declare module DateSlider.Parser {

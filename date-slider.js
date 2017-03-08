@@ -74,11 +74,14 @@ var DateSlider;
             this.sliders = DateSlider.Slider.SliderInstance.createAll(options);
             var wrapper = this.createWrapper(this.sliders);
             element.parentNode.replaceChild(wrapper, element);
+            this.bindParser();
+            this.bindFormatter();
         }
         DateSliderInstance.prototype.getValue = function () {
-            return null;
+            return this.formatter.format(this.value, this.options.formatterOptions);
         };
         DateSliderInstance.prototype.setValue = function (input) {
+            this.value = this.parser.parse(input, this.options.parserOptions);
         };
         DateSliderInstance.prototype.getOptions = function () {
             return this.options;
@@ -86,6 +89,50 @@ var DateSlider;
         DateSliderInstance.prototype.setOptions = function () {
         };
         DateSliderInstance.prototype.on = function (eventName, callback) {
+        };
+        DateSliderInstance.prototype.bindFormatter = function () {
+            if (typeof this.options.formatter === "string") {
+                switch (this.options.formatter) {
+                    case "timestamp":
+                        this.formatter = new DateSlider.Formatter.UnixTimestampFormatter();
+                        break;
+                    // TODO
+                    case "date":
+                        break;
+                    case "string":
+                        break;
+                    default:
+                        throw new Error("DateSlider.create(): Invalid formatter.");
+                }
+            }
+            else if (typeof this.options.formatter === "function") {
+                this.formatter = new DateSlider.Formatter.CustomFormatter(this.options.formatter);
+            }
+            else {
+                throw new Error("DateSlider.create(): Invalid formatter.");
+            }
+        };
+        DateSliderInstance.prototype.bindParser = function () {
+            if (typeof this.options.parser === "string") {
+                switch (this.options.parser) {
+                    case "timestamp":
+                        this.parser = new DateSlider.Parser.UnixTimestampParser();
+                        break;
+                    // TODO
+                    case "date":
+                        break;
+                    case "string":
+                        break;
+                    default:
+                        throw new Error("DateSlider.create(): Invalid parser.");
+                }
+            }
+            else if (typeof this.options.parser === "function") {
+                this.parser = new DateSlider.Parser.CustomParser(this.options.parser);
+            }
+            else {
+                throw new Error("DateSlider.create(): Invalid parser.");
+            }
         };
         DateSliderInstance.prototype.createWrapper = function (sliders) {
             var fragment = document.createDocumentFragment();
@@ -154,6 +201,20 @@ var DateSlider;
     // instance.refresh
     // on creation getter setter for outside model
     // Unable to preventDefault inside passive event listener due to target being treated as passive. See https://www.chromestatus.com/features/5093566007214080
+})(DateSlider || (DateSlider = {}));
+"use strict";
+var DateSlider;
+(function (DateSlider) {
+    var Formatter;
+    (function (Formatter) {
+        var CustomFormatter = (function () {
+            function CustomFormatter(format) {
+                this.format = format;
+            }
+            return CustomFormatter;
+        }());
+        Formatter.CustomFormatter = CustomFormatter;
+    })(Formatter = DateSlider.Formatter || (DateSlider.Formatter = {}));
 })(DateSlider || (DateSlider = {}));
 "use strict";
 var DateSlider;
@@ -235,6 +296,20 @@ var DateSlider;
         }());
         Formatter.UnixTimestampFormatter = UnixTimestampFormatter;
     })(Formatter = DateSlider.Formatter || (DateSlider.Formatter = {}));
+})(DateSlider || (DateSlider = {}));
+"use strict";
+var DateSlider;
+(function (DateSlider) {
+    var Parser;
+    (function (Parser) {
+        var CustomParser = (function () {
+            function CustomParser(parse) {
+                this.parse = parse;
+            }
+            return CustomParser;
+        }());
+        Parser.CustomParser = CustomParser;
+    })(Parser = DateSlider.Parser || (DateSlider.Parser = {}));
 })(DateSlider || (DateSlider = {}));
 "use strict";
 var DateSlider;

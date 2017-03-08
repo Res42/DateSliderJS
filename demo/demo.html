@@ -29,6 +29,10 @@
 
         <script type="text/javascript">
             var options = {
+                parser: "timestamp",
+                parserOptions: { type: "seconds" },
+                formatter: "timestamp",
+                formatterOptions: { type: "seconds" },
                 sliders: [{
                     type: "month", 
                     callback: { 
@@ -48,6 +52,10 @@
             });
 
             var options2 = {
+                parser: "timestamp",
+                parserOptions: { type: "seconds" },
+                formatter: "timestamp",
+                formatterOptions: { type: "seconds" },
                 sliders: [{
                     type: "month", 
                     template: document.getElementById("template")
