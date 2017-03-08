@@ -39,7 +39,7 @@ module DateSlider.Slider {
                 this.onValueChangeEvent.register(options.callback.onValueChanged);
             }
 
-            this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(null, this.range.getValue));
+            this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(null, this.range.value));
 
             if (this.options.template instanceof HTMLElement) {
                 this.bootstrapSliderToTemplate();
@@ -51,13 +51,13 @@ module DateSlider.Slider {
         }
 
         public getValue(): number {
-            return this.range.getValue;
+            return this.range.value;
         }
 
         public setValue(value: number): void {
-            let oldValue = this.range.getValue;
-            this.range.setValue(value);
-            let newValue = this.range.getValue;
+            let oldValue = this.range.value;
+            this.range.value = value;
+            let newValue = this.range.value;
             this.updateHandlePosition();
             this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(oldValue, newValue));
         }
@@ -179,7 +179,7 @@ module DateSlider.Slider {
                 };
             };
 
-            let ratioInSlider = this.range.getRatio();
+            let ratioInSlider = this.range.ratio;
             let startPosition = calculateCenterPosition(this.sliderLineStart);
             let endPosition = calculateCenterPosition(this.sliderLineEnd);
 

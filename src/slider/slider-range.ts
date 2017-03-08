@@ -1,24 +1,54 @@
 module DateSlider.Slider {
     export class SliderRange {
-        public get getValue() { return this.value; };
-        public get getMinimum() { return this.minimum; };
-        public get getMaximum() { return this.maximum; };
-
         constructor(
-            private minimum: number,
-            private maximum: number,
-            private value?: number,
+            private _minimum: number,
+            private _maximum: number,
+            private _value?: number,
         ) {
-            if (typeof value === "undefined" || value === null) {
-                this.value = this.minimum;
+            if (this._minimum === this._maximum) {
+                throw new Error("Range minimum cannot be equal as maximum.");
+            }
+
+            if (typeof this._value === "undefined" || this._value === null) {
+                this._value = this._minimum;
             }
         }
 
-        public getRatio() {
+        public get ratio() {
             return (this.value - this.minimum) / (this.maximum - this.minimum);
         }
 
-        public setValue(value: number) {
+        public get minimum() { return this._minimum; };
+
+        public set minimum(minimum: number) {
+            if (this._maximum <= minimum) {
+                throw new Error("Range minimum cannot be >= maximum.");
+            }
+
+            if (minimum > this._value) {
+                this._value = minimum;
+            }
+
+            this._maximum = minimum;
+        }
+
+        public get maximum() { return this._maximum; };
+
+        public set maximum(maximum: number) {
+            if (this._minimum >= maximum) {
+                throw new Error("Range maximum cannot be <= minimum.");
+            }
+
+            if (maximum < this._value) {
+                this._value = maximum;
+            }
+
+            this._maximum = maximum;
+        }
+
+        public get value() { return this._value; };
+
+        public set value(value: number) {
             if (typeof value !== "number") {
                 throw new Error("SliderRange.setValue(value): value is not a number");
             }

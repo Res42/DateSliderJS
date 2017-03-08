@@ -148,7 +148,6 @@ var DateSlider;
     }
     // TODO
     // Date.parse() or write own implementation to parse from formats -> own
-    // check if sliders move with touch events
     // test range, division with zero
     // demo: out of the box, full customization
     // timestamp parse/format
@@ -350,7 +349,7 @@ var DateSlider;
                 if (options.callback && options.callback.onValueChanged) {
                     this.onValueChangeEvent.register(options.callback.onValueChanged);
                 }
-                this.onValueChangeEvent.fire(new Slider.Context.SliderValueChangeContext(null, this.range.getValue));
+                this.onValueChangeEvent.fire(new Slider.Context.SliderValueChangeContext(null, this.range.value));
                 if (this.options.template instanceof HTMLElement) {
                     this.bootstrapSliderToTemplate();
                 }
@@ -379,12 +378,12 @@ var DateSlider;
                 }
             };
             SliderInstance.prototype.getValue = function () {
-                return this.range.getValue;
+                return this.range.value;
             };
             SliderInstance.prototype.setValue = function (value) {
-                var oldValue = this.range.getValue;
-                this.range.setValue(value);
-                var newValue = this.range.getValue;
+                var oldValue = this.range.value;
+                this.range.value = value;
+                var newValue = this.range.value;
                 this.updateHandlePosition();
                 this.onValueChangeEvent.fire(new Slider.Context.SliderValueChangeContext(oldValue, newValue));
             };
@@ -459,7 +458,7 @@ var DateSlider;
                             + element.offsetHeight / 2,
                     };
                 };
-                var ratioInSlider = this.range.getRatio();
+                var ratioInSlider = this.range.ratio;
                 var startPosition = calculateCenterPosition(this.sliderLineStart);
                 var endPosition = calculateCenterPosition(this.sliderLineEnd);
                 // start the handle at the start
@@ -485,49 +484,74 @@ var DateSlider;
     var Slider;
     (function (Slider) {
         var SliderRange = (function () {
-            function SliderRange(minimum, maximum, value) {
-                this.minimum = minimum;
-                this.maximum = maximum;
-                this.value = value;
-                if (typeof value === "undefined" || value === null) {
-                    this.value = this.minimum;
+            function SliderRange(_minimum, _maximum, _value) {
+                this._minimum = _minimum;
+                this._maximum = _maximum;
+                this._value = _value;
+                if (this._minimum === this._maximum) {
+                    throw new Error("Range minimum cannot be equal as maximum.");
+                }
+                if (typeof this._value === "undefined" || this._value === null) {
+                    this._value = this._minimum;
                 }
             }
-            Object.defineProperty(SliderRange.prototype, "getValue", {
-                get: function () { return this.value; },
+            Object.defineProperty(SliderRange.prototype, "ratio", {
+                get: function () {
+                    return (this.value - this.minimum) / (this.maximum - this.minimum);
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(SliderRange.prototype, "minimum", {
+                get: function () { return this._minimum; },
+                set: function (minimum) {
+                    if (this._maximum <= minimum) {
+                        throw new Error("Range minimum cannot be >= maximum.");
+                    }
+                    if (minimum > this._value) {
+                        this._value = minimum;
+                    }
+                    this._maximum = minimum;
+                },
                 enumerable: true,
                 configurable: true
             });
             ;
-            Object.defineProperty(SliderRange.prototype, "getMinimum", {
-                get: function () { return this.minimum; },
+            Object.defineProperty(SliderRange.prototype, "maximum", {
+                get: function () { return this._maximum; },
+                set: function (maximum) {
+                    if (this._minimum >= maximum) {
+                        throw new Error("Range maximum cannot be <= minimum.");
+                    }
+                    if (maximum < this._value) {
+                        this._value = maximum;
+                    }
+                    this._maximum = maximum;
+                },
                 enumerable: true,
                 configurable: true
             });
             ;
-            Object.defineProperty(SliderRange.prototype, "getMaximum", {
-                get: function () { return this.maximum; },
+            Object.defineProperty(SliderRange.prototype, "value", {
+                get: function () { return this._value; },
+                set: function (value) {
+                    if (typeof value !== "number") {
+                        throw new Error("SliderRange.setValue(value): value is not a number");
+                    }
+                    if (value < this.minimum) {
+                        this.value = this.minimum;
+                    }
+                    else if (value > this.maximum) {
+                        this.value = this.maximum;
+                    }
+                    else {
+                        this.value = value;
+                    }
+                },
                 enumerable: true,
                 configurable: true
             });
             ;
-            SliderRange.prototype.getRatio = function () {
-                return (this.value - this.minimum) / (this.maximum - this.minimum);
-            };
-            SliderRange.prototype.setValue = function (value) {
-                if (typeof value !== "number") {
-                    throw new Error("SliderRange.setValue(value): value is not a number");
-                }
-                if (value < this.minimum) {
-                    this.value = this.minimum;
-                }
-                else if (value > this.maximum) {
-                    this.value = this.maximum;
-                }
-                else {
-                    this.value = value;
-                }
-            };
             SliderRange.prototype.increment = function (by) {
                 if (by === void 0) { by = 1; }
                 if (typeof by !== "number") {

@@ -207,15 +207,14 @@ declare module DateSlider.Slider {
 }
 declare module DateSlider.Slider {
     class SliderRange {
-        private minimum;
-        private maximum;
-        private value;
-        readonly getValue: number;
-        readonly getMinimum: number;
-        readonly getMaximum: number;
-        constructor(minimum: number, maximum: number, value?: number);
-        getRatio(): number;
-        setValue(value: number): void;
+        private _minimum;
+        private _maximum;
+        private _value;
+        constructor(_minimum: number, _maximum: number, _value?: number);
+        readonly ratio: number;
+        minimum: number;
+        maximum: number;
+        value: number;
         increment(by?: number): void;
         decrement(by?: number): void;
     }
