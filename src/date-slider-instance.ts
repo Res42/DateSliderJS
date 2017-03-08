@@ -46,10 +46,11 @@ module DateSlider {
                     case "timestamp":
                         this.formatter = new Formatter.UnixTimestampFormatter();
                         break;
-                    // TODO
                     case "date":
+                        this.formatter = new Formatter.DateFormatter();
                         break;
                     case "string":
+                        this.formatter = new Formatter.StringFormatter();
                         break;
                     default:
                         throw new Error("DateSlider.create(): Invalid formatter.");
@@ -67,10 +68,11 @@ module DateSlider {
                     case "timestamp":
                         this.parser = new Parser.UnixTimestampParser();
                         break;
-                    // TODO
                     case "date":
+                        this.parser = new Parser.DateParser();
                         break;
                     case "string":
+                        this.parser = new Parser.StringParser();
                         break;
                     default:
                         throw new Error("DateSlider.create(): Invalid parser.");

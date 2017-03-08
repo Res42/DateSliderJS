@@ -96,10 +96,11 @@ var DateSlider;
                     case "timestamp":
                         this.formatter = new DateSlider.Formatter.UnixTimestampFormatter();
                         break;
-                    // TODO
                     case "date":
+                        this.formatter = new DateSlider.Formatter.DateFormatter();
                         break;
                     case "string":
+                        this.formatter = new DateSlider.Formatter.StringFormatter();
                         break;
                     default:
                         throw new Error("DateSlider.create(): Invalid formatter.");
@@ -118,10 +119,11 @@ var DateSlider;
                     case "timestamp":
                         this.parser = new DateSlider.Parser.UnixTimestampParser();
                         break;
-                    // TODO
                     case "date":
+                        this.parser = new DateSlider.Parser.DateParser();
                         break;
                     case "string":
+                        this.parser = new DateSlider.Parser.StringParser();
                         break;
                     default:
                         throw new Error("DateSlider.create(): Invalid parser.");
