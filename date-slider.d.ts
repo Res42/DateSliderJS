@@ -51,7 +51,7 @@ declare module DateSlider {
     }
 }
 declare module DateSlider {
-    type DateSliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged" | "onPopupBeforeOpen" | "onPopupAfterOpen" | "onPopupBeforeClose" | "onPopupAfterClose";
+    type DateSliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
     interface DateSliderOptions {
         culture?: string;
         sliders?: SliderOptions[];

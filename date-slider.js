@@ -148,7 +148,7 @@ var DateSlider;
     }
     // TODO
     // Date.parse() or write own implementation to parse from formats -> own
-    // test range, division with zero
+    // test range
     // demo: out of the box, full customization
     // timestamp parse/format
     // instance.refresh
@@ -228,7 +228,8 @@ var DateSlider;
              * Formats a unix timestamp (in seconds) from a DateSliderModel object.
              */
             UnixTimestampFormatter.prototype.format = function (input, options) {
-                return 0;
+                var timestampInMs = Date.UTC(input.model.year, input.model.month - 1, input.model.day, input.model.hour, input.model.minute, input.model.second, 0);
+                return timestampInMs / (options.type === "seconds" ? 1000 : 1);
             };
             return UnixTimestampFormatter;
         }());

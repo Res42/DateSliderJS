@@ -13,18 +13,18 @@ module DateSliderTest.Integration.ParseFormat {
         });
 
         let runs = [
-            { input: -31536000, output: -31536000, description: "Valid timestamp: negative." },
-            { input: 0,         output: 0,         description: "Valid timestamp." },
-            { input: 946684800, output: 946684800, description: "Valid timestamp." },
-            { input: 978220800, output: 978220800, description: "Valid timestamp." },
-            { input: 946729830, output: 946729830, description: "Valid timestamp." },
-            { input: 946771199, output: 946771199, description: "Valid timestamp." },
+            { input: -31536000, description: "Valid timestamp: negative." },
+            { input: 0,         description: "Valid timestamp." },
+            { input: 946684800, description: "Valid timestamp." },
+            { input: 978220800, description: "Valid timestamp." },
+            { input: 946729830, description: "Valid timestamp." },
+            { input: 946771199, description: "Valid timestamp." },
         ];
 
-        // runs.forEach((run) => {
-        //     it(run.description, () => {
-        //         expect(formatter.format(parser.parse(run.input, parserOptions), formatterOptions)).toEqual(run.output);
-        //     });
-        // });
+        runs.forEach((run) => {
+            it(run.description, () => {
+                expect(formatter.format(parser.parse(run.input, parserOptions), formatterOptions)).toEqual(run.input);
+            });
+        });
     });
 }

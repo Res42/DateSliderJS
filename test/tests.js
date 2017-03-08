@@ -12,23 +12,23 @@ var DateSliderTest;
                 secondOptions = new DateSlider.Formatter.UnixTimestampFormatterOptions("seconds");
             });
             var runs = [
-                { input: new DateSlider.DateSliderModel(new DateSlider.InnerModel(1969, 1, 1, 0, 0, 0), 0), output: -31536000000, description: "Valid model: negative timestamp." },
+                { input: new DateSlider.DateSliderModel(new DateSlider.InnerModel(1969, 1, 1, 0, 0, 0), 0), output: -31536000, description: "Valid model: negative timestamp." },
                 { input: new DateSlider.DateSliderModel(new DateSlider.InnerModel(1970, 1, 1, 0, 0, 0), 0), output: 0, description: "Valid model." },
-                { input: new DateSlider.DateSliderModel(new DateSlider.InnerModel(2000, 1, 1, 0, 0, 0), 0), output: 946684800000, description: "Valid model." },
-                { input: new DateSlider.DateSliderModel(new DateSlider.InnerModel(2000, 12, 31, 0, 0, 0), 0), output: 978220800000, description: "Valid model." },
-                { input: new DateSlider.DateSliderModel(new DateSlider.InnerModel(2000, 1, 1, 12, 30, 30), 0), output: 946729830000, description: "Valid model." },
-                { input: new DateSlider.DateSliderModel(new DateSlider.InnerModel(2000, 1, 1, 23, 59, 59), 0), output: 946771199000, description: "Valid model." },
+                { input: new DateSlider.DateSliderModel(new DateSlider.InnerModel(2000, 1, 1, 0, 0, 0), 0), output: 946684800, description: "Valid model." },
+                { input: new DateSlider.DateSliderModel(new DateSlider.InnerModel(2000, 12, 31, 0, 0, 0), 0), output: 978220800, description: "Valid model." },
+                { input: new DateSlider.DateSliderModel(new DateSlider.InnerModel(2000, 1, 1, 12, 30, 30), 0), output: 946729830, description: "Valid model." },
+                { input: new DateSlider.DateSliderModel(new DateSlider.InnerModel(2000, 1, 1, 23, 59, 59), 0), output: 946771199, description: "Valid model." },
             ];
-            // runs.forEach((run) => {
-            //     it(run.description, () => {
-            //         expect(formatter.format(run.input, secondOptions)).toBe(run.output);
-            //     });
-            // });
-            // runs.forEach((run) => {
-            //     it(run.description, () => {
-            //         expect(formatter.format(run.input, msOptions)).toBe(run.output * 1000);
-            //     });
-            // });
+            runs.forEach(function (run) {
+                it(run.description, function () {
+                    expect(formatter.format(run.input, secondOptions)).toEqual(run.output);
+                });
+            });
+            runs.forEach(function (run) {
+                it(run.description, function () {
+                    expect(formatter.format(run.input, msOptions)).toEqual(run.output * 1000);
+                });
+            });
         });
     })(Formatter = DateSliderTest.Formatter || (DateSliderTest.Formatter = {}));
 })(DateSliderTest || (DateSliderTest = {}));
@@ -50,18 +50,21 @@ var DateSliderTest;
                     formatterOptions = new DateSlider.Formatter.UnixTimestampFormatterOptions("milliseconds");
                 });
                 var runs = [
-                    { input: -31536000, output: -31536000, description: "Valid timestamp: negative." },
+                    { input: -31536000000, output: -31536000000, description: "Valid timestamp: negative." },
                     { input: 0, output: 0, description: "Valid timestamp." },
-                    { input: 946684800, output: 946684800, description: "Valid timestamp." },
-                    { input: 978220800, output: 978220800, description: "Valid timestamp." },
-                    { input: 946729830, output: 946729830, description: "Valid timestamp." },
-                    { input: 946771199, output: 946771199, description: "Valid timestamp." },
+                    { input: 946684800000, output: 946684800000, description: "Valid timestamp." },
+                    { input: 978220800000, output: 978220800000, description: "Valid timestamp." },
+                    { input: 946729830000, output: 946729830000, description: "Valid timestamp." },
+                    { input: 946771199000, output: 946771199000, description: "Valid timestamp." },
+                    { input: 946771199542, output: 946771199000, description: "Valid timestamp: rounding down milliseconds > 500." },
+                    { input: 946771199500, output: 946771199000, description: "Valid timestamp: rounding down milliseconds = 500." },
+                    { input: 946771199042, output: 946771199000, description: "Valid timestamp: rounding down milliseconds < 500." },
                 ];
-                // runs.forEach((run) => {
-                //     it(run.description, () => {
-                //         expect(formatter.format(parser.parse(run.input, parserOptions), formatterOptions)).toBe(run.input);
-                //     });
-                // });
+                runs.forEach(function (run) {
+                    it(run.description, function () {
+                        expect(formatter.format(parser.parse(run.input, parserOptions), formatterOptions)).toEqual(run.output);
+                    });
+                });
             });
         })(ParseFormat = Integration.ParseFormat || (Integration.ParseFormat = {}));
     })(Integration = DateSliderTest.Integration || (DateSliderTest.Integration = {}));
@@ -84,18 +87,18 @@ var DateSliderTest;
                     formatterOptions = new DateSlider.Formatter.UnixTimestampFormatterOptions("seconds");
                 });
                 var runs = [
-                    { input: -31536000, output: -31536000, description: "Valid timestamp: negative." },
-                    { input: 0, output: 0, description: "Valid timestamp." },
-                    { input: 946684800, output: 946684800, description: "Valid timestamp." },
-                    { input: 978220800, output: 978220800, description: "Valid timestamp." },
-                    { input: 946729830, output: 946729830, description: "Valid timestamp." },
-                    { input: 946771199, output: 946771199, description: "Valid timestamp." },
+                    { input: -31536000, description: "Valid timestamp: negative." },
+                    { input: 0, description: "Valid timestamp." },
+                    { input: 946684800, description: "Valid timestamp." },
+                    { input: 978220800, description: "Valid timestamp." },
+                    { input: 946729830, description: "Valid timestamp." },
+                    { input: 946771199, description: "Valid timestamp." },
                 ];
-                // runs.forEach((run) => {
-                //     it(run.description, () => {
-                //         expect(formatter.format(parser.parse(run.input, parserOptions), formatterOptions)).toBe(run.output);
-                //     });
-                // });
+                runs.forEach(function (run) {
+                    it(run.description, function () {
+                        expect(formatter.format(parser.parse(run.input, parserOptions), formatterOptions)).toEqual(run.input);
+                    });
+                });
             });
         })(ParseFormat = Integration.ParseFormat || (Integration.ParseFormat = {}));
     })(Integration = DateSliderTest.Integration || (DateSliderTest.Integration = {}));
@@ -141,7 +144,7 @@ var DateSliderTest;
             ];
             // runs.forEach((run) => {
             //     it(run.description, () => {
-            //         expect(parser.parse(run.input, utcOptions).model).toBe(run.output);
+            //         expect(parser.parse(run.input, utcOptions).model).toEqual(run.output);
             //     });
             // });
         });
@@ -182,7 +185,7 @@ var DateSliderTest;
             ];
             // runs.forEach((run) => {
             //     it(run.description, () => {
-            //         expect(parser.parse(run.input, run.options).model).toBe(run.output);
+            //         expect(parser.parse(run.input, run.options).model).toEqual(run.output);
             //     });
             // });
         });
