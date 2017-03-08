@@ -10,11 +10,9 @@ module DateSlider {
             if (!element || !element.parentNode) {
                 throw new Error("DateSlider.create(): Given HTML element is invalid.");
             }
-            if (options.appendTo === "replaceElement") {
-                this.sliders = Slider.SliderInstance.createAll(options);
-                let wrapper = this.createWrapper(this.sliders);
-                element.parentNode.replaceChild(wrapper, element);
-            }
+            this.sliders = Slider.SliderInstance.createAll(options);
+            let wrapper = this.createWrapper(this.sliders);
+            element.parentNode.replaceChild(wrapper, element);
         }
 
         public getValue(): any {

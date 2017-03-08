@@ -5,8 +5,6 @@ module DateSlider {
     export interface DateSliderOptions {
         culture?: string;
         sliders?: SliderOptions[];
-        appendTo?: "body" | "replaceElement" | "afterElement" | "insideElement" | "onElement";
-        displayType?: "popup" | "inline";
         parser?: "timestamp" | "string" | "date" | ((input: any, options: any) => DateSliderModel);
         parserOptions?: any;
         formatter?: "timestamp" | "string" | "date" | ((input: DateSliderModel, options: any) => any);

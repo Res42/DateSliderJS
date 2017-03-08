@@ -14,9 +14,21 @@
         <div id="demo1" class="this-will-be-deleted"></div>
         <input type="number" id="model" />
 
+        <div id="demo2"></div>
+
+        <div style="display: none">
+            <div id="template" class="slider-template">
+                <div class="slider-control-template" style="width: 500px; height: 400px; position: relative">
+                    <img class="slider-handle-template" src="https://www.iconexperience.com/_img/g_collection_png/standard/48x48/dog.png">
+                    <div class="slider-control-start-template" style="position: absolute; top: 100px; right: 100px;">HÁZ</div>
+                    <div class="slider-control-end-template" style="position: absolute; bottom: 100px; left: 100px;">CSONT</div>
+                </div>
+            </div>
+        </div>
+        
+
         <script type="text/javascript">
             var options = {
-                appendTo: "replaceElement", 
                 sliders: [{
                     type: "month", 
                     callback: { 
@@ -34,6 +46,14 @@
             document.getElementById("model").addEventListener("change", function(event) {
                 instance.sliders[0].setValue(parseInt(event.currentTarget.value));
             });
+
+            var options2 = {
+                sliders: [{
+                    type: "month", 
+                    template: document.getElementById("template")
+                }]
+            };
+            var instance2 = DateSlider.create(document.getElementById("demo2"), options2);
         </script>
     </body>
 </html>

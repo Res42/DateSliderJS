@@ -55,8 +55,6 @@ declare module DateSlider {
     interface DateSliderOptions {
         culture?: string;
         sliders?: SliderOptions[];
-        appendTo?: "body" | "replaceElement" | "afterElement" | "insideElement";
-        displayType?: "popup" | "inline";
         parser?: "timestamp" | "string" | "date" | ((input: any, options: any) => DateSliderModel);
         parserOptions?: any;
         formatter?: "timestamp" | "string" | "date" | ((input: DateSliderModel, options: any) => any);
@@ -76,7 +74,7 @@ declare module DateSlider {
             footer?: string;
             sliderBox?: string;
             valueDisplay?: string;
-        };
+        } | HTMLElement;
         callback?: {
             onValueChanged?: (context: DateSliderEventContext) => void;
             onSliderBoxGrabbed?: (context: DateSliderEventContext) => void;
@@ -181,22 +179,29 @@ declare module DateSlider.Parser {
 declare module DateSlider.Slider {
     class SliderInstance {
         private options;
-        element: HTMLDivElement;
-        private sliderElement;
-        private sliderLineElement;
-        private handleElement;
         private range;
+        element: HTMLElement;
+        private sliderElement;
+        private sliderLineStart;
+        private sliderLineElement;
+        private sliderLineEnd;
+        private handleElement;
+        private observer?;
         private onValueChangeEvent;
         static createAll(options: DateSliderOptions): SliderInstance[];
-        constructor(options: SliderOptions);
+        private static getRangeFromType(sliderOptions);
+        constructor(options: SliderOptions, range: SliderRange);
         getValue(): number;
         setValue(value: number): void;
+        private bootstrapSliderToTemplate();
+        private findElementInSlider(className);
         private createSliderElement();
-        private registerHandleListeners();
+        private registerListeners();
+        private destroy;
         private handleMouseDown;
         private handleMouseUp;
         private handleMouseMove;
-        private updateHandlePosition();
+        private updateHandlePosition;
         private calculateHandlePosition();
     }
 }

@@ -71,11 +71,9 @@ var DateSlider;
             if (!element || !element.parentNode) {
                 throw new Error("DateSlider.create(): Given HTML element is invalid.");
             }
-            if (options.appendTo === "replaceElement") {
-                this.sliders = DateSlider.Slider.SliderInstance.createAll(options);
-                var wrapper = this.createWrapper(this.sliders);
-                element.parentNode.replaceChild(wrapper, element);
-            }
+            this.sliders = DateSlider.Slider.SliderInstance.createAll(options);
+            var wrapper = this.createWrapper(this.sliders);
+            element.parentNode.replaceChild(wrapper, element);
         }
         DateSliderInstance.prototype.getValue = function () {
             return null;
@@ -150,7 +148,12 @@ var DateSlider;
     }
     // TODO
     // Date.parse() or write own implementation to parse from formats -> own
-    // next week -> create demo page, create DOM elements, hooks
+    // check if sliders move with touch events
+    // test range, division with zero
+    // demo: out of the box, full customization
+    // timestamp parse/format
+    // instance.refresh
+    // on creation getter setter for outside model
 })(DateSlider || (DateSlider = {}));
 "use strict";
 var DateSlider;
@@ -310,10 +313,20 @@ var DateSlider;
     var Slider;
     (function (Slider) {
         var SliderInstance = (function () {
-            function SliderInstance(options) {
+            function SliderInstance(options, range) {
                 var _this = this;
                 this.options = options;
+                this.range = range;
                 this.onValueChangeEvent = new DateSlider.DateSliderEventHandler();
+                this.destroy = function () {
+                    window.removeEventListener("mouseup", _this.handleMouseUp, false);
+                    window.removeEventListener("load", _this.updateHandlePosition);
+                    window.removeEventListener("resize", _this.updateHandlePosition);
+                    window.removeEventListener("mousemove", _this.handleMouseMove, true);
+                    if (_this.observer) {
+                        _this.observer.disconnect();
+                    }
+                };
                 this.handleMouseDown = function () {
                     window.addEventListener("mousemove", _this.handleMouseMove, true);
                 };
@@ -323,15 +336,23 @@ var DateSlider;
                 this.handleMouseMove = function () {
                     // TODO
                 };
-                this.onValueChangeEvent.register(options.callback.onValueChanged);
-                switch (this.options.type) {
-                    case "month":
-                        this.range = new Slider.SliderRange(1, 12);
-                        break;
+                this.updateHandlePosition = function () {
+                    var position = _this.calculateHandlePosition();
+                    _this.handleElement.style.position = "absolute";
+                    _this.handleElement.style.left = position.x + "px";
+                    _this.handleElement.style.top = position.y + "px";
+                };
+                if (options.callback && options.callback.onValueChanged) {
+                    this.onValueChangeEvent.register(options.callback.onValueChanged);
                 }
                 this.onValueChangeEvent.fire(new Slider.Context.SliderValueChangeContext(null, this.range.getValue));
-                this.createSliderElement();
-                this.registerHandleListeners();
+                if (this.options.template instanceof HTMLElement) {
+                    this.bootstrapSliderToTemplate();
+                }
+                else {
+                    this.createSliderElement();
+                }
+                this.registerListeners();
             }
             SliderInstance.createAll = function (options) {
                 if (!options.sliders) {
@@ -340,9 +361,17 @@ var DateSlider;
                 var sliders = [];
                 for (var _i = 0, _a = options.sliders; _i < _a.length; _i++) {
                     var sliderOptions = _a[_i];
-                    sliders.push(new SliderInstance(sliderOptions));
+                    sliders.push(new SliderInstance(sliderOptions, this.getRangeFromType(sliderOptions)));
                 }
                 return sliders;
+            };
+            SliderInstance.getRangeFromType = function (sliderOptions) {
+                switch (sliderOptions.type) {
+                    case "month":
+                        return new Slider.SliderRange(1, 12);
+                    default:
+                        throw new Error("SliderOptions.type is not valid.");
+                }
             };
             SliderInstance.prototype.getValue = function () {
                 return this.range.getValue;
@@ -354,39 +383,89 @@ var DateSlider;
                 this.updateHandlePosition();
                 this.onValueChangeEvent.fire(new Slider.Context.SliderValueChangeContext(oldValue, newValue));
             };
+            SliderInstance.prototype.bootstrapSliderToTemplate = function () {
+                this.element = this.options.template.cloneNode(true);
+                this.sliderElement = this.findElementInSlider("slider-control-template");
+                this.handleElement = this.findElementInSlider("slider-handle-template");
+                this.sliderLineStart = this.findElementInSlider("slider-control-start-template");
+                this.sliderLineEnd = this.findElementInSlider("slider-control-end-template");
+            };
+            SliderInstance.prototype.findElementInSlider = function (className) {
+                var found = this.element.getElementsByClassName(className);
+                if (found.length > 0) {
+                    return found[0];
+                }
+                throw new Error("Cannot find DOM element with class: '" + className + "' in the template.");
+            };
             SliderInstance.prototype.createSliderElement = function () {
-                var _this = this;
                 this.element = document.createElement("div");
                 this.element.classList.add("slider");
                 this.sliderElement = document.createElement("div");
                 this.sliderElement.classList.add("slider-control");
+                this.sliderLineStart = document.createElement("div");
+                this.sliderLineStart.classList.add("slider-control-start");
                 this.sliderLineElement = document.createElement("div");
                 this.sliderLineElement.classList.add("slider-control-line");
+                this.sliderLineEnd = document.createElement("div");
+                this.sliderLineEnd.classList.add("slider-control-end");
                 this.handleElement = document.createElement("div");
                 this.handleElement.classList.add("slider-handle");
-                window.addEventListener("load", function () {
-                    _this.updateHandlePosition();
-                });
-                window.addEventListener("resize", function () {
-                    _this.updateHandlePosition();
-                });
+                this.sliderElement.appendChild(this.sliderLineStart);
                 this.sliderElement.appendChild(this.sliderLineElement);
+                this.sliderElement.appendChild(this.sliderLineEnd);
                 this.sliderElement.appendChild(this.handleElement);
                 this.element.appendChild(this.sliderElement);
             };
-            SliderInstance.prototype.registerHandleListeners = function () {
+            SliderInstance.prototype.registerListeners = function () {
+                var _this = this;
                 this.handleElement.addEventListener("mousedown", this.handleMouseDown, false);
                 window.addEventListener("mouseup", this.handleMouseUp, false);
-            };
-            SliderInstance.prototype.updateHandlePosition = function () {
-                this.handleElement.style.left = this.calculateHandlePosition() + "px";
+                window.addEventListener("load", this.updateHandlePosition);
+                window.addEventListener("resize", this.updateHandlePosition);
+                if (window.MutationObserver && this.element.parentNode) {
+                    this.observer = new MutationObserver(function (mutations) {
+                        var isTargetRemoved = mutations.some(function (mutation) {
+                            for (var i = 0; i < mutation.removedNodes.length; i++) {
+                                if (mutation.removedNodes[i] === _this.element) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        });
+                        if (isTargetRemoved) {
+                            _this.destroy();
+                        }
+                    });
+                    this.observer.observe(this.element.parentNode, { childList: true, subtree: true });
+                }
+                else {
+                    this.element.addEventListener("DOMNodeRemoved", this.destroy, false);
+                }
             };
             SliderInstance.prototype.calculateHandlePosition = function () {
+                // calculates the center of an absolute positioned element
+                var calculateCenterPosition = function (element) {
+                    return {
+                        x: element.offsetLeft
+                            + element.offsetWidth / 2,
+                        y: element.offsetTop
+                            + element.offsetHeight / 2,
+                    };
+                };
                 var ratioInSlider = this.range.getRatio();
-                var leftOffset = this.sliderLineElement.offsetLeft // start the handle at the start of the line
-                    - this.handleElement.offsetWidth / 2 // but the handle's center should be at the start of the line
-                    + this.sliderLineElement.offsetWidth * ratioInSlider; // the handle's position on the line by value (min: 0% -> max: 100%)
-                return leftOffset;
+                var startPosition = calculateCenterPosition(this.sliderLineStart);
+                var endPosition = calculateCenterPosition(this.sliderLineEnd);
+                // start the handle at the start
+                // the handle's center should be at the start, so it needs an adjustment
+                // finally, calculate the handle's position in the line by it's range value (min: 0% -> max: 100%)
+                return {
+                    x: startPosition.x
+                        - this.handleElement.offsetWidth / 2
+                        + (endPosition.x - startPosition.x) * ratioInSlider,
+                    y: startPosition.y
+                        - this.handleElement.offsetHeight / 2
+                        + (endPosition.y - startPosition.y) * ratioInSlider,
+                };
             };
             return SliderInstance;
         }());

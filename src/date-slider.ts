@@ -16,11 +16,8 @@ module DateSlider {
     // TODO
     // Date.parse() or write own implementation to parse from formats -> own
 
-    // on destroy remove listeners, events
     // check if sliders move with touch events
     // test range, division with zero
-    // HtmlElement instead of div, find elements if "onElement"
-    // template
     // demo: out of the box, full customization
     // timestamp parse/format
     // instance.refresh
