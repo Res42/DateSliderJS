@@ -151,8 +151,11 @@ module DateSlider.Slider {
         }
 
         private handleMouseDown = (e: MouseEvent | TouchEvent): void => {
-            // prevent default: for example to disable the default image dragging
-            e.preventDefault();
+            if (e instanceof MouseEvent) {
+                // prevent default: for example to disable the default image dragging
+                e.preventDefault();
+            }
+
             window.addEventListener("touchmove", this.events.touchmove, true);
             window.addEventListener("mousemove", this.events.mousemove, true);
 
@@ -171,16 +174,21 @@ module DateSlider.Slider {
         }
 
         private handleMouseMove = (e: MouseEvent | TouchEvent): void => {
-            // prevent default: for example to disable the default image dragging
-            e.preventDefault();
-            let pointEvent = (typeof (e as MouseEvent).clientX !== "undefined")
-                ? e as MouseEvent
-                : (e as TouchEvent).targetTouches[0];
+            let position: { x: number, y: number };
 
-            let position = {
-                x: pointEvent.clientX,
-                y: pointEvent.clientY,
-            };
+            if (e instanceof MouseEvent) {
+                // prevent default: for example to disable the default image dragging
+                e.preventDefault();
+                position = {
+                    x: e.clientX,
+                    y: e.clientY,
+                };
+            } else if (e instanceof TouchEvent) {
+                position = {
+                    x: e.targetTouches[0].clientX,
+                    y: e.targetTouches[0].clientY,
+                };
+            }
 
             // the ratio of the projection of the s->p vector on the s->e vector
             // imagagine that the /'s are orthogonal to the slider line

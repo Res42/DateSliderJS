@@ -262,6 +262,7 @@ var DateSlider;
     // instance.refresh
     // on creation getter setter for outside model
     // slider distance of mouse from handle -> slowness of steps
+    // touch events: stop scroll when moving the slider
 })(DateSlider || (DateSlider = {}));
 "use strict";
 "use strict";
@@ -483,8 +484,10 @@ var DateSlider;
                     window.removeEventListener("touchmove", _this.events.touchmove, true);
                 };
                 this.handleMouseDown = function (e) {
-                    // prevent default: for example to disable the default image dragging
-                    e.preventDefault();
+                    if (e instanceof MouseEvent) {
+                        // prevent default: for example to disable the default image dragging
+                        e.preventDefault();
+                    }
                     window.addEventListener("touchmove", _this.events.touchmove, true);
                     window.addEventListener("mousemove", _this.events.mousemove, true);
                     window.addEventListener("mouseup", _this.events.mouseup, false);
@@ -499,15 +502,21 @@ var DateSlider;
                     _this.onSliderHandleReleaseEvent.fire(null);
                 };
                 this.handleMouseMove = function (e) {
-                    // prevent default: for example to disable the default image dragging
-                    e.preventDefault();
-                    var pointEvent = (typeof e.clientX !== "undefined")
-                        ? e
-                        : e.targetTouches[0];
-                    var position = {
-                        x: pointEvent.clientX,
-                        y: pointEvent.clientY,
-                    };
+                    var position;
+                    if (e instanceof MouseEvent) {
+                        // prevent default: for example to disable the default image dragging
+                        e.preventDefault();
+                        position = {
+                            x: e.clientX,
+                            y: e.clientY,
+                        };
+                    }
+                    else if (e instanceof TouchEvent) {
+                        position = {
+                            x: e.targetTouches[0].clientX,
+                            y: e.targetTouches[0].clientY,
+                        };
+                    }
                     // the ratio of the projection of the s->p vector on the s->e vector
                     // imagagine that the /'s are orthogonal to the slider line
                     // |-----------

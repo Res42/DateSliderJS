@@ -20,4 +20,5 @@ module DateSlider {
     // instance.refresh
     // on creation getter setter for outside model
     // slider distance of mouse from handle -> slowness of steps
+    // touch events: stop scroll when moving the slider
 }
