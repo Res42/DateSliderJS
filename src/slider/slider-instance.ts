@@ -3,13 +3,23 @@ module DateSlider.Slider {
         public element: HTMLElement;
         private sliderElement: HTMLElement;
         private sliderLineStart: HTMLElement;
-        private sliderLineElement: HTMLDivElement;
+        private sliderLineElement?: HTMLDivElement;
         private sliderLineEnd: HTMLElement;
         private handleElement: HTMLElement;
-
-        private observer?: MutationObserver;
+        private valueContainerElement?: HTMLElement;
 
         private onValueChangeEvent = new DateSliderEventHandler();
+
+        private events = {
+            load: () => { this.updateHandlePosition(); this.updateValueDisplay(); },
+            mousedown: (e: MouseEvent) => this.handleMouseDown(e),
+            mousemove: (e: MouseEvent) => this.handleMouseMove(e),
+            mouseup: (e: MouseEvent) => this.handleMouseUp(e),
+            resize: () => this.updateHandlePosition(),
+            touchend: (e: TouchEvent) => this.handleMouseUp(e),
+            touchmove: (e: TouchEvent) => this.handleMouseMove(e),
+            touchstart: (e: TouchEvent) => this.handleMouseDown(e),
+        };
 
         public static createAll(options: DateSliderOptions): SliderInstance[] {
             if (!options.sliders) {
@@ -58,8 +68,18 @@ module DateSlider.Slider {
             let oldValue = this.range.value;
             this.range.value = value;
             let newValue = this.range.value;
+            this.updateValueDisplay();
             this.updateHandlePosition();
             this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(oldValue, newValue));
+        }
+
+        public destroy = (event?: Event): void => {
+            window.removeEventListener("mouseup", this.events.mouseup, false);
+            window.removeEventListener("touchend", this.events.touchend, false);
+            window.removeEventListener("load", this.events.load);
+            window.removeEventListener("resize", this.events.resize);
+            window.removeEventListener("mousemove", this.events.mousemove, true);
+            window.removeEventListener("touchmove", this.events.touchmove, true);
         }
 
         private bootstrapSliderToTemplate(): void {
@@ -69,14 +89,20 @@ module DateSlider.Slider {
             this.handleElement = this.findElementInSlider("slider-handle-template");
             this.sliderLineStart = this.findElementInSlider("slider-control-start-template");
             this.sliderLineEnd = this.findElementInSlider("slider-control-end-template");
+            this.valueContainerElement = this.findElementInSlider("slider-value-container-template", false);
         }
 
-        private findElementInSlider(className: string): HTMLElement {
+        private findElementInSlider(className: string, required = true): HTMLElement {
             let found = this.element.getElementsByClassName(className);
             if (found.length > 0) {
                 return found[0] as HTMLElement;
             }
-            throw new Error(`Cannot find DOM element with class: '${className}' in the template.`);
+
+            if (required) {
+                throw new Error(`Cannot find DOM element with class: '${className}' in the template.`);
+            }
+
+            return undefined;
         }
 
         private createSliderElement(): void {
@@ -98,6 +124,11 @@ module DateSlider.Slider {
             this.handleElement = document.createElement("div");
             this.handleElement.classList.add("slider-handle");
 
+            this.valueContainerElement = document.createElement("div");
+            this.valueContainerElement.classList.add("slider-value-container");
+
+            this.element.appendChild(this.valueContainerElement);
+
             this.sliderElement.appendChild(this.sliderLineStart);
             this.sliderElement.appendChild(this.sliderLineElement);
             this.sliderElement.appendChild(this.sliderLineEnd);
@@ -106,59 +137,52 @@ module DateSlider.Slider {
         }
 
         private registerListeners(): void {
-            this.handleElement.addEventListener("mousedown", this.handleMouseDown, false);
-            this.handleElement.addEventListener("touchstart", (e) => {this.handleMouseDown(); e.preventDefault(); }, false);
-            window.addEventListener("mouseup", this.handleMouseUp, false);
-            window.addEventListener("touchend", (e) => {this.handleMouseUp(); e.preventDefault(); }, false);
+            this.handleElement.addEventListener("mousedown", this.events.mousedown, false);
+            this.handleElement.addEventListener("touchstart", this.events.touchstart, false);
 
-            window.addEventListener("load", this.updateHandlePosition);
-            window.addEventListener("resize", this.updateHandlePosition);
+            window.addEventListener("load", this.events.load);
+            window.addEventListener("resize", this.events.resize);
+        }
 
-            if ((window as Window & { MutationObserver?: any}).MutationObserver && this.element.parentNode) {
-                this.observer = new MutationObserver((mutations) => {
-                    let isTargetRemoved = mutations.some((mutation) => {
-                        for (let i = 0; i < mutation.removedNodes.length; i++) {
-                            if (mutation.removedNodes[i] === this.element) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    });
-                    if (isTargetRemoved) {
-                        this.destroy();
-                    }
-                });
+        private handleMouseDown = (e: MouseEvent | TouchEvent): void => {
+            // prevent default: for example to disable the default image dragging
+            e.preventDefault();
+            window.addEventListener("touchmove", this.events.touchmove, true);
+            window.addEventListener("mousemove", this.events.mousemove, true);
 
-                this.observer.observe(this.element.parentNode, { childList: true, subtree: true });
-            } else {
-                this.element.addEventListener("DOMNodeRemoved", this.destroy, false);
+            window.addEventListener("mouseup", this.events.mouseup, false);
+            window.addEventListener("touchend", this.events.touchend, false);
+        }
+
+        private handleMouseUp = (e: MouseEvent | TouchEvent): void => {
+            window.removeEventListener("touchmove", this.events.touchmove, true);
+            window.removeEventListener("mousemove", this.events.mousemove, true);
+
+            window.removeEventListener("mouseup", this.events.mouseup, false);
+            window.removeEventListener("touchend", this.events.touchend, false);
+        }
+
+        private handleMouseMove = (e: MouseEvent | TouchEvent): void => {
+            // prevent default: for example to disable the default image dragging
+            e.preventDefault();
+            let pointEvent = (typeof (e as MouseEvent).screenX !== "undefined")
+                ? e as MouseEvent
+                : (e as TouchEvent).targetTouches[0];
+
+            let position = {
+                x: pointEvent.screenX,
+                y: pointEvent.screenY,
+            };
+
+            // this.handleElement.style.left = pointer.x + "px";
+            // this.handleElement.style.top = pointer.y + "px";
+            // this.setValue(5);
+        }
+
+        private updateValueDisplay = (): void => {
+            if (this.valueContainerElement) {
+                this.valueContainerElement.innerText = this.range.value.toString();
             }
-        }
-
-        private destroy = (): void => {
-            window.removeEventListener("mouseup", this.handleMouseUp, false);
-            window.addEventListener("touchend", (e) => {this.handleMouseUp(); e.preventDefault(); }, false);
-            window.removeEventListener("load", this.updateHandlePosition);
-            window.removeEventListener("resize", this.updateHandlePosition);
-            window.removeEventListener("mousemove", this.handleMouseMove, true);
-            window.removeEventListener("touchmove", (e) => {this.handleMouseMove(); e.preventDefault(); }, true);
-            if (this.observer) {
-                this.observer.disconnect();
-            }
-        }
-
-        private handleMouseDown = (): void => {
-            window.addEventListener("touchmove", (e) => {this.handleMouseMove(); e.preventDefault(); }, true);
-            window.addEventListener("mousemove", this.handleMouseMove, true);
-        }
-
-        private handleMouseUp = (): void => {
-            window.removeEventListener("touchmove", (e) => {this.handleMouseMove(); e.preventDefault(); }, true);
-            window.removeEventListener("mousemove", this.handleMouseMove, true);
-        }
-
-        private handleMouseMove = (): void => {
-            // TODO
         }
 
         private updateHandlePosition = (): void => {

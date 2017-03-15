@@ -11,6 +11,45 @@ var __extends = (this && this.__extends) || (function () {
 "use strict";
 var DateSlider;
 (function (DateSlider) {
+    var DateSliderHelpers = (function () {
+        function DateSliderHelpers() {
+        }
+        /**
+         * Registers a listener to the element's destroy.
+         * @param element The element whose destroy event should be watched.
+         * @param callback A callback method with an optional event parameter.
+         * The parameter is an Event, if the 'DOMNodeRemoved' event was caught.
+         * The parameter is undefined if a MutationObserver was used to watch the element's destroy event.
+         */
+        DateSliderHelpers.registerOnDestroy = function (element, callback) {
+            if (window.MutationObserver && element.parentElement) {
+                var observer_1 = new MutationObserver(function (mutations) {
+                    var isTargetRemoved = mutations.some(function (mutation) {
+                        for (var i = 0; i < mutation.removedNodes.length; i++) {
+                            if (mutation.removedNodes[i] === element) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
+                    if (isTargetRemoved) {
+                        callback();
+                        observer_1.disconnect();
+                    }
+                });
+                observer_1.observe(element.parentNode, { childList: true, subtree: true });
+            }
+            else {
+                element.addEventListener("DOMNodeRemoved", function (event) { return callback(event); }, false);
+            }
+        };
+        return DateSliderHelpers;
+    }());
+    DateSlider.DateSliderHelpers = DateSliderHelpers;
+})(DateSlider || (DateSlider = {}));
+"use strict";
+var DateSlider;
+(function (DateSlider) {
     var DateSliderEventContext = (function () {
         function DateSliderEventContext() {
             this._isPropagationStopped = false;
@@ -65,6 +104,7 @@ var DateSlider;
 (function (DateSlider) {
     var DateSliderInstance = (function () {
         function DateSliderInstance(element, options, value) {
+            var _this = this;
             this.element = element;
             this.options = options;
             this.value = value;
@@ -74,6 +114,12 @@ var DateSlider;
             this.sliders = DateSlider.Slider.SliderInstance.createAll(options);
             var wrapper = this.createWrapper(this.sliders);
             element.parentNode.replaceChild(wrapper, element);
+            DateSlider.DateSliderHelpers.registerOnDestroy(wrapper, function (event) {
+                for (var _i = 0, _a = _this.sliders; _i < _a.length; _i++) {
+                    var slider = _a[_i];
+                    slider.destroy(event);
+                }
+            });
             this.bindParser();
             this.bindFormatter();
         }
@@ -82,6 +128,7 @@ var DateSlider;
         };
         DateSliderInstance.prototype.setValue = function (input) {
             this.value = this.parser.parse(input, this.options.parserOptions);
+            // TODO
         };
         DateSliderInstance.prototype.getOptions = function () {
             return this.options;
@@ -145,6 +192,15 @@ var DateSlider;
             var wrapper = document.createElement("div");
             wrapper.classList.add("date-slider");
             wrapper.appendChild(fragment);
+            var _loop_1 = function (slider) {
+                DateSlider.DateSliderHelpers.registerOnDestroy(slider.element, function (event) { return slider.destroy(event); });
+            };
+            // in the appendChild method the silders' destroy method would be called because it fires the 'DOMNodeRemoved' event
+            // also only after this will the sliders' element gain a parent to use the MutationObserver
+            for (var _a = 0, sliders_2 = sliders; _a < sliders_2.length; _a++) {
+                var slider = sliders_2[_a];
+                _loop_1(slider);
+            }
             return wrapper;
         };
         return DateSliderInstance;
@@ -401,27 +457,56 @@ var DateSlider;
                 this.options = options;
                 this.range = range;
                 this.onValueChangeEvent = new DateSlider.DateSliderEventHandler();
-                this.destroy = function () {
-                    window.removeEventListener("mouseup", _this.handleMouseUp, false);
-                    window.addEventListener("touchend", function (e) { _this.handleMouseUp(); e.preventDefault(); }, false);
-                    window.removeEventListener("load", _this.updateHandlePosition);
-                    window.removeEventListener("resize", _this.updateHandlePosition);
-                    window.removeEventListener("mousemove", _this.handleMouseMove, true);
-                    window.removeEventListener("touchmove", function (e) { _this.handleMouseMove(); e.preventDefault(); }, true);
-                    if (_this.observer) {
-                        _this.observer.disconnect();
+                this.events = {
+                    load: function () { _this.updateHandlePosition(); _this.updateValueDisplay(); },
+                    mousedown: function (e) { return _this.handleMouseDown(e); },
+                    mousemove: function (e) { return _this.handleMouseMove(e); },
+                    mouseup: function (e) { return _this.handleMouseUp(e); },
+                    resize: function () { return _this.updateHandlePosition(); },
+                    touchend: function (e) { return _this.handleMouseUp(e); },
+                    touchmove: function (e) { return _this.handleMouseMove(e); },
+                    touchstart: function (e) { return _this.handleMouseDown(e); },
+                };
+                this.destroy = function (event) {
+                    window.removeEventListener("mouseup", _this.events.mouseup, false);
+                    window.removeEventListener("touchend", _this.events.touchend, false);
+                    window.removeEventListener("load", _this.events.load);
+                    window.removeEventListener("resize", _this.events.resize);
+                    window.removeEventListener("mousemove", _this.events.mousemove, true);
+                    window.removeEventListener("touchmove", _this.events.touchmove, true);
+                };
+                this.handleMouseDown = function (e) {
+                    // prevent default: for example to disable the default image dragging
+                    e.preventDefault();
+                    window.addEventListener("touchmove", _this.events.touchmove, true);
+                    window.addEventListener("mousemove", _this.events.mousemove, true);
+                    window.addEventListener("mouseup", _this.events.mouseup, false);
+                    window.addEventListener("touchend", _this.events.touchend, false);
+                };
+                this.handleMouseUp = function (e) {
+                    window.removeEventListener("touchmove", _this.events.touchmove, true);
+                    window.removeEventListener("mousemove", _this.events.mousemove, true);
+                    window.removeEventListener("mouseup", _this.events.mouseup, false);
+                    window.removeEventListener("touchend", _this.events.touchend, false);
+                };
+                this.handleMouseMove = function (e) {
+                    // prevent default: for example to disable the default image dragging
+                    e.preventDefault();
+                    var pointEvent = (typeof e.screenX !== "undefined")
+                        ? e
+                        : e.targetTouches[0];
+                    var position = {
+                        x: pointEvent.screenX,
+                        y: pointEvent.screenY,
+                    };
+                    // this.handleElement.style.left = pointer.x + "px";
+                    // this.handleElement.style.top = pointer.y + "px";
+                    // this.setValue(5);
+                };
+                this.updateValueDisplay = function () {
+                    if (_this.valueContainerElement) {
+                        _this.valueContainerElement.innerText = _this.range.value.toString();
                     }
-                };
-                this.handleMouseDown = function () {
-                    window.addEventListener("touchmove", function (e) { _this.handleMouseMove(); e.preventDefault(); }, true);
-                    window.addEventListener("mousemove", _this.handleMouseMove, true);
-                };
-                this.handleMouseUp = function () {
-                    window.removeEventListener("touchmove", function (e) { _this.handleMouseMove(); e.preventDefault(); }, true);
-                    window.removeEventListener("mousemove", _this.handleMouseMove, true);
-                };
-                this.handleMouseMove = function () {
-                    // TODO
                 };
                 this.updateHandlePosition = function () {
                     var position = _this.calculateHandlePosition();
@@ -467,6 +552,7 @@ var DateSlider;
                 var oldValue = this.range.value;
                 this.range.value = value;
                 var newValue = this.range.value;
+                this.updateValueDisplay();
                 this.updateHandlePosition();
                 this.onValueChangeEvent.fire(new Slider.Context.SliderValueChangeContext(oldValue, newValue));
             };
@@ -476,13 +562,18 @@ var DateSlider;
                 this.handleElement = this.findElementInSlider("slider-handle-template");
                 this.sliderLineStart = this.findElementInSlider("slider-control-start-template");
                 this.sliderLineEnd = this.findElementInSlider("slider-control-end-template");
+                this.valueContainerElement = this.findElementInSlider("slider-value-container-template", false);
             };
-            SliderInstance.prototype.findElementInSlider = function (className) {
+            SliderInstance.prototype.findElementInSlider = function (className, required) {
+                if (required === void 0) { required = true; }
                 var found = this.element.getElementsByClassName(className);
                 if (found.length > 0) {
                     return found[0];
                 }
-                throw new Error("Cannot find DOM element with class: '" + className + "' in the template.");
+                if (required) {
+                    throw new Error("Cannot find DOM element with class: '" + className + "' in the template.");
+                }
+                return undefined;
             };
             SliderInstance.prototype.createSliderElement = function () {
                 this.element = document.createElement("div");
@@ -497,6 +588,9 @@ var DateSlider;
                 this.sliderLineEnd.classList.add("slider-control-end");
                 this.handleElement = document.createElement("div");
                 this.handleElement.classList.add("slider-handle");
+                this.valueContainerElement = document.createElement("div");
+                this.valueContainerElement.classList.add("slider-value-container");
+                this.element.appendChild(this.valueContainerElement);
                 this.sliderElement.appendChild(this.sliderLineStart);
                 this.sliderElement.appendChild(this.sliderLineElement);
                 this.sliderElement.appendChild(this.sliderLineEnd);
@@ -504,32 +598,10 @@ var DateSlider;
                 this.element.appendChild(this.sliderElement);
             };
             SliderInstance.prototype.registerListeners = function () {
-                var _this = this;
-                this.handleElement.addEventListener("mousedown", this.handleMouseDown, false);
-                this.handleElement.addEventListener("touchstart", function (e) { _this.handleMouseDown(); e.preventDefault(); }, false);
-                window.addEventListener("mouseup", this.handleMouseUp, false);
-                window.addEventListener("touchend", function (e) { _this.handleMouseUp(); e.preventDefault(); }, false);
-                window.addEventListener("load", this.updateHandlePosition);
-                window.addEventListener("resize", this.updateHandlePosition);
-                if (window.MutationObserver && this.element.parentNode) {
-                    this.observer = new MutationObserver(function (mutations) {
-                        var isTargetRemoved = mutations.some(function (mutation) {
-                            for (var i = 0; i < mutation.removedNodes.length; i++) {
-                                if (mutation.removedNodes[i] === _this.element) {
-                                    return true;
-                                }
-                            }
-                            return false;
-                        });
-                        if (isTargetRemoved) {
-                            _this.destroy();
-                        }
-                    });
-                    this.observer.observe(this.element.parentNode, { childList: true, subtree: true });
-                }
-                else {
-                    this.element.addEventListener("DOMNodeRemoved", this.destroy, false);
-                }
+                this.handleElement.addEventListener("mousedown", this.events.mousedown, false);
+                this.handleElement.addEventListener("touchstart", this.events.touchstart, false);
+                window.addEventListener("load", this.events.load);
+                window.addEventListener("resize", this.events.resize);
             };
             SliderInstance.prototype.calculateHandlePosition = function () {
                 // calculates the center of an absolute positioned element
@@ -621,14 +693,14 @@ var DateSlider;
                     if (typeof value !== "number") {
                         throw new Error("SliderRange.setValue(value): value is not a number");
                     }
-                    if (value < this.minimum) {
-                        this.value = this.minimum;
+                    if (value < this._minimum) {
+                        this._value = this._minimum;
                     }
-                    else if (value > this.maximum) {
-                        this.value = this.maximum;
+                    else if (value > this._maximum) {
+                        this._value = this._maximum;
                     }
                     else {
-                        this.value = value;
+                        this._value = value;
                     }
                 },
                 enumerable: true,
@@ -640,11 +712,11 @@ var DateSlider;
                 if (typeof by !== "number") {
                     throw new Error("SliderRange.increment(by): by is not a number");
                 }
-                if (this.value + by <= this.maximum) {
-                    this.value += by;
+                if (this._value + by <= this._maximum) {
+                    this._value += by;
                 }
                 else {
-                    this.value = this.maximum;
+                    this._value = this._maximum;
                 }
             };
             SliderRange.prototype.decrement = function (by) {
@@ -652,11 +724,11 @@ var DateSlider;
                 if (typeof by !== "number") {
                     throw new Error("SliderRange.decrement(by): by is not a number");
                 }
-                if (this.value - by >= this.minimum) {
-                    this.value -= by;
+                if (this._value - by >= this._minimum) {
+                    this._value -= by;
                 }
                 else {
-                    this.value = this.minimum;
+                    this._value = this._minimum;
                 }
             };
             return SliderRange;

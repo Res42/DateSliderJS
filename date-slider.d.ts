@@ -1,4 +1,16 @@
 declare module DateSlider {
+    class DateSliderHelpers {
+        /**
+         * Registers a listener to the element's destroy.
+         * @param element The element whose destroy event should be watched.
+         * @param callback A callback method with an optional event parameter.
+         * The parameter is an Event, if the 'DOMNodeRemoved' event was caught.
+         * The parameter is undefined if a MutationObserver was used to watch the element's destroy event.
+         */
+        static registerOnDestroy(element: HTMLElement, callback: (event?: Event) => void): void;
+    }
+}
+declare module DateSlider {
     class DateSliderEventContext {
         private _isPropagationStopped;
         readonly isPropagationStopped: boolean;
@@ -199,24 +211,26 @@ declare module DateSlider.Slider {
         element: HTMLElement;
         private sliderElement;
         private sliderLineStart;
-        private sliderLineElement;
+        private sliderLineElement?;
         private sliderLineEnd;
         private handleElement;
-        private observer?;
+        private valueContainerElement?;
         private onValueChangeEvent;
+        private events;
         static createAll(options: DateSliderOptions): SliderInstance[];
         private static getRangeFromType(sliderOptions);
         constructor(options: SliderOptions, range: SliderRange);
         getValue(): number;
         setValue(value: number): void;
+        destroy: (event?: Event) => void;
         private bootstrapSliderToTemplate();
-        private findElementInSlider(className);
+        private findElementInSlider(className, required?);
         private createSliderElement();
         private registerListeners();
-        private destroy;
         private handleMouseDown;
         private handleMouseUp;
         private handleMouseMove;
+        private updateValueDisplay;
         private updateHandlePosition;
         private calculateHandlePosition();
     }

@@ -53,12 +53,12 @@ module DateSlider.Slider {
                 throw new Error("SliderRange.setValue(value): value is not a number");
             }
 
-            if (value < this.minimum) {
-                this.value = this.minimum;
-            } else if (value > this.maximum) {
-                this.value = this.maximum;
+            if (value < this._minimum) {
+                this._value = this._minimum;
+            } else if (value > this._maximum) {
+                this._value = this._maximum;
             } else {
-                this.value = value;
+                this._value = value;
             }
         }
 
@@ -67,10 +67,10 @@ module DateSlider.Slider {
                 throw new Error("SliderRange.increment(by): by is not a number");
             }
 
-            if (this.value + by <= this.maximum) {
-                this.value += by;
+            if (this._value + by <= this._maximum) {
+                this._value += by;
             } else {
-                this.value = this.maximum;
+                this._value = this._maximum;
             }
         }
 
@@ -79,10 +79,10 @@ module DateSlider.Slider {
                 throw new Error("SliderRange.decrement(by): by is not a number");
             }
 
-            if (this.value - by >= this.minimum) {
-                this.value -= by;
+            if (this._value - by >= this._minimum) {
+                this._value -= by;
             } else {
-                this.value = this.minimum;
+                this._value = this._minimum;
             }
         }
     }
