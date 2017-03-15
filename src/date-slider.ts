@@ -17,9 +17,7 @@ module DateSlider {
     // Date.parse() or write own implementation to parse from formats -> own
     // test range
     // demo: out of the box, full customization
-    // timestamp parse/format
     // instance.refresh
     // on creation getter setter for outside model
-
-    // Unable to preventDefault inside passive event listener due to target being treated as passive. See https://www.chromestatus.com/features/5093566007214080
+    // slider distance of mouse from handle -> slowness of steps
 }

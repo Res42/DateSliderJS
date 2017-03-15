@@ -85,5 +85,35 @@ module DateSlider.Slider {
                 this._value = this._minimum;
             }
         }
+
+        public expandMaximum(by = 1): void {
+            if (by < 0) {
+                throw new Error("Cannot expand by negative values.");
+            }
+
+            if (this._value === this._maximum) {
+                this._maximum += by;
+                this._value += by;
+                return;
+            }
+
+            this._maximum += by;
+            this._minimum += by * ((this._value - this._minimum) / (this._value - this._maximum));
+        }
+
+        public expandMinimum(by = -1): void {
+            if (by > 0) {
+                throw new Error("Cannot expand minimum with positive values.");
+            }
+
+            if (this._value === this._minimum) {
+                this._minimum += by;
+                this._value += by;
+                return;
+            }
+
+            this._minimum += by;
+            this._maximum += by * ((this._value - this._maximum) / (this._value - this._minimum));
+        }
     }
 }

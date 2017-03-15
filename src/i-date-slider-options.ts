@@ -22,14 +22,14 @@ module DateSlider {
         template?: {
             header?: string;
             footer?: string;
-            sliderBox?: string;
+            sliderHandle?: string;
             valueDisplay?: string;
         } | HTMLElement;
         callback?: {
-            onValueChanged?: (context: DateSliderEventContext) => void;
-            onSliderBoxGrabbed?: (context: DateSliderEventContext) => void;
-            onSliderBoxReleased?: (context: DateSliderEventContext) => void;
-            onSliderBoxMoved?: (context: DateSliderEventContext) => void;
+            onValueChanged?: (context: Slider.Context.SliderValueChangeContext) => void;
+            onSliderHandleGrabbed?: (context: DateSliderEventContext) => void;
+            onSliderHandleReleased?: (context: DateSliderEventContext) => void;
+            onSliderHandleMoved?: (context: DateSliderEventContext) => void;
         };
     }
 }

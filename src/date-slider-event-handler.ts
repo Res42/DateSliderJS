@@ -3,6 +3,10 @@ module DateSlider {
         private events: ((context: DateSliderEventContext) => void)[] = [];
 
         public register(handler: (context: DateSliderEventContext) => void, index?: number): void {
+            if (!handler) {
+                return;
+            }
+
             if (typeof handler !== "function") {
                 throw new Error("DateSliderEventHandler.register(): handler is not given or not a function.");
             }

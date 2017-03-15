@@ -36,7 +36,8 @@ declare module DateSlider {
         getValue(): any;
         setValue(input: any): void;
         getOptions(): DateSliderOptions;
-        setOptions(): void;
+        updateOptions(options: DateSliderOptions): void;
+        replaceOptions(options: DateSliderOptions): void;
         on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void;
         private bindFormatter();
         private bindParser();
@@ -67,6 +68,10 @@ declare module DateSlider {
     }
 }
 declare module DateSlider {
+    let defaults: DateSliderOptions;
+    function create(element: HTMLElement, options: DateSliderOptions): DateSliderInstance;
+}
+declare module DateSlider {
     type DateSliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
     interface DateSliderOptions {
         culture?: string;
@@ -88,20 +93,16 @@ declare module DateSlider {
         template?: {
             header?: string;
             footer?: string;
-            sliderBox?: string;
+            sliderHandle?: string;
             valueDisplay?: string;
         } | HTMLElement;
         callback?: {
-            onValueChanged?: (context: DateSliderEventContext) => void;
-            onSliderBoxGrabbed?: (context: DateSliderEventContext) => void;
-            onSliderBoxReleased?: (context: DateSliderEventContext) => void;
-            onSliderBoxMoved?: (context: DateSliderEventContext) => void;
+            onValueChanged?: (context: Slider.Context.SliderValueChangeContext) => void;
+            onSliderHandleGrabbed?: (context: DateSliderEventContext) => void;
+            onSliderHandleReleased?: (context: DateSliderEventContext) => void;
+            onSliderHandleMoved?: (context: DateSliderEventContext) => void;
         };
     }
-}
-declare module DateSlider {
-    let defaults: DateSliderOptions;
-    function create(element: HTMLElement, options: DateSliderOptions): DateSliderInstance;
 }
 declare module DateSlider.Formatter {
     class CustomFormatter implements IFormatter {
@@ -216,6 +217,9 @@ declare module DateSlider.Slider {
         private handleElement;
         private valueContainerElement?;
         private onValueChangeEvent;
+        private onSliderHandleGrabEvent;
+        private onSliderHandleReleaseEvent;
+        private onSliderHandleMoveEvent;
         private events;
         static createAll(options: DateSliderOptions): SliderInstance[];
         private static getRangeFromType(sliderOptions);
@@ -247,6 +251,8 @@ declare module DateSlider.Slider {
         value: number;
         increment(by?: number): void;
         decrement(by?: number): void;
+        expandMaximum(by?: number): void;
+        expandMinimum(by?: number): void;
     }
 }
 declare module DateSlider.Slider.Context {

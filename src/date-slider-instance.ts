@@ -31,14 +31,18 @@ module DateSlider {
 
         public setValue(input: any): void {
             this.value = this.parser.parse(input, this.options.parserOptions);
-            // TODO
+            // TODO update sliders
         }
 
         public getOptions(): DateSliderOptions {
             return this.options;
         }
 
-        public setOptions(): void {
+        public updateOptions(options: DateSliderOptions): void {
+
+        }
+
+        public replaceOptions(options: DateSliderOptions): void {
 
         }
 

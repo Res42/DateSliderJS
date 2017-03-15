@@ -9,6 +9,9 @@ module DateSlider.Slider {
         private valueContainerElement?: HTMLElement;
 
         private onValueChangeEvent = new DateSliderEventHandler();
+        private onSliderHandleGrabEvent = new DateSliderEventHandler();
+        private onSliderHandleReleaseEvent = new DateSliderEventHandler();
+        private onSliderHandleMoveEvent = new DateSliderEventHandler();
 
         private events = {
             load: () => { this.updateHandlePosition(); this.updateValueDisplay(); },
@@ -45,8 +48,11 @@ module DateSlider.Slider {
             private options: SliderOptions,
             private range: SliderRange,
         ) {
-            if (options.callback && options.callback.onValueChanged) {
+            if (options.callback) {
                 this.onValueChangeEvent.register(options.callback.onValueChanged);
+                this.onSliderHandleGrabEvent.register(options.callback.onSliderHandleGrabbed);
+                this.onSliderHandleMoveEvent.register(options.callback.onSliderHandleMoved);
+                this.onSliderHandleReleaseEvent.register(options.callback.onSliderHandleReleased);
             }
 
             this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(null, this.range.value));
@@ -102,7 +108,7 @@ module DateSlider.Slider {
                 throw new Error(`Cannot find DOM element with class: '${className}' in the template.`);
             }
 
-            return undefined;
+            return null;
         }
 
         private createSliderElement(): void {
@@ -152,6 +158,7 @@ module DateSlider.Slider {
 
             window.addEventListener("mouseup", this.events.mouseup, false);
             window.addEventListener("touchend", this.events.touchend, false);
+            this.onSliderHandleGrabEvent.fire(null);
         }
 
         private handleMouseUp = (e: MouseEvent | TouchEvent): void => {
@@ -160,23 +167,47 @@ module DateSlider.Slider {
 
             window.removeEventListener("mouseup", this.events.mouseup, false);
             window.removeEventListener("touchend", this.events.touchend, false);
+            this.onSliderHandleReleaseEvent.fire(null);
         }
 
         private handleMouseMove = (e: MouseEvent | TouchEvent): void => {
             // prevent default: for example to disable the default image dragging
             e.preventDefault();
-            let pointEvent = (typeof (e as MouseEvent).screenX !== "undefined")
+            let pointEvent = (typeof (e as MouseEvent).clientX !== "undefined")
                 ? e as MouseEvent
                 : (e as TouchEvent).targetTouches[0];
 
             let position = {
-                x: pointEvent.screenX,
-                y: pointEvent.screenY,
+                x: pointEvent.clientX,
+                y: pointEvent.clientY,
             };
 
-            // this.handleElement.style.left = pointer.x + "px";
-            // this.handleElement.style.top = pointer.y + "px";
-            // this.setValue(5);
+            // the ratio of the projection of the s->p vector on the s->e vector
+            // imagagine that the /'s are orthogonal to the slider line
+            // |-----------
+            // |
+            // |   s       slider start
+            // |  / \
+            // | .   \a    s->a is the projection
+            // |  \  /\
+            // |    p  \   p is the position of the mouse / touch
+            // |        e  slider end
+            let start = this.sliderLineStart.getBoundingClientRect();
+            let end = this.sliderLineEnd.getBoundingClientRect();
+
+            let sp = {
+                x: position.x - start.left,
+                y: position.y - start.top,
+            };
+
+            let se = {
+                x: end.left - start.left,
+                y: end.top - start.top,
+            };
+            // the projection ratio is: dot(sp, se) / dot(se, se)
+            let projectionRatio = ((sp.x * se.x) + (sp.y * se.y)) / ((se.x * se.x) + (se.y * se.y));
+            this.setValue(Math.round((this.range.maximum - this.range.minimum) * projectionRatio + this.range.minimum));
+            this.onSliderHandleMoveEvent.fire(null);
         }
 
         private updateValueDisplay = (): void => {

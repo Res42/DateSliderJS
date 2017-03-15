@@ -76,6 +76,9 @@ var DateSlider;
             this.events = [];
         }
         DateSliderEventHandler.prototype.register = function (handler, index) {
+            if (!handler) {
+                return;
+            }
             if (typeof handler !== "function") {
                 throw new Error("DateSliderEventHandler.register(): handler is not given or not a function.");
             }
@@ -128,12 +131,14 @@ var DateSlider;
         };
         DateSliderInstance.prototype.setValue = function (input) {
             this.value = this.parser.parse(input, this.options.parserOptions);
-            // TODO
+            // TODO update sliders
         };
         DateSliderInstance.prototype.getOptions = function () {
             return this.options;
         };
-        DateSliderInstance.prototype.setOptions = function () {
+        DateSliderInstance.prototype.updateOptions = function (options) {
+        };
+        DateSliderInstance.prototype.replaceOptions = function (options) {
         };
         DateSliderInstance.prototype.on = function (eventName, callback) {
         };
@@ -237,7 +242,6 @@ var DateSlider;
     DateSlider.InnerModel = InnerModel;
 })(DateSlider || (DateSlider = {}));
 "use strict";
-"use strict";
 var DateSlider;
 (function (DateSlider) {
     DateSlider.defaults = {};
@@ -255,11 +259,11 @@ var DateSlider;
     // Date.parse() or write own implementation to parse from formats -> own
     // test range
     // demo: out of the box, full customization
-    // timestamp parse/format
     // instance.refresh
     // on creation getter setter for outside model
-    // Unable to preventDefault inside passive event listener due to target being treated as passive. See https://www.chromestatus.com/features/5093566007214080
+    // slider distance of mouse from handle -> slowness of steps
 })(DateSlider || (DateSlider = {}));
+"use strict";
 "use strict";
 var DateSlider;
 (function (DateSlider) {
@@ -457,6 +461,9 @@ var DateSlider;
                 this.options = options;
                 this.range = range;
                 this.onValueChangeEvent = new DateSlider.DateSliderEventHandler();
+                this.onSliderHandleGrabEvent = new DateSlider.DateSliderEventHandler();
+                this.onSliderHandleReleaseEvent = new DateSlider.DateSliderEventHandler();
+                this.onSliderHandleMoveEvent = new DateSlider.DateSliderEventHandler();
                 this.events = {
                     load: function () { _this.updateHandlePosition(); _this.updateValueDisplay(); },
                     mousedown: function (e) { return _this.handleMouseDown(e); },
@@ -482,26 +489,49 @@ var DateSlider;
                     window.addEventListener("mousemove", _this.events.mousemove, true);
                     window.addEventListener("mouseup", _this.events.mouseup, false);
                     window.addEventListener("touchend", _this.events.touchend, false);
+                    _this.onSliderHandleGrabEvent.fire(null);
                 };
                 this.handleMouseUp = function (e) {
                     window.removeEventListener("touchmove", _this.events.touchmove, true);
                     window.removeEventListener("mousemove", _this.events.mousemove, true);
                     window.removeEventListener("mouseup", _this.events.mouseup, false);
                     window.removeEventListener("touchend", _this.events.touchend, false);
+                    _this.onSliderHandleReleaseEvent.fire(null);
                 };
                 this.handleMouseMove = function (e) {
                     // prevent default: for example to disable the default image dragging
                     e.preventDefault();
-                    var pointEvent = (typeof e.screenX !== "undefined")
+                    var pointEvent = (typeof e.clientX !== "undefined")
                         ? e
                         : e.targetTouches[0];
                     var position = {
-                        x: pointEvent.screenX,
-                        y: pointEvent.screenY,
+                        x: pointEvent.clientX,
+                        y: pointEvent.clientY,
                     };
-                    // this.handleElement.style.left = pointer.x + "px";
-                    // this.handleElement.style.top = pointer.y + "px";
-                    // this.setValue(5);
+                    // the ratio of the projection of the s->p vector on the s->e vector
+                    // imagagine that the /'s are orthogonal to the slider line
+                    // |-----------
+                    // |
+                    // |   s       slider start
+                    // |  / \
+                    // | .   \a    s->a is the projection
+                    // |  \  /\
+                    // |    p  \   p is the position of the mouse / touch
+                    // |        e  slider end
+                    var start = _this.sliderLineStart.getBoundingClientRect();
+                    var end = _this.sliderLineEnd.getBoundingClientRect();
+                    var sp = {
+                        x: position.x - start.left,
+                        y: position.y - start.top,
+                    };
+                    var se = {
+                        x: end.left - start.left,
+                        y: end.top - start.top,
+                    };
+                    // the projection ratio is: dot(sp, se) / dot(se, se)
+                    var projectionRatio = ((sp.x * se.x) + (sp.y * se.y)) / ((se.x * se.x) + (se.y * se.y));
+                    _this.setValue(Math.round((_this.range.maximum - _this.range.minimum) * projectionRatio + _this.range.minimum));
+                    _this.onSliderHandleMoveEvent.fire(null);
                 };
                 this.updateValueDisplay = function () {
                     if (_this.valueContainerElement) {
@@ -514,8 +544,11 @@ var DateSlider;
                     _this.handleElement.style.left = position.x + "px";
                     _this.handleElement.style.top = position.y + "px";
                 };
-                if (options.callback && options.callback.onValueChanged) {
+                if (options.callback) {
                     this.onValueChangeEvent.register(options.callback.onValueChanged);
+                    this.onSliderHandleGrabEvent.register(options.callback.onSliderHandleGrabbed);
+                    this.onSliderHandleMoveEvent.register(options.callback.onSliderHandleMoved);
+                    this.onSliderHandleReleaseEvent.register(options.callback.onSliderHandleReleased);
                 }
                 this.onValueChangeEvent.fire(new Slider.Context.SliderValueChangeContext(null, this.range.value));
                 if (this.options.template instanceof HTMLElement) {
@@ -573,7 +606,7 @@ var DateSlider;
                 if (required) {
                     throw new Error("Cannot find DOM element with class: '" + className + "' in the template.");
                 }
-                return undefined;
+                return null;
             };
             SliderInstance.prototype.createSliderElement = function () {
                 this.element = document.createElement("div");
@@ -730,6 +763,32 @@ var DateSlider;
                 else {
                     this._value = this._minimum;
                 }
+            };
+            SliderRange.prototype.expandMaximum = function (by) {
+                if (by === void 0) { by = 1; }
+                if (by < 0) {
+                    throw new Error("Cannot expand by negative values.");
+                }
+                if (this._value === this._maximum) {
+                    this._maximum += by;
+                    this._value += by;
+                    return;
+                }
+                this._maximum += by;
+                this._minimum += by * ((this._value - this._minimum) / (this._value - this._maximum));
+            };
+            SliderRange.prototype.expandMinimum = function (by) {
+                if (by === void 0) { by = -1; }
+                if (by > 0) {
+                    throw new Error("Cannot expand minimum with positive values.");
+                }
+                if (this._value === this._minimum) {
+                    this._minimum += by;
+                    this._value += by;
+                    return;
+                }
+                this._minimum += by;
+                this._maximum += by * ((this._value - this._maximum) / (this._value - this._minimum));
             };
             return SliderRange;
         }());
