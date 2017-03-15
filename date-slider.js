@@ -518,7 +518,7 @@ var DateSlider;
                         };
                     }
                     // the ratio of the projection of the s->p vector on the s->e vector
-                    // imagagine that the /'s are orthogonal to the slider line
+                    // imagine that the /'s are orthogonal to the slider line
                     // |-----------
                     // |
                     // |   s       slider start
