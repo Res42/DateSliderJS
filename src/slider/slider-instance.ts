@@ -174,47 +174,34 @@ module DateSlider.Slider {
         }
 
         private handleMouseMove = (e: MouseEvent | TouchEvent): void => {
-            let position: { x: number, y: number };
+            let position: Vector;
 
             if (e instanceof MouseEvent) {
                 // prevent default: for example to disable the default image dragging
                 e.preventDefault();
-                position = {
-                    x: e.clientX,
-                    y: e.clientY,
-                };
+                position = new Vector(e.clientX, e.clientY);
             } else if (e instanceof TouchEvent) {
-                position = {
-                    x: e.targetTouches[0].clientX,
-                    y: e.targetTouches[0].clientY,
-                };
+                position = new Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
             }
 
             // the ratio of the projection of the s->p vector on the s->e vector
             // imagine that the /'s are orthogonal to the slider line
-            // |-----------
+            // |---------->
             // |
             // |   s       slider start
             // |  / \
             // | .   \a    s->a is the projection
             // |  \  /\
             // |    p  \   p is the position of the mouse / touch
-            // |        e  slider end
+            // V        e  slider end
             let start = this.sliderLineStart.getBoundingClientRect();
             let end = this.sliderLineEnd.getBoundingClientRect();
 
-            let sp = {
-                x: position.x - start.left,
-                y: position.y - start.top,
-            };
+            let sp = new Vector(position.x - start.left, position.y - start.top);
+            let se = new Vector(end.left - start.left, end.top - start.top);
 
-            let se = {
-                x: end.left - start.left,
-                y: end.top - start.top,
-            };
-            // the projection ratio is: dot(sp, se) / dot(se, se)
-            let projectionRatio = ((sp.x * se.x) + (sp.y * se.y)) / ((se.x * se.x) + (se.y * se.y));
-            this.setValue(Math.round((this.range.maximum - this.range.minimum) * projectionRatio + this.range.minimum));
+            let orthogonalProjectionRatio = sp.dot(se) / se.dot(se);
+            this.setValue(Math.round((this.range.maximum - this.range.minimum) * orthogonalProjectionRatio + this.range.minimum));
             this.onSliderHandleMoveEvent.fire(null);
         }
 
@@ -231,15 +218,11 @@ module DateSlider.Slider {
             this.handleElement.style.top = position.y + "px";
         }
 
-        private calculateHandlePosition(): { x: number, y: number } {
+        private calculateHandlePosition(): Vector {
             // calculates the center of an absolute positioned element
-            let calculateCenterPosition = (element: HTMLElement): { x: number, y: number } => {
-                return {
-                    x: element.offsetLeft
-                     + element.offsetWidth / 2,
-                    y: element.offsetTop
-                     + element.offsetHeight / 2,
-                };
+            let calculateCenterPosition = (element: HTMLElement): Vector => {
+                return new Vector(element.offsetLeft + element.offsetWidth / 2,
+                                  element.offsetTop + element.offsetHeight / 2);
             };
 
             let ratioInSlider = this.range.ratio;
@@ -249,14 +232,8 @@ module DateSlider.Slider {
             // start the handle at the start
             // the handle's center should be at the start, so it needs an adjustment
             // finally, calculate the handle's position in the line by it's range value (min: 0% -> max: 100%)
-            return {
-                x: startPosition.x
-                 - this.handleElement.offsetWidth / 2
-                 + (endPosition.x - startPosition.x) * ratioInSlider,
-                y: startPosition.y
-                 - this.handleElement.offsetHeight / 2
-                 + (endPosition.y - startPosition.y) * ratioInSlider,
-            };
+            return new Vector(startPosition.x - this.handleElement.offsetWidth / 2 + (endPosition.x - startPosition.x) * ratioInSlider,
+                              startPosition.y - this.handleElement.offsetHeight / 2 + (endPosition.y - startPosition.y) * ratioInSlider);
         }
     }
 }

@@ -268,6 +268,33 @@ var DateSlider;
 "use strict";
 var DateSlider;
 (function (DateSlider) {
+    var Vector = (function () {
+        function Vector(x, y) {
+            this.x = x;
+            this.y = y;
+        }
+        Vector.prototype.add = function (vector) {
+            return new Vector(this.x + vector.x, this.y + vector.y);
+        };
+        Vector.prototype.difference = function (vector) {
+            return new Vector(this.x - vector.x, this.y - vector.y);
+        };
+        Vector.prototype.scalarTimes = function (scalar) {
+            return new Vector(this.x * scalar, this.y * scalar);
+        };
+        Vector.prototype.dot = function (vector) {
+            return this.x * vector.x + this.y * vector.y;
+        };
+        Vector.prototype.length = function () {
+            return Math.sqrt(this.x * this.x + this.y * this.y);
+        };
+        return Vector;
+    }());
+    DateSlider.Vector = Vector;
+})(DateSlider || (DateSlider = {}));
+"use strict";
+var DateSlider;
+(function (DateSlider) {
     var Formatter;
     (function (Formatter) {
         var CustomFormatter = (function () {
@@ -506,40 +533,27 @@ var DateSlider;
                     if (e instanceof MouseEvent) {
                         // prevent default: for example to disable the default image dragging
                         e.preventDefault();
-                        position = {
-                            x: e.clientX,
-                            y: e.clientY,
-                        };
+                        position = new DateSlider.Vector(e.clientX, e.clientY);
                     }
                     else if (e instanceof TouchEvent) {
-                        position = {
-                            x: e.targetTouches[0].clientX,
-                            y: e.targetTouches[0].clientY,
-                        };
+                        position = new DateSlider.Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
                     }
                     // the ratio of the projection of the s->p vector on the s->e vector
                     // imagine that the /'s are orthogonal to the slider line
-                    // |-----------
+                    // |---------->
                     // |
                     // |   s       slider start
                     // |  / \
                     // | .   \a    s->a is the projection
                     // |  \  /\
                     // |    p  \   p is the position of the mouse / touch
-                    // |        e  slider end
+                    // V        e  slider end
                     var start = _this.sliderLineStart.getBoundingClientRect();
                     var end = _this.sliderLineEnd.getBoundingClientRect();
-                    var sp = {
-                        x: position.x - start.left,
-                        y: position.y - start.top,
-                    };
-                    var se = {
-                        x: end.left - start.left,
-                        y: end.top - start.top,
-                    };
-                    // the projection ratio is: dot(sp, se) / dot(se, se)
-                    var projectionRatio = ((sp.x * se.x) + (sp.y * se.y)) / ((se.x * se.x) + (se.y * se.y));
-                    _this.setValue(Math.round((_this.range.maximum - _this.range.minimum) * projectionRatio + _this.range.minimum));
+                    var sp = new DateSlider.Vector(position.x - start.left, position.y - start.top);
+                    var se = new DateSlider.Vector(end.left - start.left, end.top - start.top);
+                    var orthogonalProjectionRatio = sp.dot(se) / se.dot(se);
+                    _this.setValue(Math.round((_this.range.maximum - _this.range.minimum) * orthogonalProjectionRatio + _this.range.minimum));
                     _this.onSliderHandleMoveEvent.fire(null);
                 };
                 this.updateValueDisplay = function () {
@@ -648,12 +662,7 @@ var DateSlider;
             SliderInstance.prototype.calculateHandlePosition = function () {
                 // calculates the center of an absolute positioned element
                 var calculateCenterPosition = function (element) {
-                    return {
-                        x: element.offsetLeft
-                            + element.offsetWidth / 2,
-                        y: element.offsetTop
-                            + element.offsetHeight / 2,
-                    };
+                    return new DateSlider.Vector(element.offsetLeft + element.offsetWidth / 2, element.offsetTop + element.offsetHeight / 2);
                 };
                 var ratioInSlider = this.range.ratio;
                 var startPosition = calculateCenterPosition(this.sliderLineStart);
@@ -661,14 +670,7 @@ var DateSlider;
                 // start the handle at the start
                 // the handle's center should be at the start, so it needs an adjustment
                 // finally, calculate the handle's position in the line by it's range value (min: 0% -> max: 100%)
-                return {
-                    x: startPosition.x
-                        - this.handleElement.offsetWidth / 2
-                        + (endPosition.x - startPosition.x) * ratioInSlider,
-                    y: startPosition.y
-                        - this.handleElement.offsetHeight / 2
-                        + (endPosition.y - startPosition.y) * ratioInSlider,
-                };
+                return new DateSlider.Vector(startPosition.x - this.handleElement.offsetWidth / 2 + (endPosition.x - startPosition.x) * ratioInSlider, startPosition.y - this.handleElement.offsetHeight / 2 + (endPosition.y - startPosition.y) * ratioInSlider);
             };
             return SliderInstance;
         }());

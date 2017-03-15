@@ -104,6 +104,18 @@ declare module DateSlider {
         };
     }
 }
+declare module DateSlider {
+    class Vector {
+        x: number;
+        y: number;
+        constructor(x: number, y: number);
+        add(vector: Vector): Vector;
+        difference(vector: Vector): Vector;
+        scalarTimes(scalar: number): Vector;
+        dot(vector: Vector): number;
+        length(): number;
+    }
+}
 declare module DateSlider.Formatter {
     class CustomFormatter implements IFormatter {
         format: (input: DateSliderModel, options: any) => any;
