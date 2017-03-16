@@ -17,8 +17,8 @@ module DateSlider {
     // Date.parse() or write own implementation to parse from formats -> own
     // test range
     // demo: out of the box, full customization
-    // instance.refresh
-    // on creation getter setter for outside model
     // slider distance of mouse from handle -> slowness of steps
     // touch events: stop scroll when moving the slider
+    // on mouse move -> watch if the mouse button is pressed
+    // only evaluate model on mouseup
 }

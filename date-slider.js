@@ -259,10 +259,10 @@ var DateSlider;
     // Date.parse() or write own implementation to parse from formats -> own
     // test range
     // demo: out of the box, full customization
-    // instance.refresh
-    // on creation getter setter for outside model
     // slider distance of mouse from handle -> slowness of steps
     // touch events: stop scroll when moving the slider
+    // on mouse move -> watch if the mouse button is pressed
+    // only evaluate model on mouseup
 })(DateSlider || (DateSlider = {}));
 "use strict";
 "use strict";
@@ -511,10 +511,7 @@ var DateSlider;
                     window.removeEventListener("touchmove", _this.events.touchmove, true);
                 };
                 this.handleMouseDown = function (e) {
-                    if (e instanceof MouseEvent) {
-                        // prevent default: for example to disable the default image dragging
-                        e.preventDefault();
-                    }
+                    e.preventDefault();
                     window.addEventListener("touchmove", _this.events.touchmove, true);
                     window.addEventListener("mousemove", _this.events.mousemove, true);
                     window.addEventListener("mouseup", _this.events.mouseup, false);
@@ -655,7 +652,7 @@ var DateSlider;
             };
             SliderInstance.prototype.registerListeners = function () {
                 this.handleElement.addEventListener("mousedown", this.events.mousedown, false);
-                this.handleElement.addEventListener("touchstart", this.events.touchstart, false);
+                this.handleElement.addEventListener("touchstart", this.events.touchstart, true);
                 window.addEventListener("load", this.events.load);
                 window.addEventListener("resize", this.events.resize);
             };

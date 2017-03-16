@@ -144,18 +144,14 @@ module DateSlider.Slider {
 
         private registerListeners(): void {
             this.handleElement.addEventListener("mousedown", this.events.mousedown, false);
-            this.handleElement.addEventListener("touchstart", this.events.touchstart, false);
+            this.handleElement.addEventListener("touchstart", this.events.touchstart, true);
 
             window.addEventListener("load", this.events.load);
             window.addEventListener("resize", this.events.resize);
         }
 
         private handleMouseDown = (e: MouseEvent | TouchEvent): void => {
-            if (e instanceof MouseEvent) {
-                // prevent default: for example to disable the default image dragging
-                e.preventDefault();
-            }
-
+            e.preventDefault();
             window.addEventListener("touchmove", this.events.touchmove, true);
             window.addEventListener("mousemove", this.events.mousemove, true);
 
