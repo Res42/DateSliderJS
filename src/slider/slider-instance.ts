@@ -8,6 +8,8 @@ module DateSlider.Slider {
         private handleElement: HTMLElement;
         private valueContainerElement?: HTMLElement;
 
+        private toDiscrete = Math.round;
+
         private onValueChangeEvent = new DateSliderEventHandler();
         private onSliderHandleGrabEvent = new DateSliderEventHandler();
         private onSliderHandleReleaseEvent = new DateSliderEventHandler();
@@ -67,12 +69,12 @@ module DateSlider.Slider {
         }
 
         public getValue(): number {
-            return this.range.value;
+            return this.toDiscrete(this.range.value);
         }
 
         public setValue(value: number): void {
-            let oldValue = this.range.value;
-            this.range.value = value;
+            let oldValue = this.toDiscrete(this.range.value);
+            this.range.value = this.toDiscrete(value);
             let newValue = this.range.value;
             this.updateValueDisplay();
             this.updateHandlePosition();
@@ -161,6 +163,16 @@ module DateSlider.Slider {
         }
 
         private handleMouseUp = (e: MouseEvent | TouchEvent): void => {
+            let position: Vector;
+
+            if (e instanceof MouseEvent) {
+                position = new Vector(e.clientX, e.clientY);
+            } else if (e instanceof TouchEvent) {
+                position = new Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
+            }
+
+            this.setValue((this.range.maximum - this.range.minimum) * this.calculateOrthogonalProjectionRatio(position) + this.range.minimum);
+
             window.removeEventListener("touchmove", this.events.touchmove, true);
             window.removeEventListener("mousemove", this.events.mousemove, true);
 
@@ -180,6 +192,26 @@ module DateSlider.Slider {
                 position = new Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
             }
 
+            this.range.value = (this.range.maximum - this.range.minimum) * this.calculateOrthogonalProjectionRatio(position) + this.range.minimum;
+            this.updateValueDisplay();
+            this.updateHandlePosition();
+            this.onSliderHandleMoveEvent.fire(null);
+        }
+
+        private updateValueDisplay = (): void => {
+            if (this.valueContainerElement) {
+                this.valueContainerElement.innerText = this.getValue().toString();
+            }
+        }
+
+        private updateHandlePosition = (): void => {
+            let position = this.calculateHandlePosition();
+            this.handleElement.style.position = "absolute";
+            this.handleElement.style.left = position.x + "px";
+            this.handleElement.style.top = position.y + "px";
+        }
+
+        private calculateOrthogonalProjectionRatio(position: Vector): number {
             // the ratio of the projection of the s->p vector on the s->e vector
             // imagine that the /'s are orthogonal to the slider line
             // |---------->
@@ -193,25 +225,13 @@ module DateSlider.Slider {
             let start = this.sliderLineStart.getBoundingClientRect();
             let end = this.sliderLineEnd.getBoundingClientRect();
 
-            let sp = new Vector(position.x - start.left, position.y - start.top);
-            let se = new Vector(end.left - start.left, end.top - start.top);
+            let sp = new Vector(position.x - start.left,
+                                position.y - start.top);
+            let se = new Vector(end.left - start.left,
+                                end.top - start.top);
 
-            let orthogonalProjectionRatio = sp.dot(se) / se.dot(se);
-            this.setValue(Math.round((this.range.maximum - this.range.minimum) * orthogonalProjectionRatio + this.range.minimum));
-            this.onSliderHandleMoveEvent.fire(null);
-        }
-
-        private updateValueDisplay = (): void => {
-            if (this.valueContainerElement) {
-                this.valueContainerElement.innerText = this.range.value.toString();
-            }
-        }
-
-        private updateHandlePosition = (): void => {
-            let position = this.calculateHandlePosition();
-            this.handleElement.style.position = "absolute";
-            this.handleElement.style.left = position.x + "px";
-            this.handleElement.style.top = position.y + "px";
+            // othogonal projection ratio
+            return sp.dot(se) / se.dot(se);
         }
 
         private calculateHandlePosition(): Vector {
@@ -220,7 +240,6 @@ module DateSlider.Slider {
                 return new Vector(element.offsetLeft + element.offsetWidth / 2,
                                   element.offsetTop + element.offsetHeight / 2);
             };
-
             let ratioInSlider = this.range.ratio;
             let startPosition = calculateCenterPosition(this.sliderLineStart);
             let endPosition = calculateCenterPosition(this.sliderLineEnd);

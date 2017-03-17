@@ -276,11 +276,14 @@ var DateSlider;
         Vector.prototype.add = function (vector) {
             return new Vector(this.x + vector.x, this.y + vector.y);
         };
-        Vector.prototype.difference = function (vector) {
+        Vector.prototype.substract = function (vector) {
             return new Vector(this.x - vector.x, this.y - vector.y);
         };
-        Vector.prototype.scalarTimes = function (scalar) {
+        Vector.prototype.multiply = function (scalar) {
             return new Vector(this.x * scalar, this.y * scalar);
+        };
+        Vector.prototype.divide = function (scalar) {
+            return new Vector(this.x / scalar, this.y / scalar);
         };
         Vector.prototype.dot = function (vector) {
             return this.x * vector.x + this.y * vector.y;
@@ -488,6 +491,7 @@ var DateSlider;
                 var _this = this;
                 this.options = options;
                 this.range = range;
+                this.toDiscrete = Math.round;
                 this.onValueChangeEvent = new DateSlider.DateSliderEventHandler();
                 this.onSliderHandleGrabEvent = new DateSlider.DateSliderEventHandler();
                 this.onSliderHandleReleaseEvent = new DateSlider.DateSliderEventHandler();
@@ -519,6 +523,14 @@ var DateSlider;
                     _this.onSliderHandleGrabEvent.fire(null);
                 };
                 this.handleMouseUp = function (e) {
+                    var position;
+                    if (e instanceof MouseEvent) {
+                        position = new DateSlider.Vector(e.clientX, e.clientY);
+                    }
+                    else if (e instanceof TouchEvent) {
+                        position = new DateSlider.Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
+                    }
+                    _this.setValue((_this.range.maximum - _this.range.minimum) * _this.calculateOrthogonalProjectionRatio(position) + _this.range.minimum);
                     window.removeEventListener("touchmove", _this.events.touchmove, true);
                     window.removeEventListener("mousemove", _this.events.mousemove, true);
                     window.removeEventListener("mouseup", _this.events.mouseup, false);
@@ -535,27 +547,14 @@ var DateSlider;
                     else if (e instanceof TouchEvent) {
                         position = new DateSlider.Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
                     }
-                    // the ratio of the projection of the s->p vector on the s->e vector
-                    // imagine that the /'s are orthogonal to the slider line
-                    // |---------->
-                    // |
-                    // |   s       slider start
-                    // |  / \
-                    // | .   \a    s->a is the projection
-                    // |  \  /\
-                    // |    p  \   p is the position of the mouse / touch
-                    // V        e  slider end
-                    var start = _this.sliderLineStart.getBoundingClientRect();
-                    var end = _this.sliderLineEnd.getBoundingClientRect();
-                    var sp = new DateSlider.Vector(position.x - start.left, position.y - start.top);
-                    var se = new DateSlider.Vector(end.left - start.left, end.top - start.top);
-                    var orthogonalProjectionRatio = sp.dot(se) / se.dot(se);
-                    _this.setValue(Math.round((_this.range.maximum - _this.range.minimum) * orthogonalProjectionRatio + _this.range.minimum));
+                    _this.range.value = (_this.range.maximum - _this.range.minimum) * _this.calculateOrthogonalProjectionRatio(position) + _this.range.minimum;
+                    _this.updateValueDisplay();
+                    _this.updateHandlePosition();
                     _this.onSliderHandleMoveEvent.fire(null);
                 };
                 this.updateValueDisplay = function () {
                     if (_this.valueContainerElement) {
-                        _this.valueContainerElement.innerText = _this.range.value.toString();
+                        _this.valueContainerElement.innerText = _this.getValue().toString();
                     }
                 };
                 this.updateHandlePosition = function () {
@@ -599,11 +598,11 @@ var DateSlider;
                 }
             };
             SliderInstance.prototype.getValue = function () {
-                return this.range.value;
+                return this.toDiscrete(this.range.value);
             };
             SliderInstance.prototype.setValue = function (value) {
-                var oldValue = this.range.value;
-                this.range.value = value;
+                var oldValue = this.toDiscrete(this.range.value);
+                this.range.value = this.toDiscrete(value);
                 var newValue = this.range.value;
                 this.updateValueDisplay();
                 this.updateHandlePosition();
@@ -655,6 +654,24 @@ var DateSlider;
                 this.handleElement.addEventListener("touchstart", this.events.touchstart, true);
                 window.addEventListener("load", this.events.load);
                 window.addEventListener("resize", this.events.resize);
+            };
+            SliderInstance.prototype.calculateOrthogonalProjectionRatio = function (position) {
+                // the ratio of the projection of the s->p vector on the s->e vector
+                // imagine that the /'s are orthogonal to the slider line
+                // |---------->
+                // |
+                // |   s       slider start
+                // |  / \
+                // | .   \a    s->a is the projection
+                // |  \  /\
+                // |    p  \   p is the position of the mouse / touch
+                // V        e  slider end
+                var start = this.sliderLineStart.getBoundingClientRect();
+                var end = this.sliderLineEnd.getBoundingClientRect();
+                var sp = new DateSlider.Vector(position.x - start.left, position.y - start.top);
+                var se = new DateSlider.Vector(end.left - start.left, end.top - start.top);
+                // othogonal projection ratio
+                return sp.dot(se) / se.dot(se);
             };
             SliderInstance.prototype.calculateHandlePosition = function () {
                 // calculates the center of an absolute positioned element

@@ -10,12 +10,16 @@ module DateSlider {
             return new Vector(this.x + vector.x, this.y + vector.y);
         }
 
-        public difference(vector: Vector): Vector {
+        public substract(vector: Vector): Vector {
             return new Vector(this.x - vector.x, this.y - vector.y);
         }
 
-        public scalarTimes(scalar: number): Vector {
+        public multiply(scalar: number): Vector {
             return new Vector(this.x * scalar, this.y * scalar);
+        }
+
+        public divide(scalar: number): Vector {
+            return new Vector(this.x / scalar, this.y / scalar);
         }
 
         public dot(vector: Vector): number {

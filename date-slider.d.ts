@@ -110,8 +110,9 @@ declare module DateSlider {
         y: number;
         constructor(x: number, y: number);
         add(vector: Vector): Vector;
-        difference(vector: Vector): Vector;
-        scalarTimes(scalar: number): Vector;
+        substract(vector: Vector): Vector;
+        multiply(scalar: number): Vector;
+        divide(scalar: number): Vector;
         dot(vector: Vector): number;
         length(): number;
     }
@@ -228,6 +229,7 @@ declare module DateSlider.Slider {
         private sliderLineEnd;
         private handleElement;
         private valueContainerElement?;
+        private toDiscrete;
         private onValueChangeEvent;
         private onSliderHandleGrabEvent;
         private onSliderHandleReleaseEvent;
@@ -248,6 +250,7 @@ declare module DateSlider.Slider {
         private handleMouseMove;
         private updateValueDisplay;
         private updateHandlePosition;
+        private calculateOrthogonalProjectionRatio(position);
         private calculateHandlePosition();
     }
 }
