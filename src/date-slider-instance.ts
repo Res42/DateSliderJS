@@ -4,6 +4,8 @@ module DateSlider {
         public parser: Parser.IParser;
         public formatter: Formatter.IFormatter;
 
+        private onValueChangeEvent = new DateSliderEventHandler();
+
         constructor(
             public element: HTMLElement,
             private options: DateSliderOptions,
@@ -29,8 +31,11 @@ module DateSlider {
         }
 
         public setValue(input: any): void {
+            let oldValue = this.getValue();
             this.value = this.parser.parse(input, this.options.parserOptions);
             // TODO update sliders
+            this.updateSliders();
+            this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, this.getValue()));
         }
 
         public getOptions(): DateSliderOptions {
@@ -50,12 +55,48 @@ module DateSlider {
         }
 
         public on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void {
-
+            if (eventName === "onValueChanged") {
+                this.onValueChangeEvent.register(callback);
+            }
         }
 
         private setOptions(): void {
             this.bindParser();
             this.bindFormatter();
+        }
+
+        private updateSliders(): void {
+            for (let slider of this.sliders) {
+                switch (slider.options.type) {
+                    case "year":
+                        slider.setValue(this.value.model.year);
+                        break;
+                    case "month":
+                        slider.setValue(this.value.model.month);
+                        break;
+                    case "day":
+                        slider.setValue(this.value.model.day);
+                        break;
+                    case "hour":
+                        slider.setValue(this.value.model.hour);
+                        break;
+                    case "minute":
+                        slider.setValue(this.value.model.minute);
+                        break;
+                    case "second":
+                        slider.setValue(this.value.model.second);
+                        break;
+                    case "universal-date":
+                        // TODO
+                        break;
+                    case "universal-time":
+                        slider.setValue(this.value.model.hour * 3600 + this.value.model.minute * 60 + this.value.model.second);
+                        break;
+                    case "universal":
+                        // TODO
+                        break;
+                }
+            }
         }
 
         private bindFormatter(): void {

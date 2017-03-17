@@ -1,5 +1,6 @@
 module DateSlider {
-    export type DateSliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
+    export type DateSliderEvent = "onValueChanged";
+    export type SliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
 
     export interface DateSliderOptions {
         sliders?: SliderOptions[];
@@ -9,7 +10,7 @@ module DateSlider {
         formatter?: "timestamp" | "string" | "date" | ((input: DateSliderModel, options: any) => any);
         formatterOptions?: any;
         callback?: {
-            onValueChanged?: (context: DateSliderEventContext) => void;
+            onValueChanged?: (context: Context.ValueChangeContext) => void;
         };
     }
 

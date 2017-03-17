@@ -66,7 +66,7 @@ module DateSlider.Slider {
         }
 
         constructor(
-            private options: SliderOptions,
+            public options: SliderOptions,
             private range: SliderRange,
         ) {
             if (options.callback) {
@@ -99,6 +99,23 @@ module DateSlider.Slider {
             this.updateHandlePosition();
             if (oldValue !== newValue) {
                 this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(oldValue, newValue));
+            }
+        }
+
+        public on(eventName: SliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void {
+            switch (eventName) {
+                case "onValueChanged":
+                    this.onValueChangeEvent.register(callback);
+                    break;
+                case "onSliderBoxGrabbed":
+                    this.onSliderHandleGrabEvent.register(callback);
+                    break;
+                case "onSliderBoxMoved":
+                    this.onSliderHandleMoveEvent.register(callback);
+                    break;
+                case "onSliderBoxReleased":
+                    this.onSliderHandleReleaseEvent.register(callback);
+                    break;
             }
         }
 

@@ -50,6 +50,7 @@ declare module DateSlider {
         sliders: Slider.SliderInstance[];
         parser: Parser.IParser;
         formatter: Formatter.IFormatter;
+        private onValueChangeEvent;
         constructor(element: HTMLElement, options: DateSliderOptions, value?: DateSliderModel);
         getValue(): any;
         setValue(input: any): void;
@@ -58,6 +59,7 @@ declare module DateSlider {
         replaceOptions(options: DateSliderOptions): void;
         on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void;
         private setOptions();
+        private updateSliders();
         private bindFormatter();
         private bindParser();
         private createWrapper(sliders);
@@ -92,7 +94,8 @@ declare module DateSlider {
     function create(element: HTMLElement, options: DateSliderOptions): DateSliderInstance;
 }
 declare module DateSlider {
-    type DateSliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
+    type DateSliderEvent = "onValueChanged";
+    type SliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
     interface DateSliderOptions {
         sliders?: SliderOptions[];
         interval?: boolean;
@@ -101,7 +104,7 @@ declare module DateSlider {
         formatter?: "timestamp" | "string" | "date" | ((input: DateSliderModel, options: any) => any);
         formatterOptions?: any;
         callback?: {
-            onValueChanged?: (context: DateSliderEventContext) => void;
+            onValueChanged?: (context: Context.ValueChangeContext) => void;
         };
     }
     interface SliderOptions {
@@ -132,6 +135,13 @@ declare module DateSlider {
         divide(scalar: number): Vector;
         dot(vector: Vector): number;
         length(): number;
+    }
+}
+declare module DateSlider.Context {
+    class ValueChangeContext extends DateSliderEventContext {
+        oldValue: any;
+        newValue: any;
+        constructor(oldValue: any, newValue: any);
     }
 }
 declare module DateSlider.Formatter {
@@ -237,7 +247,7 @@ declare module DateSlider.Parser {
 }
 declare module DateSlider.Slider {
     class SliderInstance {
-        private options;
+        options: SliderOptions;
         private range;
         element: HTMLElement;
         private sliderElement;
@@ -257,6 +267,7 @@ declare module DateSlider.Slider {
         constructor(options: SliderOptions, range: SliderRange);
         getValue(): number;
         setValue(value: number): void;
+        on(eventName: SliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void;
         destroy: (event?: Event) => void;
         private bootstrapSliderToTemplate();
         private findElementInSlider(className, required?);

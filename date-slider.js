@@ -171,6 +171,7 @@ var DateSlider;
             this.element = element;
             this.options = options;
             this.value = value;
+            this.onValueChangeEvent = new DateSlider.DateSliderEventHandler();
             if (!element || !element.parentNode) {
                 throw new Error("DateSlider.create(): Given HTML element is invalid.");
             }
@@ -189,8 +190,11 @@ var DateSlider;
             return this.formatter.format(this.value, this.options.formatterOptions);
         };
         DateSliderInstance.prototype.setValue = function (input) {
+            var oldValue = this.getValue();
             this.value = this.parser.parse(input, this.options.parserOptions);
             // TODO update sliders
+            this.updateSliders();
+            this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, this.getValue()));
         };
         DateSliderInstance.prototype.getOptions = function () {
             return this.options;
@@ -206,10 +210,47 @@ var DateSlider;
             this.setOptions();
         };
         DateSliderInstance.prototype.on = function (eventName, callback) {
+            if (eventName === "onValueChanged") {
+                this.onValueChangeEvent.register(callback);
+            }
         };
         DateSliderInstance.prototype.setOptions = function () {
             this.bindParser();
             this.bindFormatter();
+        };
+        DateSliderInstance.prototype.updateSliders = function () {
+            for (var _i = 0, _a = this.sliders; _i < _a.length; _i++) {
+                var slider = _a[_i];
+                switch (slider.options.type) {
+                    case "year":
+                        slider.setValue(this.value.model.year);
+                        break;
+                    case "month":
+                        slider.setValue(this.value.model.month);
+                        break;
+                    case "day":
+                        slider.setValue(this.value.model.day);
+                        break;
+                    case "hour":
+                        slider.setValue(this.value.model.hour);
+                        break;
+                    case "minute":
+                        slider.setValue(this.value.model.minute);
+                        break;
+                    case "second":
+                        slider.setValue(this.value.model.second);
+                        break;
+                    case "universal-date":
+                        // TODO
+                        break;
+                    case "universal-time":
+                        slider.setValue(this.value.model.hour * 3600 + this.value.model.minute * 60 + this.value.model.second);
+                        break;
+                    case "universal":
+                        // TODO
+                        break;
+                }
+            }
         };
         DateSliderInstance.prototype.bindFormatter = function () {
             if (typeof this.options.formatter === "string") {
@@ -385,6 +426,25 @@ var DateSlider;
         return Vector;
     }());
     DateSlider.Vector = Vector;
+})(DateSlider || (DateSlider = {}));
+/// <reference path="../date-slider-event-context.ts" />
+"use strict";
+var DateSlider;
+(function (DateSlider) {
+    var Context;
+    (function (Context) {
+        var ValueChangeContext = (function (_super) {
+            __extends(ValueChangeContext, _super);
+            function ValueChangeContext(oldValue, newValue) {
+                var _this = _super.call(this) || this;
+                _this.oldValue = oldValue;
+                _this.newValue = newValue;
+                return _this;
+            }
+            return ValueChangeContext;
+        }(DateSlider.DateSliderEventContext));
+        Context.ValueChangeContext = ValueChangeContext;
+    })(Context = DateSlider.Context || (DateSlider.Context = {}));
 })(DateSlider || (DateSlider = {}));
 "use strict";
 var DateSlider;
@@ -709,6 +769,22 @@ var DateSlider;
                 this.updateHandlePosition();
                 if (oldValue !== newValue) {
                     this.onValueChangeEvent.fire(new Slider.Context.SliderValueChangeContext(oldValue, newValue));
+                }
+            };
+            SliderInstance.prototype.on = function (eventName, callback) {
+                switch (eventName) {
+                    case "onValueChanged":
+                        this.onValueChangeEvent.register(callback);
+                        break;
+                    case "onSliderBoxGrabbed":
+                        this.onSliderHandleGrabEvent.register(callback);
+                        break;
+                    case "onSliderBoxMoved":
+                        this.onSliderHandleMoveEvent.register(callback);
+                        break;
+                    case "onSliderBoxReleased":
+                        this.onSliderHandleReleaseEvent.register(callback);
+                        break;
                 }
             };
             SliderInstance.prototype.bootstrapSliderToTemplate = function () {
