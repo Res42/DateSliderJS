@@ -523,14 +523,8 @@ var DateSlider;
                     _this.onSliderHandleGrabEvent.fire(null);
                 };
                 this.handleMouseUp = function (e) {
-                    var position;
-                    if (e instanceof MouseEvent) {
-                        position = new DateSlider.Vector(e.clientX, e.clientY);
-                    }
-                    else if (e instanceof TouchEvent) {
-                        position = new DateSlider.Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
-                    }
-                    _this.setValue((_this.range.maximum - _this.range.minimum) * _this.calculateOrthogonalProjectionRatio(position) + _this.range.minimum);
+                    var position = _this.getPositionFromEvent(e);
+                    _this.setValue(_this.toDiscrete(_this.calculateValue(position)));
                     window.removeEventListener("touchmove", _this.events.touchmove, true);
                     window.removeEventListener("mousemove", _this.events.mousemove, true);
                     window.removeEventListener("mouseup", _this.events.mouseup, false);
@@ -538,18 +532,12 @@ var DateSlider;
                     _this.onSliderHandleReleaseEvent.fire(null);
                 };
                 this.handleMouseMove = function (e) {
-                    var position;
+                    // prevent default: for example to disable the default image dragging
                     if (e instanceof MouseEvent) {
-                        // prevent default: for example to disable the default image dragging
                         e.preventDefault();
-                        position = new DateSlider.Vector(e.clientX, e.clientY);
                     }
-                    else if (e instanceof TouchEvent) {
-                        position = new DateSlider.Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
-                    }
-                    _this.range.value = (_this.range.maximum - _this.range.minimum) * _this.calculateOrthogonalProjectionRatio(position) + _this.range.minimum;
-                    _this.updateValueDisplay();
-                    _this.updateHandlePosition();
+                    var position = _this.getPositionFromEvent(e);
+                    _this.setValue(_this.calculateValue(position));
                     _this.onSliderHandleMoveEvent.fire(null);
                 };
                 this.updateValueDisplay = function () {
@@ -602,11 +590,13 @@ var DateSlider;
             };
             SliderInstance.prototype.setValue = function (value) {
                 var oldValue = this.toDiscrete(this.range.value);
-                this.range.value = this.toDiscrete(value);
-                var newValue = this.range.value;
+                this.range.value = value;
+                var newValue = this.toDiscrete(this.range.value);
                 this.updateValueDisplay();
                 this.updateHandlePosition();
-                this.onValueChangeEvent.fire(new Slider.Context.SliderValueChangeContext(oldValue, newValue));
+                if (oldValue !== newValue) {
+                    this.onValueChangeEvent.fire(new Slider.Context.SliderValueChangeContext(oldValue, newValue));
+                }
             };
             SliderInstance.prototype.bootstrapSliderToTemplate = function () {
                 this.element = this.options.template.cloneNode(true);
@@ -654,6 +644,18 @@ var DateSlider;
                 this.handleElement.addEventListener("touchstart", this.events.touchstart, true);
                 window.addEventListener("load", this.events.load);
                 window.addEventListener("resize", this.events.resize);
+            };
+            SliderInstance.prototype.getPositionFromEvent = function (e) {
+                if (e instanceof MouseEvent) {
+                    return new DateSlider.Vector(e.clientX, e.clientY);
+                }
+                else if (e instanceof TouchEvent) {
+                    return new DateSlider.Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
+                }
+                throw new Error("Cannot extract position from event.");
+            };
+            SliderInstance.prototype.calculateValue = function (position) {
+                return (this.range.maximum - this.range.minimum) * this.calculateOrthogonalProjectionRatio(position) + this.range.minimum;
             };
             SliderInstance.prototype.calculateOrthogonalProjectionRatio = function (position) {
                 // the ratio of the projection of the s->p vector on the s->e vector

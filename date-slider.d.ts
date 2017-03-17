@@ -250,6 +250,8 @@ declare module DateSlider.Slider {
         private handleMouseMove;
         private updateValueDisplay;
         private updateHandlePosition;
+        private getPositionFromEvent(e);
+        private calculateValue(position);
         private calculateOrthogonalProjectionRatio(position);
         private calculateHandlePosition();
     }

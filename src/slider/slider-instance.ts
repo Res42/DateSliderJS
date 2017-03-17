@@ -74,11 +74,13 @@ module DateSlider.Slider {
 
         public setValue(value: number): void {
             let oldValue = this.toDiscrete(this.range.value);
-            this.range.value = this.toDiscrete(value);
-            let newValue = this.range.value;
+            this.range.value = value;
+            let newValue = this.toDiscrete(this.range.value);
             this.updateValueDisplay();
             this.updateHandlePosition();
-            this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(oldValue, newValue));
+            if (oldValue !== newValue) {
+                this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(oldValue, newValue));
+            }
         }
 
         public destroy = (event?: Event): void => {
@@ -163,15 +165,8 @@ module DateSlider.Slider {
         }
 
         private handleMouseUp = (e: MouseEvent | TouchEvent): void => {
-            let position: Vector;
-
-            if (e instanceof MouseEvent) {
-                position = new Vector(e.clientX, e.clientY);
-            } else if (e instanceof TouchEvent) {
-                position = new Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
-            }
-
-            this.setValue((this.range.maximum - this.range.minimum) * this.calculateOrthogonalProjectionRatio(position) + this.range.minimum);
+            let position = this.getPositionFromEvent(e);
+            this.setValue(this.toDiscrete(this.calculateValue(position)));
 
             window.removeEventListener("touchmove", this.events.touchmove, true);
             window.removeEventListener("mousemove", this.events.mousemove, true);
@@ -182,19 +177,14 @@ module DateSlider.Slider {
         }
 
         private handleMouseMove = (e: MouseEvent | TouchEvent): void => {
-            let position: Vector;
-
+            // prevent default: for example to disable the default image dragging
             if (e instanceof MouseEvent) {
-                // prevent default: for example to disable the default image dragging
                 e.preventDefault();
-                position = new Vector(e.clientX, e.clientY);
-            } else if (e instanceof TouchEvent) {
-                position = new Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
             }
 
-            this.range.value = (this.range.maximum - this.range.minimum) * this.calculateOrthogonalProjectionRatio(position) + this.range.minimum;
-            this.updateValueDisplay();
-            this.updateHandlePosition();
+            let position = this.getPositionFromEvent(e);
+            this.setValue(this.calculateValue(position));
+
             this.onSliderHandleMoveEvent.fire(null);
         }
 
@@ -209,6 +199,20 @@ module DateSlider.Slider {
             this.handleElement.style.position = "absolute";
             this.handleElement.style.left = position.x + "px";
             this.handleElement.style.top = position.y + "px";
+        }
+
+        private getPositionFromEvent(e: MouseEvent | TouchEvent): Vector {
+            if (e instanceof MouseEvent) {
+                return new Vector(e.clientX, e.clientY);
+            } else if (e instanceof TouchEvent) {
+                return new Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
+            }
+
+            throw new Error("Cannot extract position from event.");
+        }
+
+        private calculateValue(position: Vector) {
+            return (this.range.maximum - this.range.minimum) * this.calculateOrthogonalProjectionRatio(position) + this.range.minimum;
         }
 
         private calculateOrthogonalProjectionRatio(position: Vector): number {
