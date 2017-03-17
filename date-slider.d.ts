@@ -257,6 +257,7 @@ declare module DateSlider.Slider {
         private calculateValue(position);
         private calculateOrthogonalProjectionRatio(position);
         private calculateHandlePosition();
+        private calculateCenterPosition(element);
     }
 }
 declare module DateSlider.Slider {

@@ -234,10 +234,11 @@ module DateSlider.Slider {
         }
 
         private calculateValue(position: Vector) {
-            return (this.range.maximum - this.range.minimum) * this.calculateOrthogonalProjectionRatio(position) + this.range.minimum;
+            let r = this.calculateOrthogonalProjectionRatio(position);
+            return (this.range.maximum - this.range.minimum) * r.ratio + this.range.minimum;
         }
 
-        private calculateOrthogonalProjectionRatio(position: Vector): number {
+        private calculateOrthogonalProjectionRatio(position: Vector): { ratio: number, distance: number } {
             // the ratio of the projection of the s->p vector on the s->e vector
             // imagine that the /'s are orthogonal to the slider line
             // |---------->
@@ -250,31 +251,42 @@ module DateSlider.Slider {
             // V        e  slider end
             let start = this.sliderLineStart.getBoundingClientRect();
             let end = this.sliderLineEnd.getBoundingClientRect();
+            let startCenter = this.calculateCenterPosition(start);
+            let endCenter = this.calculateCenterPosition(end);
 
-            let sp = new Vector(position.x - start.left,
-                                position.y - start.top);
-            let se = new Vector(end.left - start.left,
-                                end.top - start.top);
+            let sp = position.substract(startCenter);
+            let se = endCenter.substract(startCenter);
 
-            // othogonal projection ratio
-            return sp.dot(se) / se.dot(se);
+            let othogonalProjectionRatio = sp.dot(se) / se.dot(se);
+            return {
+                distance: sp.substract(se.multiply(othogonalProjectionRatio)).length(),
+                ratio: othogonalProjectionRatio,
+            };
         }
 
         private calculateHandlePosition(): Vector {
             // calculates the center of an absolute positioned element
-            let calculateCenterPosition = (element: HTMLElement): Vector => {
-                return new Vector(element.offsetLeft + element.offsetWidth / 2,
-                                  element.offsetTop + element.offsetHeight / 2);
-            };
+
             let ratioInSlider = this.range.ratio;
-            let startPosition = calculateCenterPosition(this.sliderLineStart);
-            let endPosition = calculateCenterPosition(this.sliderLineEnd);
+            let startPosition = this.calculateCenterPosition(this.sliderLineStart);
+            let endPosition = this.calculateCenterPosition(this.sliderLineEnd);
 
             // start the handle at the start
             // the handle's center should be at the start, so it needs an adjustment
             // finally, calculate the handle's position in the line by it's range value (min: 0% -> max: 100%)
             return new Vector(startPosition.x - this.handleElement.offsetWidth / 2 + (endPosition.x - startPosition.x) * ratioInSlider,
                               startPosition.y - this.handleElement.offsetHeight / 2 + (endPosition.y - startPosition.y) * ratioInSlider);
+        }
+
+        private calculateCenterPosition(element: HTMLElement | ClientRect): Vector {
+            if (element instanceof HTMLElement) {
+                return new Vector(element.offsetLeft + element.offsetWidth / 2,
+                                  element.offsetTop + element.offsetHeight / 2);
+            } else if (element instanceof ClientRect) {
+                return new Vector(element.left + element.width / 2,
+                                  element.top + element.height / 2);
+            }
+            throw new Error("Invalid parameter.");
         }
     }
 }

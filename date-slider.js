@@ -260,9 +260,6 @@ var DateSlider;
     // test range
     // demo: out of the box, full customization
     // slider distance of mouse from handle -> slowness of steps
-    // touch events: stop scroll when moving the slider
-    // on mouse move -> watch if the mouse button is pressed
-    // only evaluate model on mouseup
 })(DateSlider || (DateSlider = {}));
 "use strict";
 "use strict";
@@ -671,7 +668,8 @@ var DateSlider;
                 throw new Error("Cannot extract position from event.");
             };
             SliderInstance.prototype.calculateValue = function (position) {
-                return (this.range.maximum - this.range.minimum) * this.calculateOrthogonalProjectionRatio(position) + this.range.minimum;
+                var r = this.calculateOrthogonalProjectionRatio(position);
+                return (this.range.maximum - this.range.minimum) * r.ratio + this.range.minimum;
             };
             SliderInstance.prototype.calculateOrthogonalProjectionRatio = function (position) {
                 // the ratio of the projection of the s->p vector on the s->e vector
@@ -686,23 +684,34 @@ var DateSlider;
                 // V        e  slider end
                 var start = this.sliderLineStart.getBoundingClientRect();
                 var end = this.sliderLineEnd.getBoundingClientRect();
-                var sp = new DateSlider.Vector(position.x - start.left, position.y - start.top);
-                var se = new DateSlider.Vector(end.left - start.left, end.top - start.top);
-                // othogonal projection ratio
-                return sp.dot(se) / se.dot(se);
+                var startCenter = this.calculateCenterPosition(start);
+                var endCenter = this.calculateCenterPosition(end);
+                var sp = position.substract(startCenter);
+                var se = endCenter.substract(startCenter);
+                var othogonalProjectionRatio = sp.dot(se) / se.dot(se);
+                return {
+                    distance: sp.substract(se.multiply(othogonalProjectionRatio)).length(),
+                    ratio: othogonalProjectionRatio,
+                };
             };
             SliderInstance.prototype.calculateHandlePosition = function () {
                 // calculates the center of an absolute positioned element
-                var calculateCenterPosition = function (element) {
-                    return new DateSlider.Vector(element.offsetLeft + element.offsetWidth / 2, element.offsetTop + element.offsetHeight / 2);
-                };
                 var ratioInSlider = this.range.ratio;
-                var startPosition = calculateCenterPosition(this.sliderLineStart);
-                var endPosition = calculateCenterPosition(this.sliderLineEnd);
+                var startPosition = this.calculateCenterPosition(this.sliderLineStart);
+                var endPosition = this.calculateCenterPosition(this.sliderLineEnd);
                 // start the handle at the start
                 // the handle's center should be at the start, so it needs an adjustment
                 // finally, calculate the handle's position in the line by it's range value (min: 0% -> max: 100%)
                 return new DateSlider.Vector(startPosition.x - this.handleElement.offsetWidth / 2 + (endPosition.x - startPosition.x) * ratioInSlider, startPosition.y - this.handleElement.offsetHeight / 2 + (endPosition.y - startPosition.y) * ratioInSlider);
+            };
+            SliderInstance.prototype.calculateCenterPosition = function (element) {
+                if (element instanceof HTMLElement) {
+                    return new DateSlider.Vector(element.offsetLeft + element.offsetWidth / 2, element.offsetTop + element.offsetHeight / 2);
+                }
+                else if (element instanceof ClientRect) {
+                    return new DateSlider.Vector(element.left + element.width / 2, element.top + element.height / 2);
+                }
+                throw new Error("Invalid parameter.");
             };
             return SliderInstance;
         }());
