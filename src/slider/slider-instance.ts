@@ -39,8 +39,27 @@ module DateSlider.Slider {
 
         private static getRangeFromType(sliderOptions: SliderOptions): SliderRange {
             switch (sliderOptions.type) {
+                case "year":
+                    // TODO
+                    return new SliderRange(1, 12);
                 case "month":
                     return new SliderRange(1, 12);
+                case "day":
+                    return new SliderRange(1, 31);
+                case "hour":
+                    return new SliderRange(0, 23);
+                case "minute":
+                case "second":
+                    return new SliderRange(0, 59);
+                case "universal":
+                    // TODO
+                    return new SliderRange(1, 12);
+                case "universal-date":
+                    // TODO
+                    return new SliderRange(1, 12);
+                case "universal-time":
+                    // 24 * 60 * 60 -1
+                    return new SliderRange(0, 86399);
                 default:
                     throw new Error("SliderOptions.type is not valid.");
             }
@@ -212,7 +231,11 @@ module DateSlider.Slider {
 
         private updateValueDisplay = (): void => {
             if (this.valueContainerElement) {
-                this.valueContainerElement.innerText = this.getValue().toString();
+                let value = this.getValue();
+                let displayedValue = this.options.displayValueFormatter
+                                     ? this.options.displayValueFormatter(value)
+                                     : value.toString();
+                this.valueContainerElement.innerText = displayedValue;
             }
         }
 

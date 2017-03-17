@@ -15,14 +15,13 @@ module DateSlider {
             this.sliders = Slider.SliderInstance.createAll(options);
             let wrapper = this.createWrapper(this.sliders);
             element.parentNode.replaceChild(wrapper, element);
-            DateSliderHelpers.registerOnDestroy(wrapper, (event) => {
+            Helpers.registerOnDestroy(wrapper, (event) => {
                 for (let slider of this.sliders) {
                     slider.destroy(event);
                 }
             });
 
-            this.bindParser();
-            this.bindFormatter();
+            this.setOptions();
         }
 
         public getValue(): any {
@@ -39,15 +38,24 @@ module DateSlider {
         }
 
         public updateOptions(options: DateSliderOptions): void {
-
+            Helpers.deepMerge(this.options, options);
+            // TODO update sliders
+            this.setOptions();
         }
 
         public replaceOptions(options: DateSliderOptions): void {
-
+            this.options = options;
+            // TODO update sliders
+            this.setOptions();
         }
 
         public on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void {
 
+        }
+
+        private setOptions(): void {
+            this.bindParser();
+            this.bindFormatter();
         }
 
         private bindFormatter(): void {
@@ -105,7 +113,7 @@ module DateSlider {
                 // in the appendChild method the silders' destroy method would be called because it fires the 'DOMNodeRemoved' event
                 // also only after this will the sliders' element gain a parent to use the MutationObserver
                 for (let slider of sliders) {
-                    DateSliderHelpers.registerOnDestroy(slider.element, (event) => slider.destroy(event));
+                    Helpers.registerOnDestroy(slider.element, (event) => slider.destroy(event));
                 }
                 return wrapper;
         }

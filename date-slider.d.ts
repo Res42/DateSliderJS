@@ -1,5 +1,5 @@
 declare module DateSlider {
-    class DateSliderHelpers {
+    class Helpers {
         /**
          * Registers a listener to the element's destroy.
          * @param element The element whose destroy event should be watched.
@@ -8,6 +8,23 @@ declare module DateSlider {
          * The parameter is undefined if a MutationObserver was used to watch the element's destroy event.
          */
         static registerOnDestroy(element: HTMLElement, callback: (event?: Event) => void): void;
+        /**
+         * Shallow merges objects to a destination object.
+         * Use \{\} as the "to" parameter and add the original object to the "from" parameter if you do not want to modify the original object.
+         * @param to The destination object.
+         * @param from The objects wose properties will overwrite the properties of the destination object.
+         * @returns The merged object.
+         */
+        static shallowMerge<T extends {
+            [key: string]: any;
+        }, U extends {
+            [key: string]: any;
+        }>(to: T, ...from: U[]): T & U;
+        static deepMerge<T extends {
+            [key: string]: any;
+        }, U extends {
+            [key: string]: any;
+        }>(to: T, ...from: U[]): T & U;
     }
 }
 declare module DateSlider {
@@ -21,6 +38,7 @@ declare module DateSlider {
     class DateSliderEventHandler {
         private events;
         register(handler: (context: DateSliderEventContext) => void, index?: number): void;
+        remove(handler: (context: DateSliderEventContext) => void): void;
         fire(context: DateSliderEventContext): void;
     }
 }
@@ -39,6 +57,7 @@ declare module DateSlider {
         updateOptions(options: DateSliderOptions): void;
         replaceOptions(options: DateSliderOptions): void;
         on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void;
+        private setOptions();
         private bindFormatter();
         private bindParser();
         private createWrapper(sliders);
@@ -69,27 +88,25 @@ declare module DateSlider {
 }
 declare module DateSlider {
     let defaults: DateSliderOptions;
+    let universalTimeDefaults: SliderOptions;
     function create(element: HTMLElement, options: DateSliderOptions): DateSliderInstance;
 }
 declare module DateSlider {
     type DateSliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
     interface DateSliderOptions {
-        culture?: string;
         sliders?: SliderOptions[];
+        interval?: boolean;
         parser?: "timestamp" | "string" | "date" | ((input: any, options: any) => DateSliderModel);
         parserOptions?: any;
         formatter?: "timestamp" | "string" | "date" | ((input: DateSliderModel, options: any) => any);
         formatterOptions?: any;
         callback?: {
             onValueChanged?: (context: DateSliderEventContext) => void;
-            onPopupBeforeOpen?: (context: DateSliderEventContext) => void;
-            onPopupAfterOpen?: (context: DateSliderEventContext) => void;
-            onPopupBeforeClose?: (context: DateSliderEventContext) => void;
-            onPopupAfterClose?: (context: DateSliderEventContext) => void;
         };
     }
     interface SliderOptions {
-        type?: "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
+        type: "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
+        displayValueFormatter?: (value: number) => string;
         template?: {
             header?: string;
             footer?: string;

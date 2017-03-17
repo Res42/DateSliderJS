@@ -17,6 +17,14 @@ module DateSlider {
             }
         }
 
+        public remove(handler: (context: DateSliderEventContext) => void): void {
+            if (!handler) {
+                return;
+            }
+
+            this.events = this.events.filter((e) => e !== handler);
+        }
+
         public fire(context: DateSliderEventContext): void {
             for (let callback of this.events) {
                 callback(context);

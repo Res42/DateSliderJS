@@ -11,8 +11,8 @@ var __extends = (this && this.__extends) || (function () {
 "use strict";
 var DateSlider;
 (function (DateSlider) {
-    var DateSliderHelpers = (function () {
-        function DateSliderHelpers() {
+    var Helpers = (function () {
+        function Helpers() {
         }
         /**
          * Registers a listener to the element's destroy.
@@ -21,7 +21,7 @@ var DateSlider;
          * The parameter is an Event, if the 'DOMNodeRemoved' event was caught.
          * The parameter is undefined if a MutationObserver was used to watch the element's destroy event.
          */
-        DateSliderHelpers.registerOnDestroy = function (element, callback) {
+        Helpers.registerOnDestroy = function (element, callback) {
             if (window.MutationObserver && element.parentElement) {
                 var observer_1 = new MutationObserver(function (mutations) {
                     var isTargetRemoved = mutations.some(function (mutation) {
@@ -43,9 +43,63 @@ var DateSlider;
                 element.addEventListener("DOMNodeRemoved", function (event) { return callback(event); }, false);
             }
         };
-        return DateSliderHelpers;
+        /**
+         * Shallow merges objects to a destination object.
+         * Use \{\} as the "to" parameter and add the original object to the "from" parameter if you do not want to modify the original object.
+         * @param to The destination object.
+         * @param from The objects wose properties will overwrite the properties of the destination object.
+         * @returns The merged object.
+         */
+        Helpers.shallowMerge = function (to) {
+            var from = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                from[_i - 1] = arguments[_i];
+            }
+            for (var _a = 0, from_1 = from; _a < from_1.length; _a++) {
+                var f = from_1[_a];
+                for (var propertyName in f) {
+                    if (f.hasOwnProperty(propertyName)) {
+                        to[propertyName] = f[propertyName];
+                    }
+                }
+            }
+            return to;
+        };
+        Helpers.deepMerge = function (to) {
+            var from = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                from[_i - 1] = arguments[_i];
+            }
+            for (var _a = 0, from_2 = from; _a < from_2.length; _a++) {
+                var f = from_2[_a];
+                for (var propertyName in f) {
+                    if (f.hasOwnProperty(propertyName)) {
+                        if (typeof f[propertyName] === "object") {
+                            if (f[propertyName] instanceof Array) {
+                                to[propertyName] = new Array();
+                                for (var _b = 0, _c = f[propertyName]; _b < _c.length; _b++) {
+                                    var a = _c[_b];
+                                    to[propertyName].push(Helpers.deepMerge({}, a));
+                                }
+                            }
+                            else if (f[propertyName] instanceof Node) {
+                                to[propertyName] = f[propertyName];
+                            }
+                            else {
+                                to[propertyName] = Helpers.deepMerge({}, f[propertyName]);
+                            }
+                        }
+                        else {
+                            to[propertyName] = f[propertyName];
+                        }
+                    }
+                }
+            }
+            return to;
+        };
+        return Helpers;
     }());
-    DateSlider.DateSliderHelpers = DateSliderHelpers;
+    DateSlider.Helpers = Helpers;
 })(DateSlider || (DateSlider = {}));
 "use strict";
 var DateSlider;
@@ -89,6 +143,12 @@ var DateSlider;
                 this.events.push(handler);
             }
         };
+        DateSliderEventHandler.prototype.remove = function (handler) {
+            if (!handler) {
+                return;
+            }
+            this.events = this.events.filter(function (e) { return e !== handler; });
+        };
         DateSliderEventHandler.prototype.fire = function (context) {
             for (var _i = 0, _a = this.events; _i < _a.length; _i++) {
                 var callback = _a[_i];
@@ -117,14 +177,13 @@ var DateSlider;
             this.sliders = DateSlider.Slider.SliderInstance.createAll(options);
             var wrapper = this.createWrapper(this.sliders);
             element.parentNode.replaceChild(wrapper, element);
-            DateSlider.DateSliderHelpers.registerOnDestroy(wrapper, function (event) {
+            DateSlider.Helpers.registerOnDestroy(wrapper, function (event) {
                 for (var _i = 0, _a = _this.sliders; _i < _a.length; _i++) {
                     var slider = _a[_i];
                     slider.destroy(event);
                 }
             });
-            this.bindParser();
-            this.bindFormatter();
+            this.setOptions();
         }
         DateSliderInstance.prototype.getValue = function () {
             return this.formatter.format(this.value, this.options.formatterOptions);
@@ -137,10 +196,20 @@ var DateSlider;
             return this.options;
         };
         DateSliderInstance.prototype.updateOptions = function (options) {
+            DateSlider.Helpers.deepMerge(this.options, options);
+            // TODO update sliders
+            this.setOptions();
         };
         DateSliderInstance.prototype.replaceOptions = function (options) {
+            this.options = options;
+            // TODO update sliders
+            this.setOptions();
         };
         DateSliderInstance.prototype.on = function (eventName, callback) {
+        };
+        DateSliderInstance.prototype.setOptions = function () {
+            this.bindParser();
+            this.bindFormatter();
         };
         DateSliderInstance.prototype.bindFormatter = function () {
             if (typeof this.options.formatter === "string") {
@@ -198,7 +267,7 @@ var DateSlider;
             wrapper.classList.add("date-slider");
             wrapper.appendChild(fragment);
             var _loop_1 = function (slider) {
-                DateSlider.DateSliderHelpers.registerOnDestroy(slider.element, function (event) { return slider.destroy(event); });
+                DateSlider.Helpers.registerOnDestroy(slider.element, function (event) { return slider.destroy(event); });
             };
             // in the appendChild method the silders' destroy method would be called because it fires the 'DOMNodeRemoved' event
             // also only after this will the sliders' element gain a parent to use the MutationObserver
@@ -244,19 +313,44 @@ var DateSlider;
 "use strict";
 var DateSlider;
 (function (DateSlider) {
-    DateSlider.defaults = {};
+    DateSlider.defaults = {
+        formatter: "timestamp",
+        formatterOptions: { type: "milliseconds" },
+        interval: false,
+        parser: "timestamp",
+        parserOptions: { type: "milliseconds" },
+    };
+    DateSlider.universalTimeDefaults = {
+        displayValueFormatter: function (value) {
+            var pad = function (v) {
+                return (0 <= v && v < 10) ? "0" + v : v.toString();
+            };
+            var seconds = value % 60;
+            var minutes = Math.floor(value / 60) % 60;
+            var hours = Math.floor(value / 3600);
+            return pad(hours) + ":" + pad(minutes) + ":" + pad(seconds);
+        },
+        type: "universal-time",
+    };
     function create(element, options) {
         if (!element) {
             throw new Error("DateSlider.create(): Given HTML element is invalid.");
         }
-        return new DateSlider.DateSliderInstance(element, mergeOptions(options, DateSlider.defaults));
+        var opts = DateSlider.Helpers.deepMerge({}, DateSlider.defaults, options);
+        for (var i = 0; i < opts.sliders.length; i++) {
+            switch (opts.sliders[i].type) {
+                case "universal-time":
+                    opts.sliders[i] = DateSlider.Helpers.deepMerge({}, DateSlider.universalTimeDefaults, opts.sliders[i]);
+                    break;
+            }
+        }
+        return new DateSlider.DateSliderInstance(element, opts);
     }
     DateSlider.create = create;
-    function mergeOptions(instanceOptions, defaultOptions) {
-        return instanceOptions;
-    }
     // TODO
-    // Date.parse() or write own implementation to parse from formats -> own
+    // date parser / formatter + tests
+    // string parser / formatter + tests
+    // range interval
     // test range
     // demo: out of the box, full customization
     // slider distance of mouse from handle -> slowness of steps
@@ -538,7 +632,11 @@ var DateSlider;
                 };
                 this.updateValueDisplay = function () {
                     if (_this.valueContainerElement) {
-                        _this.valueContainerElement.innerText = _this.getValue().toString();
+                        var value = _this.getValue();
+                        var displayedValue = _this.options.displayValueFormatter
+                            ? _this.options.displayValueFormatter(value)
+                            : value.toString();
+                        _this.valueContainerElement.innerText = displayedValue;
                     }
                 };
                 this.updateHandlePosition = function () {
@@ -575,8 +673,27 @@ var DateSlider;
             };
             SliderInstance.getRangeFromType = function (sliderOptions) {
                 switch (sliderOptions.type) {
+                    case "year":
+                        // TODO
+                        return new Slider.SliderRange(1, 12);
                     case "month":
                         return new Slider.SliderRange(1, 12);
+                    case "day":
+                        return new Slider.SliderRange(1, 31);
+                    case "hour":
+                        return new Slider.SliderRange(0, 23);
+                    case "minute":
+                    case "second":
+                        return new Slider.SliderRange(0, 59);
+                    case "universal":
+                        // TODO
+                        return new Slider.SliderRange(1, 12);
+                    case "universal-date":
+                        // TODO
+                        return new Slider.SliderRange(1, 12);
+                    case "universal-time":
+                        // 24 * 60 * 60 -1
+                        return new Slider.SliderRange(0, 86399);
                     default:
                         throw new Error("SliderOptions.type is not valid.");
                 }
