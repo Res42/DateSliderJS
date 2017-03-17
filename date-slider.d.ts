@@ -245,9 +245,12 @@ declare module DateSlider.Slider {
         private findElementInSlider(className, required?);
         private createSliderElement();
         private registerListeners();
+        private addMovementListeners();
+        private removeMovementListeners();
         private handleMouseDown;
         private handleMouseUp;
         private handleMouseMove;
+        private isHandleReleased(e);
         private updateValueDisplay;
         private updateHandlePosition;
         private getPositionFromEvent(e);

@@ -84,12 +84,9 @@ module DateSlider.Slider {
         }
 
         public destroy = (event?: Event): void => {
-            window.removeEventListener("mouseup", this.events.mouseup, false);
-            window.removeEventListener("touchend", this.events.touchend, false);
             window.removeEventListener("load", this.events.load);
             window.removeEventListener("resize", this.events.resize);
-            window.removeEventListener("mousemove", this.events.mousemove, true);
-            window.removeEventListener("touchmove", this.events.touchmove, true);
+            this.removeMovementListeners();
         }
 
         private bootstrapSliderToTemplate(): void {
@@ -154,13 +151,30 @@ module DateSlider.Slider {
             window.addEventListener("resize", this.events.resize);
         }
 
-        private handleMouseDown = (e: MouseEvent | TouchEvent): void => {
-            e.preventDefault();
+        private addMovementListeners(): void {
             window.addEventListener("touchmove", this.events.touchmove, true);
             window.addEventListener("mousemove", this.events.mousemove, true);
 
             window.addEventListener("mouseup", this.events.mouseup, false);
             window.addEventListener("touchend", this.events.touchend, false);
+        }
+
+        private removeMovementListeners(): void {
+            window.removeEventListener("touchmove", this.events.touchmove, true);
+            window.removeEventListener("mousemove", this.events.mousemove, true);
+
+            window.removeEventListener("mouseup", this.events.mouseup, false);
+            window.removeEventListener("touchend", this.events.touchend, false);
+        }
+
+        private handleMouseDown = (e: MouseEvent | TouchEvent): void => {
+            // only move handler with the left mouse button
+            if (this.isHandleReleased(e)) {
+                return;
+            }
+
+            e.preventDefault();
+            this.addMovementListeners();
             this.onSliderHandleGrabEvent.fire(null);
         }
 
@@ -168,24 +182,32 @@ module DateSlider.Slider {
             let position = this.getPositionFromEvent(e);
             this.setValue(this.toDiscrete(this.calculateValue(position)));
 
-            window.removeEventListener("touchmove", this.events.touchmove, true);
-            window.removeEventListener("mousemove", this.events.mousemove, true);
-
-            window.removeEventListener("mouseup", this.events.mouseup, false);
-            window.removeEventListener("touchend", this.events.touchend, false);
+            this.removeMovementListeners();
             this.onSliderHandleReleaseEvent.fire(null);
         }
 
         private handleMouseMove = (e: MouseEvent | TouchEvent): void => {
-            // prevent default: for example to disable the default image dragging
             if (e instanceof MouseEvent) {
+                // prevent default: for example to disable the default image dragging
                 e.preventDefault();
+            }
+
+            if (this.isHandleReleased(e)) {
+                this.removeMovementListeners();
+                return;
             }
 
             let position = this.getPositionFromEvent(e);
             this.setValue(this.calculateValue(position));
 
             this.onSliderHandleMoveEvent.fire(null);
+        }
+
+        private isHandleReleased(e: MouseEvent | TouchEvent): boolean {
+                   // no touches
+            return e instanceof TouchEvent && e.targetTouches.length <= 0
+                   // not holding the left button
+                || e instanceof MouseEvent && (1 & e.buttons) !== 1;
         }
 
         private updateValueDisplay = (): void => {

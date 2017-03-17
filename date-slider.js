@@ -507,34 +507,33 @@ var DateSlider;
                     touchstart: function (e) { return _this.handleMouseDown(e); },
                 };
                 this.destroy = function (event) {
-                    window.removeEventListener("mouseup", _this.events.mouseup, false);
-                    window.removeEventListener("touchend", _this.events.touchend, false);
                     window.removeEventListener("load", _this.events.load);
                     window.removeEventListener("resize", _this.events.resize);
-                    window.removeEventListener("mousemove", _this.events.mousemove, true);
-                    window.removeEventListener("touchmove", _this.events.touchmove, true);
+                    _this.removeMovementListeners();
                 };
                 this.handleMouseDown = function (e) {
+                    // only move handler with the left mouse button
+                    if (_this.isHandleReleased(e)) {
+                        return;
+                    }
                     e.preventDefault();
-                    window.addEventListener("touchmove", _this.events.touchmove, true);
-                    window.addEventListener("mousemove", _this.events.mousemove, true);
-                    window.addEventListener("mouseup", _this.events.mouseup, false);
-                    window.addEventListener("touchend", _this.events.touchend, false);
+                    _this.addMovementListeners();
                     _this.onSliderHandleGrabEvent.fire(null);
                 };
                 this.handleMouseUp = function (e) {
                     var position = _this.getPositionFromEvent(e);
                     _this.setValue(_this.toDiscrete(_this.calculateValue(position)));
-                    window.removeEventListener("touchmove", _this.events.touchmove, true);
-                    window.removeEventListener("mousemove", _this.events.mousemove, true);
-                    window.removeEventListener("mouseup", _this.events.mouseup, false);
-                    window.removeEventListener("touchend", _this.events.touchend, false);
+                    _this.removeMovementListeners();
                     _this.onSliderHandleReleaseEvent.fire(null);
                 };
                 this.handleMouseMove = function (e) {
-                    // prevent default: for example to disable the default image dragging
                     if (e instanceof MouseEvent) {
+                        // prevent default: for example to disable the default image dragging
                         e.preventDefault();
+                    }
+                    if (_this.isHandleReleased(e)) {
+                        _this.removeMovementListeners();
+                        return;
                     }
                     var position = _this.getPositionFromEvent(e);
                     _this.setValue(_this.calculateValue(position));
@@ -644,6 +643,23 @@ var DateSlider;
                 this.handleElement.addEventListener("touchstart", this.events.touchstart, true);
                 window.addEventListener("load", this.events.load);
                 window.addEventListener("resize", this.events.resize);
+            };
+            SliderInstance.prototype.addMovementListeners = function () {
+                window.addEventListener("touchmove", this.events.touchmove, true);
+                window.addEventListener("mousemove", this.events.mousemove, true);
+                window.addEventListener("mouseup", this.events.mouseup, false);
+                window.addEventListener("touchend", this.events.touchend, false);
+            };
+            SliderInstance.prototype.removeMovementListeners = function () {
+                window.removeEventListener("touchmove", this.events.touchmove, true);
+                window.removeEventListener("mousemove", this.events.mousemove, true);
+                window.removeEventListener("mouseup", this.events.mouseup, false);
+                window.removeEventListener("touchend", this.events.touchend, false);
+            };
+            SliderInstance.prototype.isHandleReleased = function (e) {
+                // no touches
+                return e instanceof TouchEvent && e.targetTouches.length <= 0
+                    || e instanceof MouseEvent && (1 & e.buttons) !== 1;
             };
             SliderInstance.prototype.getPositionFromEvent = function (e) {
                 if (e instanceof MouseEvent) {
