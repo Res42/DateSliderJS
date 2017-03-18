@@ -395,6 +395,8 @@ var DateSlider;
     // test range
     // demo: out of the box, full customization
     // slider distance of mouse from handle -> slowness of steps
+    // jquery, angular integration
+    // mark values next to the slider
 })(DateSlider || (DateSlider = {}));
 "use strict";
 "use strict";
@@ -752,7 +754,7 @@ var DateSlider;
                         // TODO
                         return new Slider.SliderRange(1, 12);
                     case "universal-time":
-                        // 24 * 60 * 60 -1
+                        // 24 * 60 * 60 - 1
                         return new Slider.SliderRange(0, 86399);
                     default:
                         throw new Error("SliderOptions.type is not valid.");

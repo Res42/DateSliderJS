@@ -58,7 +58,7 @@ module DateSlider.Slider {
                     // TODO
                     return new SliderRange(1, 12);
                 case "universal-time":
-                    // 24 * 60 * 60 -1
+                    // 24 * 60 * 60 - 1
                     return new SliderRange(0, 86399);
                 default:
                     throw new Error("SliderOptions.type is not valid.");
