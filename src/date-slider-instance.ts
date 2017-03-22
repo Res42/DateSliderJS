@@ -15,6 +15,9 @@ module DateSlider {
                 throw new Error("DateSlider.create(): Given HTML element is invalid.");
             }
             this.sliders = Slider.SliderInstance.createAll(options);
+            this.sliders.forEach(slider => {
+                slider.on("onValueChanged", (context: Slider.Context.SliderValueChangeContext) => this.onSliderUpdate(context, slider.options));
+            });
             let wrapper = this.createWrapper(this.sliders);
             element.parentNode.replaceChild(wrapper, element);
             Helpers.registerOnDestroy(wrapper, (event) => {
@@ -23,6 +26,13 @@ module DateSlider {
                 }
             });
 
+            if (!value) {
+                this.value = new DateSliderModel(new InnerModel(), null);
+            }
+
+            if (this.options.callback) {
+                this.onValueChangeEvent.register(this.options.callback.onValueChanged);
+            }
             this.setOptions();
         }
 
@@ -33,7 +43,6 @@ module DateSlider {
         public setValue(input: any): void {
             let oldValue = this.getValue();
             this.value = this.parser.parse(input, this.options.parserOptions);
-            // TODO update sliders
             this.updateSliders();
             this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, this.getValue()));
         }
@@ -63,6 +72,42 @@ module DateSlider {
         private setOptions(): void {
             this.bindParser();
             this.bindFormatter();
+        }
+
+        private onSliderUpdate = (context: Slider.Context.SliderValueChangeContext, options: SliderOptions) => {
+            let oldValue = this.getValue();
+            switch (options.type) {
+                case "year":
+                    this.value.model.year = context.newValue;
+                    break;
+                case "month":
+                    this.value.model.month = context.newValue;
+                    break;
+                case "day":
+                    this.value.model.day = context.newValue;
+                    break;
+                case "hour":
+                    this.value.model.hour = context.newValue;
+                    break;
+                case "minute":
+                    this.value.model.minute = context.newValue;
+                    break;
+                case "second":
+                    this.value.model.second = context.newValue;
+                    break;
+                case "universal-date":
+                    // TODO
+                    break;
+                case "universal-time":
+                    this.value.model.hour = Math.floor(context.newValue / 3600);
+                    this.value.model.minute = Math.floor(context.newValue / 60) % 60;
+                    this.value.model.second = context.newValue % 60;
+                    break;
+                case "universal":
+                    // TODO
+                    break;
+            }
+            this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, this.getValue()));
         }
 
         private updateSliders(): void {
@@ -144,19 +189,19 @@ module DateSlider {
         }
 
         private createWrapper(sliders: Slider.SliderInstance[]): HTMLDivElement {
-                let fragment = document.createDocumentFragment();
-                for (let slider of sliders) {
-                    fragment.appendChild(slider.element);
-                }
-                let wrapper = document.createElement("div");
-                wrapper.classList.add("date-slider");
-                wrapper.appendChild(fragment);
-                // in the appendChild method the silders' destroy method would be called because it fires the 'DOMNodeRemoved' event
-                // also only after this will the sliders' element gain a parent to use the MutationObserver
-                for (let slider of sliders) {
-                    Helpers.registerOnDestroy(slider.element, (event) => slider.destroy(event));
-                }
-                return wrapper;
+            let fragment = document.createDocumentFragment();
+            for (let slider of sliders) {
+                fragment.appendChild(slider.element);
+            }
+            let wrapper = document.createElement("div");
+            wrapper.classList.add("date-slider");
+            wrapper.appendChild(fragment);
+            // in the appendChild method the silders' destroy method would be called because it fires the 'DOMNodeRemoved' event
+            // also only after this will the sliders' element gain a parent to use the MutationObserver
+            for (let slider of sliders) {
+                Helpers.registerOnDestroy(slider.element, (event) => slider.destroy(event));
+            }
+            return wrapper;
         }
     }
 }

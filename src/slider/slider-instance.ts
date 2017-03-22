@@ -105,7 +105,7 @@ module DateSlider.Slider {
             }
         }
 
-        public on(eventName: SliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void {
+        public on(eventName: SliderEvent, callback: (context: DateSliderEventContext) => void): void {
             switch (eventName) {
                 case "onValueChanged":
                     this.onValueChangeEvent.register(callback);

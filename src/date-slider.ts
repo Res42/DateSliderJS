@@ -62,5 +62,5 @@ module DateSlider {
     // demo: out of the box, full customization
     // slider distance of mouse from handle -> slowness of steps
     // jquery, angular integration
-    // mark values next to the slider
+    // expanding / moving window slider
 }

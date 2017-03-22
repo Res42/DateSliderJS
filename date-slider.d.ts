@@ -62,6 +62,7 @@ declare module DateSlider {
         replaceOptions(options: DateSliderOptions): void;
         on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void;
         private setOptions();
+        private onSliderUpdate;
         private updateSliders();
         private bindFormatter();
         private bindParser();
@@ -282,7 +283,7 @@ declare module DateSlider.Slider {
         constructor(options: SliderOptions, range: SliderRange);
         getValue(): number;
         setValue(value: number): void;
-        on(eventName: SliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void;
+        on(eventName: SliderEvent, callback: (context: DateSliderEventContext) => void): void;
         destroy: (event?: Event) => void;
         private bootstrapSliderToTemplate();
         private findElementInSlider(className, required?);

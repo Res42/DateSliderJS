@@ -179,10 +179,48 @@ var DateSlider;
             this.options = options;
             this.value = value;
             this.onValueChangeEvent = new DateSlider.DateSliderEventHandler();
+            this.onSliderUpdate = function (context, options) {
+                var oldValue = _this.getValue();
+                switch (options.type) {
+                    case "year":
+                        _this.value.model.year = context.newValue;
+                        break;
+                    case "month":
+                        _this.value.model.month = context.newValue;
+                        break;
+                    case "day":
+                        _this.value.model.day = context.newValue;
+                        break;
+                    case "hour":
+                        _this.value.model.hour = context.newValue;
+                        break;
+                    case "minute":
+                        _this.value.model.minute = context.newValue;
+                        break;
+                    case "second":
+                        _this.value.model.second = context.newValue;
+                        break;
+                    case "universal-date":
+                        // TODO
+                        break;
+                    case "universal-time":
+                        _this.value.model.hour = Math.floor(context.newValue / 3600);
+                        _this.value.model.minute = Math.floor(context.newValue / 60) % 60;
+                        _this.value.model.second = context.newValue % 60;
+                        break;
+                    case "universal":
+                        // TODO
+                        break;
+                }
+                _this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, _this.getValue()));
+            };
             if (!element || !element.parentNode) {
                 throw new Error("DateSlider.create(): Given HTML element is invalid.");
             }
             this.sliders = DateSlider.Slider.SliderInstance.createAll(options);
+            this.sliders.forEach(function (slider) {
+                slider.on("onValueChanged", function (context) { return _this.onSliderUpdate(context, slider.options); });
+            });
             var wrapper = this.createWrapper(this.sliders);
             element.parentNode.replaceChild(wrapper, element);
             DateSlider.Helpers.registerOnDestroy(wrapper, function (event) {
@@ -191,6 +229,12 @@ var DateSlider;
                     slider.destroy(event);
                 }
             });
+            if (!value) {
+                this.value = new DateSlider.DateSliderModel(new DateSlider.InnerModel(), null);
+            }
+            if (this.options.callback) {
+                this.onValueChangeEvent.register(this.options.callback.onValueChanged);
+            }
             this.setOptions();
         }
         DateSliderInstance.prototype.getValue = function () {
@@ -199,7 +243,6 @@ var DateSlider;
         DateSliderInstance.prototype.setValue = function (input) {
             var oldValue = this.getValue();
             this.value = this.parser.parse(input, this.options.parserOptions);
-            // TODO update sliders
             this.updateSliders();
             this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, this.getValue()));
         };
@@ -346,6 +389,13 @@ var DateSlider;
             month, 
             /** In the range of [1, 31]. */
             day, hour, minute, second, timezone) {
+            if (year === void 0) { year = 0; }
+            if (month === void 0) { month = 1; }
+            if (day === void 0) { day = 1; }
+            if (hour === void 0) { hour = 0; }
+            if (minute === void 0) { minute = 0; }
+            if (second === void 0) { second = 0; }
+            if (timezone === void 0) { timezone = ""; }
             this.year = year;
             this.month = month;
             this.day = day;
@@ -418,7 +468,7 @@ var DateSlider;
     // demo: out of the box, full customization
     // slider distance of mouse from handle -> slowness of steps
     // jquery, angular integration
-    // mark values next to the slider
+    // expanding / moving window slider
 })(DateSlider || (DateSlider = {}));
 "use strict";
 "use strict";

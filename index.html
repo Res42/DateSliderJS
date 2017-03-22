@@ -46,21 +46,22 @@
                 formatter: "timestamp",
                 formatterOptions: { type: "seconds" },
                 sliders: [{
-                    type: "universal-time",
-                    callback: { 
-                        onValueChanged: function(context) {
-                            if (document.getElementById("model").value != context.newValue) {
-                                document.getElementById("model").value = context.newValue;
-                            }
-                            
+                    type: "universal-time"
+                }],
+                callback: { 
+                    onValueChanged: function(context) {
+                        if (document.getElementById("model").value != context.newValue) {
+                             document.getElementById("model").value = context.newValue;
                         } 
-                    }
-                }]
+                    } 
+                }
             };
+            document.getElementById("model").value = Math.floor(Date.now() / 1000);
             var instance = DateSlider.create(document.getElementById("demo1"), options);
+            instance.setValue(parseInt(document.getElementById("model").value));
 
             document.getElementById("model").addEventListener("change", function(event) {
-                instance.sliders[0].setValue(parseInt(event.currentTarget.value));
+                instance.setValue(parseInt(event.currentTarget.value));
             });
 
             var options2 = {
