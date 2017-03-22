@@ -1,4 +1,8 @@
 module DateSlider {
+    export class Constants {
+        public static SliderMarkerValueContainer = "marker-value-container";
+    }
+
     export class Helpers {
         /**
          * Registers a listener to the element's destroy.

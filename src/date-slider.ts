@@ -17,6 +17,22 @@ module DateSlider {
             let hours = Math.floor(value / 3600);
             return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
         },
+        markers: {
+            displayValueFormatter: (value: number, minimum: number, maximum: number): string => {
+                if (value === maximum) {
+                    return "24";
+                }
+                return (value / 3600).toString();
+            },
+            perpendicularOffset: 20,
+            showValueMarker: (value: number, minimum: number, maximum: number): boolean => {
+                if (value === maximum) {
+                    return true;
+                }
+
+                return value % 3600 === 0;
+            },
+        },
         type: "universal-time",
     };
 

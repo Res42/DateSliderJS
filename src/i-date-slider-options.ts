@@ -17,6 +17,11 @@ module DateSlider {
     export interface SliderOptions {
         type: "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
         displayValueFormatter?: (value: number) => string;
+        markers?: {
+            showValueMarker?: (value: number, minimum: number, maximum: number) => boolean;
+            displayValueFormatter?: (value: number, minimum: number, maximum: number) => string;
+            perpendicularOffset?: number;
+        };
         template?: {
             header?: string;
             footer?: string;

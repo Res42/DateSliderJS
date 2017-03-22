@@ -1,4 +1,7 @@
 declare module DateSlider {
+    class Constants {
+        static SliderMarkerValueContainer: string;
+    }
     class Helpers {
         /**
          * Registers a listener to the element's destroy.
@@ -110,6 +113,11 @@ declare module DateSlider {
     interface SliderOptions {
         type: "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
         displayValueFormatter?: (value: number) => string;
+        markers?: {
+            showValueMarker?: (value: number, minimum: number, maximum: number) => boolean;
+            displayValueFormatter?: (value: number, minimum: number, maximum: number) => string;
+            perpendicularOffset?: number;
+        };
         template?: {
             header?: string;
             footer?: string;
@@ -135,6 +143,11 @@ declare module DateSlider {
         divide(scalar: number): Vector;
         dot(vector: Vector): number;
         length(): number;
+        normalize(): Vector;
+        perpendicularClockwise(): Vector;
+        perpendicularCounterClockwise(): Vector;
+        floor(): Vector;
+        ceil(): Vector;
     }
 }
 declare module DateSlider.Context {
@@ -256,6 +269,8 @@ declare module DateSlider.Slider {
         private sliderLineEnd;
         private handleElement;
         private valueContainerElement?;
+        private markerElement?;
+        private markers;
         private toDiscrete;
         private onValueChangeEvent;
         private onSliderHandleGrabEvent;
@@ -279,6 +294,9 @@ declare module DateSlider.Slider {
         private handleMouseUp;
         private handleMouseMove;
         private isHandleReleased(e);
+        private createMarkers();
+        private updateMarkerValue(marker);
+        private updateMarkersPosition();
         private updateValueDisplay;
         private updateHandlePosition;
         private getPositionFromEvent(e);

@@ -7,6 +7,9 @@ module DateSlider.Slider {
         private sliderLineEnd: HTMLElement;
         private handleElement: HTMLElement;
         private valueContainerElement?: HTMLElement;
+        // private markerContainerElement?: HTMLElement;
+        private markerElement?: HTMLElement;
+        private markers: Array<{ element: HTMLElement, valueContainers: NodeListOf<HTMLElement>, value: number }>;
 
         private toDiscrete = Math.round;
 
@@ -16,11 +19,11 @@ module DateSlider.Slider {
         private onSliderHandleMoveEvent = new DateSliderEventHandler();
 
         private events = {
-            load: () => { this.updateHandlePosition(); this.updateValueDisplay(); },
+            load: () => { this.updateHandlePosition(); this.updateValueDisplay(); this.createMarkers(); this.updateMarkersPosition(); },
             mousedown: (e: MouseEvent) => this.handleMouseDown(e),
             mousemove: (e: MouseEvent) => this.handleMouseMove(e),
             mouseup: (e: MouseEvent) => this.handleMouseUp(e),
-            resize: () => this.updateHandlePosition(),
+            resize: () => { this.updateHandlePosition(); this.updateMarkersPosition(); },
             touchend: (e: TouchEvent) => this.handleMouseUp(e),
             touchmove: (e: TouchEvent) => this.handleMouseMove(e),
             touchstart: (e: TouchEvent) => this.handleMouseDown(e),
@@ -132,7 +135,10 @@ module DateSlider.Slider {
             this.handleElement = this.findElementInSlider("slider-handle-template");
             this.sliderLineStart = this.findElementInSlider("slider-control-start-template");
             this.sliderLineEnd = this.findElementInSlider("slider-control-end-template");
+            // TODO?: multiple value containers? use same class in template and normal?
             this.valueContainerElement = this.findElementInSlider("slider-value-container-template", false);
+            this.markerElement = this.findElementInSlider("slider-marker-template", false);
+            this.markerElement.remove();
         }
 
         private findElementInSlider(className: string, required = true): HTMLElement {
@@ -152,31 +158,43 @@ module DateSlider.Slider {
             this.element = document.createElement("div");
             this.element.classList.add("slider");
 
+            // value display
+            this.valueContainerElement = document.createElement("div");
+            this.valueContainerElement.classList.add("slider-value-container");
+            this.element.appendChild(this.valueContainerElement);
+
+            // value marker
+            this.markerElement = document.createElement("div");
+            this.markerElement.classList.add("slider-marker");
+
+            let valueContainer = document.createElement("div");
+            valueContainer.classList.add(Constants.SliderMarkerValueContainer);
+            this.markerElement.appendChild(valueContainer);
+
+            let marker = document.createElement("div");
+            marker.classList.add("marker-mark");
+            this.markerElement.appendChild(marker);
+
+            // slider
             this.sliderElement = document.createElement("div");
             this.sliderElement.classList.add("slider-control");
+            this.element.appendChild(this.sliderElement);
 
             this.sliderLineStart = document.createElement("div");
             this.sliderLineStart.classList.add("slider-control-start");
+            this.sliderElement.appendChild(this.sliderLineStart);
 
             this.sliderLineElement = document.createElement("div");
             this.sliderLineElement.classList.add("slider-control-line");
+            this.sliderElement.appendChild(this.sliderLineElement);
 
             this.sliderLineEnd = document.createElement("div");
             this.sliderLineEnd.classList.add("slider-control-end");
+            this.sliderElement.appendChild(this.sliderLineEnd);
 
             this.handleElement = document.createElement("div");
             this.handleElement.classList.add("slider-handle");
-
-            this.valueContainerElement = document.createElement("div");
-            this.valueContainerElement.classList.add("slider-value-container");
-
-            this.element.appendChild(this.valueContainerElement);
-
-            this.sliderElement.appendChild(this.sliderLineStart);
-            this.sliderElement.appendChild(this.sliderLineElement);
-            this.sliderElement.appendChild(this.sliderLineEnd);
             this.sliderElement.appendChild(this.handleElement);
-            this.element.appendChild(this.sliderElement);
         }
 
         private registerListeners(): void {
@@ -240,19 +258,83 @@ module DateSlider.Slider {
         }
 
         private isHandleReleased(e: MouseEvent | TouchEvent): boolean {
-                   // no touches
+            // no touches
             return e instanceof TouchEvent && e.targetTouches.length <= 0
-                   // not holding the left button
+                // not holding the left button
                 || e instanceof MouseEvent && (1 & e.buttons) !== 1;
+        }
+
+        private createMarkers() {
+            if (this.markerElement && this.options.markers && this.options.markers.showValueMarker) {
+
+                this.markers = [];
+                for (let v = this.range.minimum; v <= this.range.maximum; v++) {
+                    if (this.options.markers.showValueMarker(v, this.range.minimum, this.range.maximum)) {
+                        let marker = this.markerElement.cloneNode(true) as HTMLElement;
+                        let valueContainers = marker.getElementsByClassName(Constants.SliderMarkerValueContainer) as NodeListOf<HTMLElement>;
+                        this.markers.push({ element: marker, valueContainers: valueContainers, value: v });
+                        this.sliderElement.appendChild(marker);
+
+                        this.updateMarkerValue(this.markers[this.markers.length - 1]);
+                    }
+                }
+
+                this.sliderElement.style.overflow = "hidden";
+            }
+        }
+
+        private updateMarkerValue(marker: { element: HTMLElement, valueContainers: NodeListOf<HTMLElement>, value: number }): void {
+            let text: string;
+            if (this.options.markers.displayValueFormatter) {
+                text = this.options.markers.displayValueFormatter(marker.value, this.range.minimum, this.range.maximum);
+            } else if (this.options.displayValueFormatter) {
+                text = this.options.displayValueFormatter(marker.value);
+            } else {
+                text = marker.value.toString();
+            }
+
+            for (let i = 0; i < marker.valueContainers.length; i++) {
+                let container = marker.valueContainers.item(i);
+                container.innerHTML = text;
+            }
+        }
+
+        private updateMarkersPosition(): void {
+            if (!this.markers || this.markers.length <= 0) {
+                return;
+            }
+
+            let startCenter = this.calculateCenterPosition(this.sliderLineStart);
+            let endCenter = this.calculateCenterPosition(this.sliderLineEnd);
+
+            let se = endCenter.substract(startCenter);
+
+            // with this length, if the overflow is set to hidden,
+            // then the first marker's start will be at the beginning of the slider
+            // and the last marker's start will be at the end of the slider
+            let markerLength = se.length() / (this.markers.length - 1);
+            // offset the markers, so the first marker's CENTER will be at the beginning of the slider
+            //                    and the last  marker's CENTER will be at the end of the slider
+            let xOffset = se.normalize().multiply(markerLength / 2);
+            for (let marker of this.markers) {
+                let markerRatio = (marker.value - this.range.minimum) / (this.range.maximum - this.range.minimum);
+                let markerYPosition = startCenter.add(se.multiply(markerRatio).add(se.normalize().perpendicularCounterClockwise().multiply(this.options.markers.perpendicularOffset || 0)));
+                let markerXPosition = markerYPosition.substract(xOffset);
+
+                marker.element.style.width = `${markerLength.toFixed(2)}px`;
+                marker.element.style.position = "absolute";
+                marker.element.style.top = `${(markerYPosition.y - marker.element.scrollHeight).toFixed(2)}px`;
+                marker.element.style.left = `${markerXPosition.x.toFixed(2)}px`;
+            }
         }
 
         private updateValueDisplay = (): void => {
             if (this.valueContainerElement) {
                 let value = this.getValue();
                 let displayedValue = this.options.displayValueFormatter
-                                     ? this.options.displayValueFormatter(value)
-                                     : value.toString();
-                this.valueContainerElement.innerText = displayedValue;
+                    ? this.options.displayValueFormatter(value)
+                    : value.toString();
+                this.valueContainerElement.innerHTML = displayedValue;
             }
         }
 
@@ -315,16 +397,16 @@ module DateSlider.Slider {
             // the handle's center should be at the start, so it needs an adjustment
             // finally, calculate the handle's position in the line by it's range value (min: 0% -> max: 100%)
             return new Vector(startPosition.x - this.handleElement.offsetWidth / 2 + (endPosition.x - startPosition.x) * ratioInSlider,
-                              startPosition.y - this.handleElement.offsetHeight / 2 + (endPosition.y - startPosition.y) * ratioInSlider);
+                startPosition.y - this.handleElement.offsetHeight / 2 + (endPosition.y - startPosition.y) * ratioInSlider);
         }
 
         private calculateCenterPosition(element: HTMLElement | ClientRect): Vector {
             if (element instanceof HTMLElement) {
                 return new Vector(element.offsetLeft + element.offsetWidth / 2,
-                                  element.offsetTop + element.offsetHeight / 2);
+                    element.offsetTop + element.offsetHeight / 2);
             } else if (element instanceof ClientRect) {
                 return new Vector(element.left + element.width / 2,
-                                  element.top + element.height / 2);
+                    element.top + element.height / 2);
             }
             throw new Error("Invalid parameter.");
         }

@@ -29,5 +29,26 @@ module DateSlider {
         public length(): number {
             return Math.sqrt(this.x * this.x + this.y * this.y);
         }
+
+        public normalize(): Vector {
+            let length = this.length();
+            return new Vector(this.x / length, this.y / length);
+        }
+
+        public perpendicularClockwise(): Vector {
+            return new Vector(-this.y, this.x);
+        }
+
+        public perpendicularCounterClockwise(): Vector {
+            return new Vector(this.y, -this.x);
+        }
+
+        public floor(): Vector {
+            return new Vector(Math.floor(this.x), Math.floor(this.y));
+        }
+
+        public ceil(): Vector {
+            return new Vector(Math.ceil(this.x), Math.ceil(this.y));
+        }
     }
 }

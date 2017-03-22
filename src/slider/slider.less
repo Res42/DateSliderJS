@@ -1,32 +1,60 @@
 .slider {
+
+    .slider-marker {
+        height: 30px;
+        display: inline-block;
+        position: absolute;
+
+        // &:nth-child(2n) {
+        //     background-color: coral;
+        // }
+
+        // &:nth-child(2n+1) {
+        //     background-color: darkolivegreen;
+        // }
+
+        .marker-mark {
+            width: 50%;
+            border-right: 1px solid black;
+            height: 10px;
+        }
+
+        .marker-value-container {
+            text-align: center;
+        }
+    }
+
     .slider-control {
         position: relative;
-        height: 60px;
+        height: 72px;
         background-color: lightgray;
 
         .slider-control-line {
             position: absolute;
-            .vertical-center();
+            //.vertical-center();
             height: 3px;
             left: 20px;
             right: 20px;
+            bottom: 21px;
             background-color: limegreen;
         }
 
         .slider-control-start {
             position: absolute;
-            .vertical-center();
+            //.vertical-center();
             height: 1px;
             width: 1px;
             left: 20px;
+            bottom: 21px;
         }
 
         .slider-control-end {
             position: absolute;
-            .vertical-center();
+            //.vertical-center();
             height: 1px;
             width: 1px;
             right: 20px;
+            bottom: 21px;
         }
 
         .slider-handle {

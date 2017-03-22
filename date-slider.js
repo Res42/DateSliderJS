@@ -11,6 +11,13 @@ var __extends = (this && this.__extends) || (function () {
 "use strict";
 var DateSlider;
 (function (DateSlider) {
+    var Constants = (function () {
+        function Constants() {
+        }
+        return Constants;
+    }());
+    Constants.SliderMarkerValueContainer = "marker-value-container";
+    DateSlider.Constants = Constants;
     var Helpers = (function () {
         function Helpers() {
         }
@@ -371,6 +378,21 @@ var DateSlider;
             var hours = Math.floor(value / 3600);
             return pad(hours) + ":" + pad(minutes) + ":" + pad(seconds);
         },
+        markers: {
+            displayValueFormatter: function (value, minimum, maximum) {
+                if (value === maximum) {
+                    return "24";
+                }
+                return (value / 3600).toString();
+            },
+            perpendicularOffset: 20,
+            showValueMarker: function (value, minimum, maximum) {
+                if (value === maximum) {
+                    return true;
+                }
+                return value % 3600 === 0;
+            },
+        },
         type: "universal-time",
     };
     function create(element, options) {
@@ -424,6 +446,22 @@ var DateSlider;
         };
         Vector.prototype.length = function () {
             return Math.sqrt(this.x * this.x + this.y * this.y);
+        };
+        Vector.prototype.normalize = function () {
+            var length = this.length();
+            return new Vector(this.x / length, this.y / length);
+        };
+        Vector.prototype.perpendicularClockwise = function () {
+            return new Vector(-this.y, this.x);
+        };
+        Vector.prototype.perpendicularCounterClockwise = function () {
+            return new Vector(this.y, -this.x);
+        };
+        Vector.prototype.floor = function () {
+            return new Vector(Math.floor(this.x), Math.floor(this.y));
+        };
+        Vector.prototype.ceil = function () {
+            return new Vector(Math.ceil(this.x), Math.ceil(this.y));
         };
         return Vector;
     }());
@@ -650,11 +688,11 @@ var DateSlider;
                 this.onSliderHandleReleaseEvent = new DateSlider.DateSliderEventHandler();
                 this.onSliderHandleMoveEvent = new DateSlider.DateSliderEventHandler();
                 this.events = {
-                    load: function () { _this.updateHandlePosition(); _this.updateValueDisplay(); },
+                    load: function () { _this.updateHandlePosition(); _this.updateValueDisplay(); _this.createMarkers(); _this.updateMarkersPosition(); },
                     mousedown: function (e) { return _this.handleMouseDown(e); },
                     mousemove: function (e) { return _this.handleMouseMove(e); },
                     mouseup: function (e) { return _this.handleMouseUp(e); },
-                    resize: function () { return _this.updateHandlePosition(); },
+                    resize: function () { _this.updateHandlePosition(); _this.updateMarkersPosition(); },
                     touchend: function (e) { return _this.handleMouseUp(e); },
                     touchmove: function (e) { return _this.handleMouseMove(e); },
                     touchstart: function (e) { return _this.handleMouseDown(e); },
@@ -698,7 +736,7 @@ var DateSlider;
                         var displayedValue = _this.options.displayValueFormatter
                             ? _this.options.displayValueFormatter(value)
                             : value.toString();
-                        _this.valueContainerElement.innerText = displayedValue;
+                        _this.valueContainerElement.innerHTML = displayedValue;
                     }
                 };
                 this.updateHandlePosition = function () {
@@ -795,7 +833,10 @@ var DateSlider;
                 this.handleElement = this.findElementInSlider("slider-handle-template");
                 this.sliderLineStart = this.findElementInSlider("slider-control-start-template");
                 this.sliderLineEnd = this.findElementInSlider("slider-control-end-template");
+                // TODO?: multiple value containers? use same class in template and normal?
                 this.valueContainerElement = this.findElementInSlider("slider-value-container-template", false);
+                this.markerElement = this.findElementInSlider("slider-marker-template", false);
+                this.markerElement.remove();
             };
             SliderInstance.prototype.findElementInSlider = function (className, required) {
                 if (required === void 0) { required = true; }
@@ -811,24 +852,35 @@ var DateSlider;
             SliderInstance.prototype.createSliderElement = function () {
                 this.element = document.createElement("div");
                 this.element.classList.add("slider");
-                this.sliderElement = document.createElement("div");
-                this.sliderElement.classList.add("slider-control");
-                this.sliderLineStart = document.createElement("div");
-                this.sliderLineStart.classList.add("slider-control-start");
-                this.sliderLineElement = document.createElement("div");
-                this.sliderLineElement.classList.add("slider-control-line");
-                this.sliderLineEnd = document.createElement("div");
-                this.sliderLineEnd.classList.add("slider-control-end");
-                this.handleElement = document.createElement("div");
-                this.handleElement.classList.add("slider-handle");
+                // value display
                 this.valueContainerElement = document.createElement("div");
                 this.valueContainerElement.classList.add("slider-value-container");
                 this.element.appendChild(this.valueContainerElement);
-                this.sliderElement.appendChild(this.sliderLineStart);
-                this.sliderElement.appendChild(this.sliderLineElement);
-                this.sliderElement.appendChild(this.sliderLineEnd);
-                this.sliderElement.appendChild(this.handleElement);
+                // value marker
+                this.markerElement = document.createElement("div");
+                this.markerElement.classList.add("slider-marker");
+                var valueContainer = document.createElement("div");
+                valueContainer.classList.add(DateSlider.Constants.SliderMarkerValueContainer);
+                this.markerElement.appendChild(valueContainer);
+                var marker = document.createElement("div");
+                marker.classList.add("marker-mark");
+                this.markerElement.appendChild(marker);
+                // slider
+                this.sliderElement = document.createElement("div");
+                this.sliderElement.classList.add("slider-control");
                 this.element.appendChild(this.sliderElement);
+                this.sliderLineStart = document.createElement("div");
+                this.sliderLineStart.classList.add("slider-control-start");
+                this.sliderElement.appendChild(this.sliderLineStart);
+                this.sliderLineElement = document.createElement("div");
+                this.sliderLineElement.classList.add("slider-control-line");
+                this.sliderElement.appendChild(this.sliderLineElement);
+                this.sliderLineEnd = document.createElement("div");
+                this.sliderLineEnd.classList.add("slider-control-end");
+                this.sliderElement.appendChild(this.sliderLineEnd);
+                this.handleElement = document.createElement("div");
+                this.handleElement.classList.add("slider-handle");
+                this.sliderElement.appendChild(this.handleElement);
             };
             SliderInstance.prototype.registerListeners = function () {
                 this.handleElement.addEventListener("mousedown", this.events.mousedown, false);
@@ -852,6 +904,62 @@ var DateSlider;
                 // no touches
                 return e instanceof TouchEvent && e.targetTouches.length <= 0
                     || e instanceof MouseEvent && (1 & e.buttons) !== 1;
+            };
+            SliderInstance.prototype.createMarkers = function () {
+                if (this.markerElement && this.options.markers && this.options.markers.showValueMarker) {
+                    this.markers = [];
+                    for (var v = this.range.minimum; v <= this.range.maximum; v++) {
+                        if (this.options.markers.showValueMarker(v, this.range.minimum, this.range.maximum)) {
+                            var marker = this.markerElement.cloneNode(true);
+                            var valueContainers = marker.getElementsByClassName(DateSlider.Constants.SliderMarkerValueContainer);
+                            this.markers.push({ element: marker, valueContainers: valueContainers, value: v });
+                            this.sliderElement.appendChild(marker);
+                            this.updateMarkerValue(this.markers[this.markers.length - 1]);
+                        }
+                    }
+                    this.sliderElement.style.overflow = "hidden";
+                }
+            };
+            SliderInstance.prototype.updateMarkerValue = function (marker) {
+                var text;
+                if (this.options.markers.displayValueFormatter) {
+                    text = this.options.markers.displayValueFormatter(marker.value, this.range.minimum, this.range.maximum);
+                }
+                else if (this.options.displayValueFormatter) {
+                    text = this.options.displayValueFormatter(marker.value);
+                }
+                else {
+                    text = marker.value.toString();
+                }
+                for (var i = 0; i < marker.valueContainers.length; i++) {
+                    var container = marker.valueContainers.item(i);
+                    container.innerHTML = text;
+                }
+            };
+            SliderInstance.prototype.updateMarkersPosition = function () {
+                if (!this.markers || this.markers.length <= 0) {
+                    return;
+                }
+                var startCenter = this.calculateCenterPosition(this.sliderLineStart);
+                var endCenter = this.calculateCenterPosition(this.sliderLineEnd);
+                var se = endCenter.substract(startCenter);
+                // with this length, if the overflow is set to hidden,
+                // then the first marker's start will be at the beginning of the slider
+                // and the last marker's start will be at the end of the slider
+                var markerLength = se.length() / (this.markers.length - 1);
+                // offset the markers, so the first marker's CENTER will be at the beginning of the slider
+                //                    and the last  marker's CENTER will be at the end of the slider
+                var xOffset = se.normalize().multiply(markerLength / 2);
+                for (var _i = 0, _a = this.markers; _i < _a.length; _i++) {
+                    var marker = _a[_i];
+                    var markerRatio = (marker.value - this.range.minimum) / (this.range.maximum - this.range.minimum);
+                    var markerYPosition = startCenter.add(se.multiply(markerRatio).add(se.normalize().perpendicularCounterClockwise().multiply(this.options.markers.perpendicularOffset || 0)));
+                    var markerXPosition = markerYPosition.substract(xOffset);
+                    marker.element.style.width = markerLength.toFixed(2) + "px";
+                    marker.element.style.position = "absolute";
+                    marker.element.style.top = (markerYPosition.y - marker.element.scrollHeight).toFixed(2) + "px";
+                    marker.element.style.left = markerXPosition.x.toFixed(2) + "px";
+                }
             };
             SliderInstance.prototype.getPositionFromEvent = function (e) {
                 if (e instanceof MouseEvent) {
