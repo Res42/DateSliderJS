@@ -63,4 +63,5 @@ module DateSlider {
     // slider distance of mouse from handle -> slowness of steps
     // jquery, angular integration
     // expanding / moving window slider
+    // showValueMarker: return a string[] with marker classlist; null if no marker
 }
