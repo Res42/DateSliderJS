@@ -1,9 +1,24 @@
 module DateSlider {
     export class Constants {
         public static SliderMarkerValueContainer = "marker-value-container";
+        /** 86400 = 24 \* 60 \* 60 */
+        public static SecondsInDay = 86400;
+        /** 86400000 = 24 \* 60 \* 60 \* 1000 */
+        public static MillisecondsInDay = 86400000;
     }
 
     export class Helpers {
+        public static getDaysinYear(year?: number): number {
+            if (typeof year === "undefined" || year === null) {
+                year = (new Date()).getUTCFullYear();
+            }
+
+            let startOfYear = new Date(year, 0, 0).getTime();
+            let endOfYear = new Date(year + 1, 0, 0).getTime();
+
+            return (endOfYear - startOfYear) / (Constants.MillisecondsInDay);
+        }
+
         /**
          * Registers a listener to the element's destroy.
          * @param element The element whose destroy event should be watched.

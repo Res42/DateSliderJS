@@ -121,20 +121,15 @@ module DateSlider.Slider {
                 throw new Error("Cannot slide with non-number.");
             }
 
-            if (by < 0) {
-                this._minimum -= by;
-                this._maximum -= by;
-                if (this._value > this._maximum) {
-                    this._value = this._maximum;
-                }
+            this._minimum += by;
+            this._maximum += by;
+
+            if (by < 0 && this._value > this._maximum) {
+                this._value = this._maximum;
             }
 
-            if (by > 0) {
-                this._maximum += by;
-                this._minimum += by;
-                if (this._value < this._minimum) {
-                    this._value = this._minimum;
-                }
+            if (by > 0 && this._value < this._minimum) {
+                this._value = this._minimum;
             }
         }
     }

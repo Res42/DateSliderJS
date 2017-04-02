@@ -55,8 +55,31 @@ module DateSlider {
         type: "month",
     };
 
+    export let universalDateDefaults: SliderOptions = {
+        // markers: {
+        //     perpendicularOffset: 20,
+        //     showValueMarker: (value: number, minimum: number, maximum: number): string | string[] => {
+        //         return "";
+        //     },
+        // },
+        type: "universal-date",
+    };
+
+    export let yearDefaults: SliderOptions = {
+        markers: {
+            perpendicularOffset: 20,
+            showValueMarker: (value: number, minimum: number, maximum: number): string | string[] => {
+                return "";
+            },
+        },
+        movement: "slide",
+        type: "year",
+    };
+
     export let defaultSilderOptions: {[key: string]: SliderOptions} = {
         "month": monthDefaults,
+        "universal-date": universalDateDefaults,
         "universal-time": universalTimeDefaults,
+        "year": yearDefaults,
     };
 }

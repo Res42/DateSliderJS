@@ -1,8 +1,13 @@
 declare module DateSlider {
     class Constants {
         static SliderMarkerValueContainer: string;
+        /** 86400 = 24 \* 60 \* 60 */
+        static SecondsInDay: number;
+        /** 86400000 = 24 \* 60 \* 60 \* 1000 */
+        static MillisecondsInDay: number;
     }
     class Helpers {
+        static getDaysinYear(year?: number): number;
         /**
          * Registers a listener to the element's destroy.
          * @param element The element whose destroy event should be watched.
@@ -40,6 +45,8 @@ declare module DateSlider {
      */
     let universalTimeDefaults: SliderOptions;
     let monthDefaults: SliderOptions;
+    let universalDateDefaults: SliderOptions;
+    let yearDefaults: SliderOptions;
     let defaultSilderOptions: {
         [key: string]: SliderOptions;
     };
@@ -126,6 +133,7 @@ declare module DateSlider {
     interface SliderOptions {
         type: "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
         movement?: "none" | "slide" | "expand";
+        movementStep?: number;
         displayValueFormatter?: (value: number) => string;
         /** Customize the markers of the slider. */
         markers?: {
@@ -296,11 +304,14 @@ declare module DateSlider.Slider {
         private markerElement?;
         private markers;
         private toDiscrete;
+        private lastPointerPosition;
+        private isDragging;
         private onValueChangeEvent;
         private onSliderHandleGrabEvent;
         private onSliderHandleReleaseEvent;
         private onSliderHandleMoveEvent;
         private events;
+        private slideIntervalHandle;
         static createAll(options: DateSliderOptions): SliderInstance[];
         private static getRangeFromType(sliderOptions);
         constructor(options: SliderOptions, range: SliderRange);
@@ -318,6 +329,9 @@ declare module DateSlider.Slider {
         private handleMouseUp;
         private handleMouseMove;
         private isHandleReleased(e);
+        private updateAfter(callback);
+        private sliding;
+        private registerSliding();
         private createMarkers();
         private updateMarkerValue(marker);
         private updateMarkersPosition();

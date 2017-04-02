@@ -17,6 +17,7 @@ module DateSlider {
     export interface SliderOptions {
         type: "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
         movement?: "none" | "slide" | "expand";
+        movementStep?: number;
         displayValueFormatter?: (value: number) => string;
         /** Customize the markers of the slider. */
         markers?: {

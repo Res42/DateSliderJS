@@ -7,11 +7,12 @@ module DateSlider.Slider {
         private sliderLineEnd: HTMLElement;
         private handleElement: HTMLElement;
         private valueContainerElement?: HTMLElement;
-        // private markerContainerElement?: HTMLElement;
         private markerElement?: HTMLElement;
         private markers: Array<{ element: HTMLElement, valueContainers: NodeListOf<HTMLElement>, value: number }>;
 
         private toDiscrete = Math.round;
+        private lastPointerPosition: Vector;
+        private isDragging = false;
 
         private onValueChangeEvent = new DateSliderEventHandler();
         private onSliderHandleGrabEvent = new DateSliderEventHandler();
@@ -29,6 +30,8 @@ module DateSlider.Slider {
             touchstart: (e: TouchEvent) => this.handleMouseDown(e),
         };
 
+        private slideIntervalHandle: number;
+
         public static createAll(options: DateSliderOptions): SliderInstance[] {
             if (!options.sliders) {
                 throw new Error("Cannot create sliders because options.sliders is not set.");
@@ -43,8 +46,8 @@ module DateSlider.Slider {
         private static getRangeFromType(sliderOptions: SliderOptions): SliderRange {
             switch (sliderOptions.type) {
                 case "year":
-                    // TODO
-                    return new SliderRange(1, 12);
+                    let currentYear = new Date().getUTCFullYear();
+                    return new SliderRange(currentYear - 10, currentYear + 10);
                 case "month":
                     return new SliderRange(1, 12);
                 case "day":
@@ -61,8 +64,7 @@ module DateSlider.Slider {
                     // TODO
                     return new SliderRange(1, 12);
                 case "universal-time":
-                    // 24 * 60 * 60 - 1
-                    return new SliderRange(0, 86399);
+                    return new SliderRange(0, Constants.SecondsInDay - 1);
                 default:
                     throw new Error("SliderOptions.type is not valid.");
             }
@@ -79,7 +81,10 @@ module DateSlider.Slider {
                 this.onSliderHandleReleaseEvent.register(options.callback.onSliderHandleReleased);
             }
 
-            this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(null, this.range.value));
+            if (this.options.movement === "slide") {
+                this.range.value = this.toDiscrete((this.range.maximum - this.range.minimum) / 2);
+                this.registerSliding();
+            }
 
             if (this.options.template instanceof HTMLElement) {
                 this.bootstrapSliderToTemplate();
@@ -88,6 +93,8 @@ module DateSlider.Slider {
             }
 
             this.registerListeners();
+
+            this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(null, this.range.value));
         }
 
         public getValue(): number {
@@ -95,14 +102,9 @@ module DateSlider.Slider {
         }
 
         public setValue(value: number): void {
-            let oldValue = this.toDiscrete(this.range.value);
-            this.range.value = value;
-            let newValue = this.toDiscrete(this.range.value);
-            this.updateValueDisplay();
-            this.updateHandlePosition();
-            if (oldValue !== newValue) {
-                this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(oldValue, newValue));
-            }
+            this.updateAfter(() => {
+                this.range.value = value;
+            });
         }
 
         public on(eventName: SliderEvent, callback: (context: DateSliderEventContext) => void): void {
@@ -125,6 +127,9 @@ module DateSlider.Slider {
         public destroy = (event?: Event): void => {
             window.removeEventListener("load", this.events.load);
             window.removeEventListener("resize", this.events.resize);
+            if (typeof this.slideIntervalHandle !== "undefined" && this.slideIntervalHandle !== null) {
+                window.clearInterval(this.slideIntervalHandle);
+            }
             this.removeMovementListeners();
         }
 
@@ -224,17 +229,23 @@ module DateSlider.Slider {
         private handleMouseDown = (e: MouseEvent | TouchEvent): void => {
             // only move handler with the left mouse button
             if (this.isHandleReleased(e)) {
+                this.isDragging = false;
                 return;
             }
 
             e.preventDefault();
+
+            this.lastPointerPosition = this.getPositionFromEvent(e);
+            this.isDragging = true;
+
             this.addMovementListeners();
             this.onSliderHandleGrabEvent.fire(null);
         }
 
         private handleMouseUp = (e: MouseEvent | TouchEvent): void => {
-            let position = this.getPositionFromEvent(e);
-            this.setValue(this.toDiscrete(this.calculateValue(position)));
+            this.isDragging = false;
+            this.lastPointerPosition = this.getPositionFromEvent(e);
+            this.setValue(this.toDiscrete(this.calculateValue(this.lastPointerPosition)));
 
             this.removeMovementListeners();
             this.onSliderHandleReleaseEvent.fire(null);
@@ -248,11 +259,12 @@ module DateSlider.Slider {
 
             if (this.isHandleReleased(e)) {
                 this.removeMovementListeners();
+                this.isDragging = false;
                 return;
             }
 
-            let position = this.getPositionFromEvent(e);
-            this.setValue(this.calculateValue(position));
+            this.lastPointerPosition = this.getPositionFromEvent(e);
+            this.setValue(this.calculateValue(this.lastPointerPosition));
 
             this.onSliderHandleMoveEvent.fire(null);
         }
@@ -262,6 +274,43 @@ module DateSlider.Slider {
             return e instanceof TouchEvent && e.targetTouches.length <= 0
                 // not holding the left button
                 || e instanceof MouseEvent && (1 & e.buttons) !== 1;
+        }
+
+        private updateAfter(callback: () => void) {
+            let oldValue = this.toDiscrete(this.range.value);
+            callback();
+            let newValue = this.toDiscrete(this.range.value);
+            this.updateValueDisplay();
+            this.updateHandlePosition();
+            if (oldValue !== newValue) {
+                this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(oldValue, newValue));
+            }
+        }
+
+        private sliding = () => {
+            let direction: number;
+            if (this.range.value === this.range.maximum) {
+                direction = 1;
+            } else if (this.range.value === this.range.minimum){
+                direction = -1;
+            } else {
+                direction = 0;
+            }
+
+            if (direction !== 0) {
+                this.updateAfter(() => {
+                    this.range.slide(direction * (this.options.movementStep || 1));
+                    if (this.isDragging) {
+                        this.setValue(this.calculateValue(this.lastPointerPosition));
+                    }
+                });
+                this.createMarkers();
+                this.updateMarkersPosition();
+            }
+        }
+
+        private registerSliding() {
+            this.slideIntervalHandle = window.setInterval(this.sliding, 200);
         }
 
         private createMarkers() {
