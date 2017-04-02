@@ -321,6 +321,7 @@ declare module DateSlider.Slider {
         decrement(by?: number): void;
         expandMaximum(by?: number): void;
         expandMinimum(by?: number): void;
+        slide(by?: number): void;
     }
 }
 declare module DateSlider.Slider.Context {

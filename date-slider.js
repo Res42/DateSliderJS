@@ -469,6 +469,7 @@ var DateSlider;
     // slider distance of mouse from handle -> slowness of steps
     // jquery, angular integration
     // expanding / moving window slider
+    // showValueMarker: return a string[] with marker classlist; null if no marker
 })(DateSlider || (DateSlider = {}));
 "use strict";
 "use strict";
@@ -1082,7 +1083,7 @@ var DateSlider;
                 this._maximum = _maximum;
                 this._value = _value;
                 if (this._minimum === this._maximum) {
-                    throw new Error("Range minimum cannot be equal as maximum.");
+                    throw new Error("Range minimum cannot be equal to the maximum.");
                 }
                 if (typeof this._value === "undefined" || this._value === null) {
                     this._value = this._minimum;
@@ -1194,6 +1195,26 @@ var DateSlider;
                 }
                 this._minimum += by;
                 this._maximum += by * ((this._value - this._maximum) / (this._value - this._minimum));
+            };
+            SliderRange.prototype.slide = function (by) {
+                if (by === void 0) { by = 1; }
+                if (typeof by !== "number") {
+                    throw new Error("Cannot slide with non-number.");
+                }
+                if (by < 0) {
+                    this._minimum -= by;
+                    this._maximum -= by;
+                    if (this._value > this._maximum) {
+                        this._value = this._maximum;
+                    }
+                }
+                if (by > 0) {
+                    this._maximum += by;
+                    this._minimum += by;
+                    if (this._value < this._minimum) {
+                        this._value = this._minimum;
+                    }
+                }
             };
             return SliderRange;
         }());

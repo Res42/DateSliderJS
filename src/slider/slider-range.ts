@@ -6,7 +6,7 @@ module DateSlider.Slider {
             private _value?: number,
         ) {
             if (this._minimum === this._maximum) {
-                throw new Error("Range minimum cannot be equal as maximum.");
+                throw new Error("Range minimum cannot be equal to the maximum.");
             }
 
             if (typeof this._value === "undefined" || this._value === null) {
@@ -114,6 +114,28 @@ module DateSlider.Slider {
 
             this._minimum += by;
             this._maximum += by * ((this._value - this._maximum) / (this._value - this._minimum));
+        }
+
+        public slide(by = 1): void {
+            if (typeof by !== "number") {
+                throw new Error("Cannot slide with non-number.");
+            }
+
+            if (by < 0) {
+                this._minimum -= by;
+                this._maximum -= by;
+                if (this._value > this._maximum) {
+                    this._value = this._maximum;
+                }
+            }
+
+            if (by > 0) {
+                this._maximum += by;
+                this._minimum += by;
+                if (this._value < this._minimum) {
+                    this._value = this._minimum;
+                }
+            }
         }
     }
 }
