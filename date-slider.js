@@ -528,7 +528,7 @@ var DateSlider;
     // test range
     // demo: out of the box, full customization
     // slider distance of mouse from handle -> slowness of steps
-    // jquery, angular integration
+    // angular integration
     // expanding slider
     // what is better? switch case or dictionary?
 })(DateSlider || (DateSlider = {}));
@@ -949,7 +949,12 @@ var DateSlider;
             SliderInstance.prototype.setValue = function (value) {
                 var _this = this;
                 this.updateAfter(function () {
-                    _this.range.value = value;
+                    if (_this.options.movement === "slide") {
+                        _this.range.slideTo(value);
+                    }
+                    else {
+                        _this.range.value = value;
+                    }
                 });
             };
             SliderInstance.prototype.on = function (eventName, callback) {
@@ -1326,6 +1331,15 @@ var DateSlider;
                 if (by > 0 && this._value < this._minimum) {
                     this._value = this._minimum;
                 }
+            };
+            SliderRange.prototype.slideTo = function (target) {
+                if (typeof target !== "number") {
+                    throw new Error("Cannot slideTo with non-number.");
+                }
+                var distance = this._maximum - this._minimum;
+                this._minimum = target - distance / 2;
+                this._value = target;
+                this._maximum = target + distance / 2;
             };
             return SliderRange;
         }());

@@ -23,7 +23,7 @@ module DateSlider {
     // test range
     // demo: out of the box, full customization
     // slider distance of mouse from handle -> slowness of steps
-    // jquery, angular integration
+    // angular integration
     // expanding slider
     // what is better? switch case or dictionary?
 }

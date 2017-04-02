@@ -132,5 +132,17 @@ module DateSlider.Slider {
                 this._value = this._minimum;
             }
         }
+
+        public slideTo(target: number): void {
+            if (typeof target !== "number") {
+                throw new Error("Cannot slideTo with non-number.");
+            }
+
+            let distance = this._maximum - this._minimum;
+
+            this._minimum = target - distance / 2;
+            this._value = target;
+            this._maximum = target + distance / 2;
+        }
     }
 }

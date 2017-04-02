@@ -102,7 +102,11 @@ module DateSlider.Slider {
 
         public setValue(value: number): void {
             this.updateAfter(() => {
-                this.range.value = value;
+                if (this.options.movement === "slide") {
+                    this.range.slideTo(value);
+                } else {
+                    this.range.value = value;
+                }
             });
         }
 
