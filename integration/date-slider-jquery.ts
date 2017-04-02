@@ -10,6 +10,10 @@ interface JQuery {
         this.each(function () {
             let instance = DateSlider.create(this, options);
             jQuery.data(this, "dateSlider", instance);
+
+            DateSlider.Helpers.registerOnDestroy(instance.element, () => {
+                jQuery.removeData(instance.element);
+            });
         });
 
         return this;
