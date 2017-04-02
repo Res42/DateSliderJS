@@ -291,7 +291,7 @@ module DateSlider.Slider {
             let direction: number;
             if (this.range.value === this.range.maximum) {
                 direction = 1;
-            } else if (this.range.value === this.range.minimum){
+            } else if (this.range.value === this.range.minimum) {
                 direction = -1;
             } else {
                 direction = 0;
