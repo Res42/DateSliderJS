@@ -994,10 +994,10 @@ var DateSlider;
                         var classNames = this.options.markers.showValueMarker(v, this.range.minimum, this.range.maximum);
                         if (classNames !== null) {
                             var marker = this.markerElement.cloneNode(true);
-                            if (typeof classNames === "string") {
+                            if (typeof classNames === "string" && classNames.length > 0) {
                                 marker.classList.add(classNames);
                             }
-                            else {
+                            else if (classNames instanceof Array) {
                                 (_b = marker.classList).add.apply(_b, classNames);
                             }
                             var valueContainers = marker.getElementsByClassName(DateSlider.Constants.SliderMarkerValueContainer);

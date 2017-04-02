@@ -279,9 +279,9 @@ module DateSlider.Slider {
                     if (classNames !== null) {
                         let marker = this.markerElement.cloneNode(true) as HTMLElement;
 
-                        if (typeof classNames === "string") {
+                        if (typeof classNames === "string" && classNames.length > 0) {
                             marker.classList.add(classNames);
-                        } else {
+                        } else if (classNames instanceof Array) {
                             marker.classList.add(...classNames);
                         }
 
