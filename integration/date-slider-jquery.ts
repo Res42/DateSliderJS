@@ -5,13 +5,6 @@ interface JQuery {
     data(key: "dateSlider"): DateSlider.DateSliderInstance;
 }
 
-interface JQueryStatic {
-    dateSlider(): JQuery;
-    dateSlider(options?: DateSlider.DateSliderOptions): JQuery;
-
-    data(key: "dateSlider"): DateSlider.DateSliderInstance;
-}
-
 (function ($) {
     $.fn.dateSlider = function (options?: DateSlider.DateSliderOptions): JQuery {
         this.each(function () {
