@@ -114,7 +114,7 @@ module DateSlider {
             for (let slider of this.sliders) {
                 switch (slider.options.type) {
                     case "year":
-                        slider.setValue(this.value.model.year);
+                        slider.slideTo(this.value.model.year);
                         break;
                     case "month":
                         slider.setValue(this.value.model.month);

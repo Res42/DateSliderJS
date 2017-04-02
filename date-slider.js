@@ -373,7 +373,7 @@ var DateSlider;
                 var slider = _a[_i];
                 switch (slider.options.type) {
                     case "year":
-                        slider.setValue(this.value.model.year);
+                        slider.slideTo(this.value.model.year);
                         break;
                     case "month":
                         slider.setValue(this.value.model.month);
@@ -946,15 +946,18 @@ var DateSlider;
             SliderInstance.prototype.getValue = function () {
                 return this.toDiscrete(this.range.value);
             };
-            SliderInstance.prototype.setValue = function (value) {
+            SliderInstance.prototype.slideTo = function (value) {
                 var _this = this;
                 this.updateAfter(function () {
                     if (_this.options.movement === "slide") {
                         _this.range.slideTo(value);
                     }
-                    else {
-                        _this.range.value = value;
-                    }
+                });
+            };
+            SliderInstance.prototype.setValue = function (value) {
+                var _this = this;
+                this.updateAfter(function () {
+                    _this.range.value = value;
                 });
             };
             SliderInstance.prototype.on = function (eventName, callback) {

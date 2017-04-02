@@ -100,13 +100,17 @@ module DateSlider.Slider {
             return this.toDiscrete(this.range.value);
         }
 
-        public setValue(value: number): void {
+        public slideTo(value: number): void {
             this.updateAfter(() => {
                 if (this.options.movement === "slide") {
-                    this.range.slideTo(value);
-                } else {
-                    this.range.value = value;
+                     this.range.slideTo(value);
                 }
+            });
+        }
+
+        public setValue(value: number): void {
+            this.updateAfter(() => {
+                this.range.value = value;
             });
         }
 

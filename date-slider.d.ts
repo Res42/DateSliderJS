@@ -318,6 +318,7 @@ declare module DateSlider.Slider {
         private static getRangeFromType(sliderOptions);
         constructor(options: SliderOptions, range: SliderRange);
         getValue(): number;
+        slideTo(value: number): void;
         setValue(value: number): void;
         on(eventName: SliderEvent, callback: (context: DateSliderEventContext) => void): void;
         destroy: (event?: Event) => void;
