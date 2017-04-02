@@ -87,7 +87,7 @@ declare module DateSlider {
         private updateSliders();
         private bindFormatter();
         private bindParser();
-        private createWrapper(sliders);
+        private bootstrapSliders(sliders);
     }
 }
 declare module DateSlider {
@@ -114,7 +114,7 @@ declare module DateSlider {
     }
 }
 declare module DateSlider {
-    function create(element: HTMLElement, options: DateSliderOptions): DateSliderInstance;
+    function create(element: HTMLElement, options?: DateSliderOptions): DateSliderInstance;
 }
 declare module DateSlider {
     type DateSliderEvent = "onValueChanged";

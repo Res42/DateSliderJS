@@ -19,7 +19,7 @@ module DateSliderTest.Parser {
             { input: "",        description: "Invalid timestamp: empty string." },
             { input: {} as any, description: "Invalid timestamp: object." },
             { input: "100",     description: "Invalid timestamp: number as a string." },
-            { input: "100000",  output: null, description: "Invalid timestamp: number as a string." },
+            { input: "100000",  description: "Invalid timestamp: number as a string." },
             { input: function() {} as any, description: "Invalid timestamp: function." },
         ];
 

@@ -76,6 +76,9 @@ var DateSlider;
             }
             for (var _a = 0, from_1 = from; _a < from_1.length; _a++) {
                 var f = from_1[_a];
+                if (typeof f === "undefined" || f === null) {
+                    break;
+                }
                 for (var propertyName in f) {
                     if (f.hasOwnProperty(propertyName)) {
                         to[propertyName] = f[propertyName];
@@ -91,6 +94,9 @@ var DateSlider;
             }
             for (var _a = 0, from_2 = from; _a < from_2.length; _a++) {
                 var f = from_2[_a];
+                if (typeof f === "undefined" || f === null) {
+                    break;
+                }
                 for (var propertyName in f) {
                     if (f.hasOwnProperty(propertyName)) {
                         if (typeof f[propertyName] === "object") {
@@ -316,9 +322,8 @@ var DateSlider;
             this.sliders.forEach(function (slider) {
                 slider.on("onValueChanged", function (context) { return _this.onSliderUpdate(context, slider.options); });
             });
-            var wrapper = this.createWrapper(this.sliders);
-            element.parentNode.replaceChild(wrapper, element);
-            DateSlider.Helpers.registerOnDestroy(wrapper, function (event) {
+            this.bootstrapSliders(this.sliders);
+            DateSlider.Helpers.registerOnDestroy(element, function (event) {
                 for (var _i = 0, _a = _this.sliders; _i < _a.length; _i++) {
                     var slider = _a[_i];
                     slider.destroy(event);
@@ -443,15 +448,12 @@ var DateSlider;
                 throw new Error("DateSlider.create(): Invalid parser.");
             }
         };
-        DateSliderInstance.prototype.createWrapper = function (sliders) {
-            var fragment = document.createDocumentFragment();
+        DateSliderInstance.prototype.bootstrapSliders = function (sliders) {
             for (var _i = 0, sliders_1 = sliders; _i < sliders_1.length; _i++) {
                 var slider = sliders_1[_i];
-                fragment.appendChild(slider.element);
+                this.element.appendChild(slider.element);
             }
-            var wrapper = document.createElement("div");
-            wrapper.classList.add("date-slider");
-            wrapper.appendChild(fragment);
+            this.element.classList.add("date-slider");
             var _loop_1 = function (slider) {
                 DateSlider.Helpers.registerOnDestroy(slider.element, function (event) { return slider.destroy(event); });
             };
@@ -461,7 +463,6 @@ var DateSlider;
                 var slider = sliders_2[_a];
                 _loop_1(slider);
             }
-            return wrapper;
         };
         return DateSliderInstance;
     }());
@@ -507,7 +508,7 @@ var DateSlider;
 var DateSlider;
 (function (DateSlider) {
     function create(element, options) {
-        if (!element) {
+        if (!element || !(element instanceof HTMLElement)) {
             throw new Error("DateSlider.create(): Given HTML element is invalid.");
         }
         var opts = DateSlider.Helpers.deepMerge({}, DateSlider.defaults, options);
@@ -528,7 +529,8 @@ var DateSlider;
     // demo: out of the box, full customization
     // slider distance of mouse from handle -> slowness of steps
     // jquery, angular integration
-    // expanding / moving window slider
+    // expanding slider
+    // what is better? switch case or dictionary?
 })(DateSlider || (DateSlider = {}));
 "use strict";
 "use strict";
@@ -893,7 +895,7 @@ var DateSlider;
                     this.onSliderHandleReleaseEvent.register(options.callback.onSliderHandleReleased);
                 }
                 if (this.options.movement === "slide") {
-                    this.range.value = this.toDiscrete((this.range.maximum - this.range.minimum) / 2);
+                    this.range.value = this.toDiscrete((this.range.maximum + this.range.minimum) / 2);
                     this.registerSliding();
                 }
                 if (this.options.template instanceof HTMLElement) {
@@ -919,8 +921,7 @@ var DateSlider;
             SliderInstance.getRangeFromType = function (sliderOptions) {
                 switch (sliderOptions.type) {
                     case "year":
-                        var currentYear = new Date().getUTCFullYear();
-                        return new Slider.SliderRange(currentYear - 10, currentYear + 10);
+                        return new Slider.SliderRange(-10, 10);
                     case "month":
                         return new Slider.SliderRange(1, 12);
                     case "day":

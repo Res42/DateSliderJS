@@ -1,3 +1,4 @@
+"use strict";
 var DateSliderTest;
 (function (DateSliderTest) {
     var Formatter;
@@ -32,6 +33,7 @@ var DateSliderTest;
         });
     })(Formatter = DateSliderTest.Formatter || (DateSliderTest.Formatter = {}));
 })(DateSliderTest || (DateSliderTest = {}));
+"use strict";
 var DateSliderTest;
 (function (DateSliderTest) {
     var Integration;
@@ -69,6 +71,7 @@ var DateSliderTest;
         })(ParseFormat = Integration.ParseFormat || (Integration.ParseFormat = {}));
     })(Integration = DateSliderTest.Integration || (DateSliderTest.Integration = {}));
 })(DateSliderTest || (DateSliderTest = {}));
+"use strict";
 var DateSliderTest;
 (function (DateSliderTest) {
     var Integration;
@@ -103,6 +106,7 @@ var DateSliderTest;
         })(ParseFormat = Integration.ParseFormat || (Integration.ParseFormat = {}));
     })(Integration = DateSliderTest.Integration || (DateSliderTest.Integration = {}));
 })(DateSliderTest || (DateSliderTest = {}));
+"use strict";
 var DateSliderTest;
 (function (DateSliderTest) {
     var Parser;
@@ -150,6 +154,7 @@ var DateSliderTest;
         });
     })(Parser = DateSliderTest.Parser || (DateSliderTest.Parser = {}));
 })(DateSliderTest || (DateSliderTest = {}));
+"use strict";
 var DateSliderTest;
 (function (DateSliderTest) {
     var Parser;
@@ -191,6 +196,7 @@ var DateSliderTest;
         });
     })(Parser = DateSliderTest.Parser || (DateSliderTest.Parser = {}));
 })(DateSliderTest || (DateSliderTest = {}));
+"use strict";
 var DateSliderTest;
 (function (DateSliderTest) {
     var Parser;
@@ -213,7 +219,7 @@ var DateSliderTest;
                 { input: "", description: "Invalid timestamp: empty string." },
                 { input: {}, description: "Invalid timestamp: object." },
                 { input: "100", description: "Invalid timestamp: number as a string." },
-                { input: "100000", output: null, description: "Invalid timestamp: number as a string." },
+                { input: "100000", description: "Invalid timestamp: number as a string." },
                 { input: function () { }, description: "Invalid timestamp: function." },
             ];
             throws.forEach(function (run) {

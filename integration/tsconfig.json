@@ -4,14 +4,13 @@
         "module": "amd",
         "sourceMap": true,
         "alwaysStrict": true,
-        "declaration": false,
+        "declaration": true,
         "noEmitOnError": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,
         "typeRoots": [
             "../node_modules/@types/"
         ],
-        "outFile": "tests.js",
         "watch": true
     },
     "compileOnSave": true,

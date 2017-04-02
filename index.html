@@ -7,10 +7,14 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+
         <link rel="stylesheet" href="date-slider.css">
         <script src="date-slider.js"></script>
+        <script src="date-slider-jquery.js"></script>
     </head>
     <body>
+        <h1>Alap</h1>
         <div id="demo1" class="this-will-be-deleted"></div>
         <input type="number" id="model" />
         <div style="margin-bottom: 100px"></div>
@@ -38,6 +42,10 @@
             </div>
         </div>
         
+        <h1>jQuery</h1>
+        <div id="demo4"></div>
+        <div class="demo5"></div>
+        <div class="demo5"></div>
 
         <script type="text/javascript">
             var options = {
@@ -87,6 +95,19 @@
                 }]
             };
             var instance3 = DateSlider.create(document.getElementById("demo3"), options3);
+
+            var options4 = {
+                parser: "timestamp",
+                parserOptions: { type: "seconds" },
+                formatter: "timestamp",
+                formatterOptions: { type: "seconds" },
+                sliders: [{
+                    type: "year"
+                }]
+            };
+            $("#demo4").dateSlider(options4);
+            //$("#demo4").data("dateSlider").setValue((new Date()).getTime());
+            $(".demo5").dateSlider(options4);
         </script>
     </body>
 </html>

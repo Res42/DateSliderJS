@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "@types/jasmine": "^2.5.43",
+    "@types/jquery": "^2.0.41",
     "gulp": "^3.9.1",
     "gulp-clean-css": "^3.0.3",
     "gulp-cli": "^1.2.2",

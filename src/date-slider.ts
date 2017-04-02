@@ -1,6 +1,6 @@
 module DateSlider {
-    export function create(element: HTMLElement, options: DateSliderOptions): DateSliderInstance {
-        if (!element) {
+    export function create(element: HTMLElement, options?: DateSliderOptions): DateSliderInstance {
+        if (!element || !(element instanceof HTMLElement)) {
             throw new Error("DateSlider.create(): Given HTML element is invalid.");
         }
 
@@ -24,5 +24,6 @@ module DateSlider {
     // demo: out of the box, full customization
     // slider distance of mouse from handle -> slowness of steps
     // jquery, angular integration
-    // expanding / moving window slider
+    // expanding slider
+    // what is better? switch case or dictionary?
 }

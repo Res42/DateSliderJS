@@ -46,8 +46,7 @@ module DateSlider.Slider {
         private static getRangeFromType(sliderOptions: SliderOptions): SliderRange {
             switch (sliderOptions.type) {
                 case "year":
-                    let currentYear = new Date().getUTCFullYear();
-                    return new SliderRange(currentYear - 10, currentYear + 10);
+                    return new SliderRange(-10, 10);
                 case "month":
                     return new SliderRange(1, 12);
                 case "day":
@@ -82,7 +81,7 @@ module DateSlider.Slider {
             }
 
             if (this.options.movement === "slide") {
-                this.range.value = this.toDiscrete((this.range.maximum - this.range.minimum) / 2);
+                this.range.value = this.toDiscrete((this.range.maximum + this.range.minimum) / 2);
                 this.registerSliding();
             }
 

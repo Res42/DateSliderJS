@@ -58,6 +58,10 @@ module DateSlider {
          */
         public static shallowMerge<T extends { [key: string]: any }, U extends { [key: string]: any }>(to: T, ...from: U[]): T & U {
             for (let f of from) {
+                if (typeof f === "undefined" || f === null) {
+                    break;
+                }
+
                 for (let propertyName in f) {
                     if (f.hasOwnProperty(propertyName)) {
                         to[propertyName] = f[propertyName];
@@ -70,6 +74,10 @@ module DateSlider {
 
         public static deepMerge<T extends { [key: string]: any }, U extends { [key: string]: any }>(to: T, ...from: U[]): T & U {
             for (let f of from) {
+                if (typeof f === "undefined" || f === null) {
+                    break;
+                }
+
                 for (let propertyName in f) {
                     if (f.hasOwnProperty(propertyName)) {
                         if (typeof f[propertyName] === "object") {

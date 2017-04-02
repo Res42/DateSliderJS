@@ -18,9 +18,9 @@ module DateSlider {
             this.sliders.forEach(slider => {
                 slider.on("onValueChanged", (context: Slider.Context.SliderValueChangeContext) => this.onSliderUpdate(context, slider.options));
             });
-            let wrapper = this.createWrapper(this.sliders);
-            element.parentNode.replaceChild(wrapper, element);
-            Helpers.registerOnDestroy(wrapper, (event) => {
+
+            this.bootstrapSliders(this.sliders);
+            Helpers.registerOnDestroy(element, (event) => {
                 for (let slider of this.sliders) {
                     slider.destroy(event);
                 }
@@ -188,20 +188,17 @@ module DateSlider {
             }
         }
 
-        private createWrapper(sliders: Slider.SliderInstance[]): HTMLDivElement {
-            let fragment = document.createDocumentFragment();
+        private bootstrapSliders(sliders: Slider.SliderInstance[]) {
             for (let slider of sliders) {
-                fragment.appendChild(slider.element);
+                this.element.appendChild(slider.element);
             }
-            let wrapper = document.createElement("div");
-            wrapper.classList.add("date-slider");
-            wrapper.appendChild(fragment);
+            this.element.classList.add("date-slider");
+
             // in the appendChild method the silders' destroy method would be called because it fires the 'DOMNodeRemoved' event
             // also only after this will the sliders' element gain a parent to use the MutationObserver
             for (let slider of sliders) {
                 Helpers.registerOnDestroy(slider.element, (event) => slider.destroy(event));
             }
-            return wrapper;
         }
     }
 }
