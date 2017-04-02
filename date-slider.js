@@ -531,7 +531,7 @@ var DateSlider;
     // angular integration
     // expanding slider
     // what is better? switch case or dictionary?
-    // when changing months, set dayt to mondtly maximum
+    // when changing months, set days to montly maximum
 })(DateSlider || (DateSlider = {}));
 "use strict";
 "use strict";
