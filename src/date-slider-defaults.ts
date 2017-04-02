@@ -44,4 +44,19 @@ module DateSlider {
         },
         type: "universal-time",
     };
+
+    export let monthDefaults: SliderOptions = {
+        markers: {
+            perpendicularOffset: 20,
+            showValueMarker: (value: number, minimum: number, maximum: number): string | string[] => {
+                return "";
+            },
+        },
+        type: "month",
+    };
+
+    export let defaultSilderOptions: {[key: string]: SliderOptions} = {
+        "month": monthDefaults,
+        "universal-time": universalTimeDefaults,
+    };
 }

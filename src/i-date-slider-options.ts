@@ -25,7 +25,11 @@ module DateSlider {
              *          Null if the marker should not be displayed.
              */
             showValueMarker?: (value: number, minimum: number, maximum: number) => string | string[];
-            /** Format the displayed value of a marker. */
+            /**
+             * Optional. Format the displayed value of a marker.
+             * If not given, it will fall back to the slider displayValueFormatter.
+             * If the slider displayValueFormatter is not given too, it will fall back to value.toString().
+             */
             displayValueFormatter?: (value: number, minimum: number, maximum: number) => string;
             perpendicularOffset?: number;
         };

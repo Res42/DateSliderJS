@@ -155,6 +155,19 @@ var DateSlider;
         },
         type: "universal-time",
     };
+    DateSlider.monthDefaults = {
+        markers: {
+            perpendicularOffset: 20,
+            showValueMarker: function (value, minimum, maximum) {
+                return "";
+            },
+        },
+        type: "month",
+    };
+    DateSlider.defaultSilderOptions = {
+        "month": DateSlider.monthDefaults,
+        "universal-time": DateSlider.universalTimeDefaults,
+    };
 })(DateSlider || (DateSlider = {}));
 "use strict";
 var DateSlider;
@@ -465,10 +478,9 @@ var DateSlider;
         }
         var opts = DateSlider.Helpers.deepMerge({}, DateSlider.defaults, options);
         for (var i = 0; i < opts.sliders.length; i++) {
-            switch (opts.sliders[i].type) {
-                case "universal-time":
-                    opts.sliders[i] = DateSlider.Helpers.deepMerge({}, DateSlider.universalTimeDefaults, opts.sliders[i]);
-                    break;
+            var sliderDefaults = DateSlider.defaultSilderOptions[opts.sliders[i].type];
+            if (sliderDefaults) {
+                opts.sliders[i] = DateSlider.Helpers.deepMerge({}, sliderDefaults, opts.sliders[i]);
             }
         }
         return new DateSlider.DateSliderInstance(element, opts);

@@ -7,10 +7,9 @@ module DateSlider {
         let opts = Helpers.deepMerge({}, defaults, options);
 
         for (let i = 0; i < opts.sliders.length; i++) {
-            switch (opts.sliders[i].type) {
-                case "universal-time":
-                    opts.sliders[i] = Helpers.deepMerge({}, universalTimeDefaults, opts.sliders[i]);
-                    break;
+            let sliderDefaults = defaultSilderOptions[opts.sliders[i].type];
+            if (sliderDefaults) {
+                opts.sliders[i] = Helpers.deepMerge({}, sliderDefaults, opts.sliders[i]);
             }
         }
 
