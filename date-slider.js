@@ -193,6 +193,7 @@ var DateSlider;
             },
         },
         movement: "slide",
+        movementSpeed: 100,
         type: "year",
     };
     DateSlider.defaultSilderOptions = {
@@ -1055,7 +1056,7 @@ var DateSlider;
                 }
             };
             SliderInstance.prototype.registerSliding = function () {
-                this.slideIntervalHandle = window.setInterval(this.sliding, 200);
+                this.slideIntervalHandle = window.setInterval(this.sliding, this.options.movementSpeed || 0);
             };
             SliderInstance.prototype.createMarkers = function () {
                 if (this.markerElement && this.options.markers && this.options.markers.showValueMarker) {

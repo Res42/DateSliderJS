@@ -310,7 +310,7 @@ module DateSlider.Slider {
         }
 
         private registerSliding() {
-            this.slideIntervalHandle = window.setInterval(this.sliding, 200);
+            this.slideIntervalHandle = window.setInterval(this.sliding, this.options.movementSpeed || 0);
         }
 
         private createMarkers() {

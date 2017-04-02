@@ -73,6 +73,7 @@ module DateSlider {
             },
         },
         movement: "slide",
+        movementSpeed: 100,
         type: "year",
     };
 
