@@ -16,9 +16,16 @@ module DateSlider {
 
     export interface SliderOptions {
         type: "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
+        movement?: "none" | "slide" | "expand";
         displayValueFormatter?: (value: number) => string;
+        /** Customize the markers of the slider. */
         markers?: {
-            showValueMarker?: (value: number, minimum: number, maximum: number) => boolean;
+            /**
+             * @returns An array of class names to append to the marker if the marker should be displayed.
+             *          Null if the marker should not be displayed.
+             */
+            showValueMarker?: (value: number, minimum: number, maximum: number) => string | string[];
+            /** Format the displayed value of a marker. */
             displayValueFormatter?: (value: number, minimum: number, maximum: number) => string;
             perpendicularOffset?: number;
         };

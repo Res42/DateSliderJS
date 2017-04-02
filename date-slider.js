@@ -111,6 +111,54 @@ var DateSlider;
 "use strict";
 var DateSlider;
 (function (DateSlider) {
+    /**
+     * Default options for the whole DateSlider.
+     */
+    DateSlider.defaults = {
+        formatter: "timestamp",
+        formatterOptions: { type: "milliseconds" },
+        interval: false,
+        parser: "timestamp",
+        parserOptions: { type: "milliseconds" },
+    };
+    /**
+     * Default options for the universal time slider.
+     */
+    DateSlider.universalTimeDefaults = {
+        displayValueFormatter: function (value) {
+            var pad = function (v) {
+                return (0 <= v && v < 10) ? "0" + v : v.toString();
+            };
+            var seconds = value % 60;
+            var minutes = Math.floor(value / 60) % 60;
+            var hours = Math.floor(value / 3600);
+            return pad(hours) + ":" + pad(minutes) + ":" + pad(seconds);
+        },
+        markers: {
+            displayValueFormatter: function (value, minimum, maximum) {
+                if (value === maximum) {
+                    return "24";
+                }
+                return (value / 3600).toString();
+            },
+            perpendicularOffset: 20,
+            showValueMarker: function (value, minimum, maximum) {
+                var show;
+                if (value === maximum) {
+                    show = true;
+                }
+                else {
+                    show = value % 3600 === 0;
+                }
+                return show ? "" : null;
+            },
+        },
+        type: "universal-time",
+    };
+})(DateSlider || (DateSlider = {}));
+"use strict";
+var DateSlider;
+(function (DateSlider) {
     var DateSliderEventContext = (function () {
         function DateSliderEventContext() {
             this._isPropagationStopped = false;
@@ -411,40 +459,6 @@ var DateSlider;
 "use strict";
 var DateSlider;
 (function (DateSlider) {
-    DateSlider.defaults = {
-        formatter: "timestamp",
-        formatterOptions: { type: "milliseconds" },
-        interval: false,
-        parser: "timestamp",
-        parserOptions: { type: "milliseconds" },
-    };
-    DateSlider.universalTimeDefaults = {
-        displayValueFormatter: function (value) {
-            var pad = function (v) {
-                return (0 <= v && v < 10) ? "0" + v : v.toString();
-            };
-            var seconds = value % 60;
-            var minutes = Math.floor(value / 60) % 60;
-            var hours = Math.floor(value / 3600);
-            return pad(hours) + ":" + pad(minutes) + ":" + pad(seconds);
-        },
-        markers: {
-            displayValueFormatter: function (value, minimum, maximum) {
-                if (value === maximum) {
-                    return "24";
-                }
-                return (value / 3600).toString();
-            },
-            perpendicularOffset: 20,
-            showValueMarker: function (value, minimum, maximum) {
-                if (value === maximum) {
-                    return true;
-                }
-                return value % 3600 === 0;
-            },
-        },
-        type: "universal-time",
-    };
     function create(element, options) {
         if (!element) {
             throw new Error("DateSlider.create(): Given HTML element is invalid.");
@@ -469,7 +483,6 @@ var DateSlider;
     // slider distance of mouse from handle -> slowness of steps
     // jquery, angular integration
     // expanding / moving window slider
-    // showValueMarker: return a string[] with marker classlist; null if no marker
 })(DateSlider || (DateSlider = {}));
 "use strict";
 "use strict";
@@ -958,10 +971,23 @@ var DateSlider;
             };
             SliderInstance.prototype.createMarkers = function () {
                 if (this.markerElement && this.options.markers && this.options.markers.showValueMarker) {
+                    if (this.markers) {
+                        for (var _i = 0, _a = this.markers; _i < _a.length; _i++) {
+                            var marker = _a[_i];
+                            marker.element.remove();
+                        }
+                    }
                     this.markers = [];
                     for (var v = this.range.minimum; v <= this.range.maximum; v++) {
-                        if (this.options.markers.showValueMarker(v, this.range.minimum, this.range.maximum)) {
+                        var classNames = this.options.markers.showValueMarker(v, this.range.minimum, this.range.maximum);
+                        if (classNames !== null) {
                             var marker = this.markerElement.cloneNode(true);
+                            if (typeof classNames === "string") {
+                                marker.classList.add(classNames);
+                            }
+                            else {
+                                (_b = marker.classList).add.apply(_b, classNames);
+                            }
                             var valueContainers = marker.getElementsByClassName(DateSlider.Constants.SliderMarkerValueContainer);
                             this.markers.push({ element: marker, valueContainers: valueContainers, value: v });
                             this.sliderElement.appendChild(marker);
@@ -970,6 +996,7 @@ var DateSlider;
                     }
                     this.sliderElement.style.overflow = "hidden";
                 }
+                var _b;
             };
             SliderInstance.prototype.updateMarkerValue = function (marker) {
                 var text;

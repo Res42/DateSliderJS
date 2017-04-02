@@ -267,10 +267,24 @@ module DateSlider.Slider {
         private createMarkers() {
             if (this.markerElement && this.options.markers && this.options.markers.showValueMarker) {
 
+                if (this.markers) {
+                    for (let marker of this.markers) {
+                        marker.element.remove();
+                    }
+                }
                 this.markers = [];
+
                 for (let v = this.range.minimum; v <= this.range.maximum; v++) {
-                    if (this.options.markers.showValueMarker(v, this.range.minimum, this.range.maximum)) {
+                    let classNames = this.options.markers.showValueMarker(v, this.range.minimum, this.range.maximum);
+                    if (classNames !== null) {
                         let marker = this.markerElement.cloneNode(true) as HTMLElement;
+
+                        if (typeof classNames === "string") {
+                            marker.classList.add(classNames);
+                        } else {
+                            marker.classList.add(...classNames);
+                        }
+
                         let valueContainers = marker.getElementsByClassName(Constants.SliderMarkerValueContainer) as NodeListOf<HTMLElement>;
                         this.markers.push({ element: marker, valueContainers: valueContainers, value: v });
                         this.sliderElement.appendChild(marker);
