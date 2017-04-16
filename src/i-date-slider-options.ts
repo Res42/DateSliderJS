@@ -12,6 +12,11 @@ module DateSlider {
         callback?: {
             onValueChanged?: (context: Context.ValueChangeContext) => void;
         };
+        validation?: {
+            custom: (value: any) => boolean;
+            min: any;
+            max: any;
+        };
     }
 
     export interface SliderOptions {
