@@ -3,6 +3,7 @@ module DateSlider {
     export type SliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
 
     export interface DateSliderOptions {
+        value?: any;
         sliders?: SliderOptions[];
         interval?: boolean;
         parser?: "timestamp" | "string" | "date" | ((input: any, options: any) => DateSliderModel);

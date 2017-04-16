@@ -32,43 +32,6 @@ module DateSlider.Slider {
 
         private slideIntervalHandle: number;
 
-        public static createAll(options: DateSliderOptions): SliderInstance[] {
-            if (!options.sliders) {
-                throw new Error("Cannot create sliders because options.sliders is not set.");
-            }
-            let sliders: SliderInstance[] = [];
-            for (let sliderOptions of options.sliders) {
-                sliders.push(new SliderInstance(sliderOptions, this.getRangeFromType(sliderOptions)));
-            }
-            return sliders;
-        }
-
-        private static getRangeFromType(sliderOptions: SliderOptions): SliderRange {
-            switch (sliderOptions.type) {
-                case "year":
-                    return new SliderRange(-10, 10);
-                case "month":
-                    return new SliderRange(1, 12);
-                case "day":
-                    return new SliderRange(1, 31);
-                case "hour":
-                    return new SliderRange(0, 23);
-                case "minute":
-                case "second":
-                    return new SliderRange(0, 59);
-                case "universal":
-                    // TODO
-                    return new SliderRange(1, 12);
-                case "universal-date":
-                    // TODO
-                    return new SliderRange(1, 12);
-                case "universal-time":
-                    return new SliderRange(0, Constants.SecondsInDay - 1);
-                default:
-                    throw new Error("SliderOptions.type is not valid.");
-            }
-        }
-
         constructor(
             public options: SliderOptions,
             private range: SliderRange,
@@ -103,9 +66,11 @@ module DateSlider.Slider {
         public slideTo(value: number): void {
             this.updateAfter(() => {
                 if (this.options.movement === "slide") {
-                     this.range.slideTo(value);
+                     this.range.slideTo(value, false);
                 }
             });
+            this.createMarkers();
+            this.updateMarkersPosition();
         }
 
         public setValue(value: number): void {
@@ -246,7 +211,7 @@ module DateSlider.Slider {
             this.isDragging = true;
 
             this.addMovementListeners();
-            this.onSliderHandleGrabEvent.fire(null);
+            this.onSliderHandleGrabEvent.fire(new DateSliderEventContext());
         }
 
         private handleMouseUp = (e: MouseEvent | TouchEvent): void => {
@@ -255,7 +220,7 @@ module DateSlider.Slider {
             this.setValue(this.toDiscrete(this.calculateValue(this.lastPointerPosition)));
 
             this.removeMovementListeners();
-            this.onSliderHandleReleaseEvent.fire(null);
+            this.onSliderHandleReleaseEvent.fire(new DateSliderEventContext());
         }
 
         private handleMouseMove = (e: MouseEvent | TouchEvent): void => {
@@ -273,7 +238,7 @@ module DateSlider.Slider {
             this.lastPointerPosition = this.getPositionFromEvent(e);
             this.setValue(this.calculateValue(this.lastPointerPosition));
 
-            this.onSliderHandleMoveEvent.fire(null);
+            this.onSliderHandleMoveEvent.fire(new DateSliderEventContext());
         }
 
         private isHandleReleased(e: MouseEvent | TouchEvent): boolean {

@@ -55,12 +55,15 @@
     <div id="angularApp" ng-controller="TestController as testCtrl">
         <h1>Angular</h1>
         <div date-slider options="{sliders: [{ type: 'year' }]}" ng-model="testCtrl.model"></div>
+        <div ng-bind="testCtrl.model"></div>
+        <button type="button" ng-click="testCtrl.model = 1483228800000">2017</button>
     </div>
 
     <script type="text/javascript">
         var TestController = (function(){
-            function TestController() {
-                this.model = 0;
+            function TestController($scope) {
+                this.$scope = $scope;
+                this.model = 1451606400000;
             }
             return TestController;
         }());
@@ -68,7 +71,7 @@
             .config(["dateSliderOptionsProvider", (dateSliderOptions) => {
                 console.log(dateSliderOptions);
             }])
-            .controller("TestController", [TestController]);
+            .controller("TestController", ["$scope", TestController]);
         angular.bootstrap(document.getElementById("angularApp"), ["test"], { strictDi: true });
     </script>
 

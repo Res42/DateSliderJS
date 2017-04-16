@@ -274,11 +274,10 @@ var DateSlider;
 var DateSlider;
 (function (DateSlider) {
     var DateSliderInstance = (function () {
-        function DateSliderInstance(element, options, value) {
+        function DateSliderInstance(element, options) {
             var _this = this;
             this.element = element;
             this.options = options;
-            this.value = value;
             this.onValueChangeEvent = new DateSlider.DateSliderEventHandler();
             this.onSliderUpdate = function (context, options) {
                 var oldValue = _this.getValue();
@@ -313,12 +312,23 @@ var DateSlider;
                         // TODO
                         break;
                 }
-                _this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, _this.getValue()));
+                var newValue = _this.getValue();
+                if (oldValue !== newValue) {
+                    _this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, newValue));
+                }
             };
             if (!element || !element.parentNode) {
                 throw new Error("DateSlider.create(): Given HTML element is invalid.");
             }
-            this.sliders = DateSlider.Slider.SliderInstance.createAll(options);
+            this.bindParser();
+            this.bindFormatter();
+            if (typeof this.options.value !== "undefined") {
+                this.value = this.parser.parse(this.options.value, this.options.parserOptions);
+            }
+            else {
+                this.value = new DateSlider.DateSliderModel(new DateSlider.InnerModel, null);
+            }
+            this.sliders = this.createAllSliders();
             this.sliders.forEach(function (slider) {
                 slider.on("onValueChanged", function (context) { return _this.onSliderUpdate(context, slider.options); });
             });
@@ -329,13 +339,9 @@ var DateSlider;
                     slider.destroy(event);
                 }
             });
-            if (!value) {
-                this.value = new DateSlider.DateSliderModel(new DateSlider.InnerModel(), null);
-            }
             if (this.options.callback) {
                 this.onValueChangeEvent.register(this.options.callback.onValueChanged);
             }
-            this.setOptions();
         }
         DateSliderInstance.prototype.getValue = function () {
             return this.formatter.format(this.value, this.options.formatterOptions);
@@ -352,21 +358,56 @@ var DateSlider;
         DateSliderInstance.prototype.updateOptions = function (options) {
             DateSlider.Helpers.deepMerge(this.options, options);
             // TODO update sliders
-            this.setOptions();
+            this.bindParser();
+            this.bindFormatter();
         };
         DateSliderInstance.prototype.replaceOptions = function (options) {
             this.options = options;
             // TODO update sliders
-            this.setOptions();
+            this.bindParser();
+            this.bindFormatter();
         };
         DateSliderInstance.prototype.on = function (eventName, callback) {
             if (eventName === "onValueChanged") {
                 this.onValueChangeEvent.register(callback);
             }
         };
-        DateSliderInstance.prototype.setOptions = function () {
-            this.bindParser();
-            this.bindFormatter();
+        DateSliderInstance.prototype.createAllSliders = function () {
+            if (!this.options.sliders) {
+                throw new Error("Cannot create sliders because options.sliders is not set.");
+            }
+            var sliders = [];
+            for (var _i = 0, _a = this.options.sliders; _i < _a.length; _i++) {
+                var sliderOptions = _a[_i];
+                sliders.push(new DateSlider.Slider.SliderInstance(sliderOptions, this.getRangeFromType(sliderOptions)));
+            }
+            return sliders;
+        };
+        DateSliderInstance.prototype.getRangeFromType = function (sliderOptions) {
+            switch (sliderOptions.type) {
+                case "year":
+                    return new DateSlider.Slider.SliderRange(this.value.model.year - 10, this.value.model.year + 10, this.value.model.year);
+                case "month":
+                    return new DateSlider.Slider.SliderRange(1, 12, this.value.model.month);
+                case "day":
+                    return new DateSlider.Slider.SliderRange(1, 31, this.value.model.day);
+                case "hour":
+                    return new DateSlider.Slider.SliderRange(0, 23, this.value.model.hour);
+                case "minute":
+                    return new DateSlider.Slider.SliderRange(0, 59, this.value.model.minute);
+                case "second":
+                    return new DateSlider.Slider.SliderRange(0, 59, this.value.model.second);
+                case "universal":
+                    // TODO
+                    return new DateSlider.Slider.SliderRange(1, 12);
+                case "universal-date":
+                    // TODO
+                    return new DateSlider.Slider.SliderRange(1, 12);
+                case "universal-time":
+                    return new DateSlider.Slider.SliderRange(0, DateSlider.Constants.SecondsInDay - 1);
+                default:
+                    throw new Error("SliderOptions.type is not valid.");
+            }
         };
         DateSliderInstance.prototype.updateSliders = function () {
             for (var _i = 0, _a = this.sliders; _i < _a.length; _i++) {
@@ -831,14 +872,14 @@ var DateSlider;
                     _this.lastPointerPosition = _this.getPositionFromEvent(e);
                     _this.isDragging = true;
                     _this.addMovementListeners();
-                    _this.onSliderHandleGrabEvent.fire(null);
+                    _this.onSliderHandleGrabEvent.fire(new DateSlider.DateSliderEventContext());
                 };
                 this.handleMouseUp = function (e) {
                     _this.isDragging = false;
                     _this.lastPointerPosition = _this.getPositionFromEvent(e);
                     _this.setValue(_this.toDiscrete(_this.calculateValue(_this.lastPointerPosition)));
                     _this.removeMovementListeners();
-                    _this.onSliderHandleReleaseEvent.fire(null);
+                    _this.onSliderHandleReleaseEvent.fire(new DateSlider.DateSliderEventContext());
                 };
                 this.handleMouseMove = function (e) {
                     if (e instanceof MouseEvent) {
@@ -852,7 +893,7 @@ var DateSlider;
                     }
                     _this.lastPointerPosition = _this.getPositionFromEvent(e);
                     _this.setValue(_this.calculateValue(_this.lastPointerPosition));
-                    _this.onSliderHandleMoveEvent.fire(null);
+                    _this.onSliderHandleMoveEvent.fire(new DateSlider.DateSliderEventContext());
                 };
                 this.sliding = function () {
                     var direction;
@@ -910,42 +951,6 @@ var DateSlider;
                 this.registerListeners();
                 this.onValueChangeEvent.fire(new Slider.Context.SliderValueChangeContext(null, this.range.value));
             }
-            SliderInstance.createAll = function (options) {
-                if (!options.sliders) {
-                    throw new Error("Cannot create sliders because options.sliders is not set.");
-                }
-                var sliders = [];
-                for (var _i = 0, _a = options.sliders; _i < _a.length; _i++) {
-                    var sliderOptions = _a[_i];
-                    sliders.push(new SliderInstance(sliderOptions, this.getRangeFromType(sliderOptions)));
-                }
-                return sliders;
-            };
-            SliderInstance.getRangeFromType = function (sliderOptions) {
-                switch (sliderOptions.type) {
-                    case "year":
-                        return new Slider.SliderRange(-10, 10);
-                    case "month":
-                        return new Slider.SliderRange(1, 12);
-                    case "day":
-                        return new Slider.SliderRange(1, 31);
-                    case "hour":
-                        return new Slider.SliderRange(0, 23);
-                    case "minute":
-                    case "second":
-                        return new Slider.SliderRange(0, 59);
-                    case "universal":
-                        // TODO
-                        return new Slider.SliderRange(1, 12);
-                    case "universal-date":
-                        // TODO
-                        return new Slider.SliderRange(1, 12);
-                    case "universal-time":
-                        return new Slider.SliderRange(0, DateSlider.Constants.SecondsInDay - 1);
-                    default:
-                        throw new Error("SliderOptions.type is not valid.");
-                }
-            };
             SliderInstance.prototype.getValue = function () {
                 return this.toDiscrete(this.range.value);
             };
@@ -953,9 +958,11 @@ var DateSlider;
                 var _this = this;
                 this.updateAfter(function () {
                     if (_this.options.movement === "slide") {
-                        _this.range.slideTo(value);
+                        _this.range.slideTo(value, false);
                     }
                 });
+                this.createMarkers();
+                this.updateMarkersPosition();
             };
             SliderInstance.prototype.setValue = function (value) {
                 var _this = this;
@@ -1338,9 +1345,14 @@ var DateSlider;
                     this._value = this._minimum;
                 }
             };
-            SliderRange.prototype.slideTo = function (target) {
+            SliderRange.prototype.slideTo = function (target, mustSlide) {
+                if (mustSlide === void 0) { mustSlide = true; }
                 if (typeof target !== "number") {
                     throw new Error("Cannot slideTo with non-number.");
+                }
+                if (!mustSlide && this._minimum <= target && target <= this._maximum) {
+                    this.value = target;
+                    return;
                 }
                 var distance = this._maximum - this._minimum;
                 this._minimum = target - distance / 2;

@@ -3,18 +3,28 @@ module DateSlider {
         public sliders: Slider.SliderInstance[];
         public parser: Parser.IParser;
         public formatter: Formatter.IFormatter;
+        public value: DateSliderModel;
 
         private onValueChangeEvent = new DateSliderEventHandler();
 
         constructor(
             public element: HTMLElement,
             private options: DateSliderOptions,
-            private value?: DateSliderModel,
         ) {
             if (!element || !element.parentNode) {
                 throw new Error("DateSlider.create(): Given HTML element is invalid.");
             }
-            this.sliders = Slider.SliderInstance.createAll(options);
+
+            this.bindParser();
+            this.bindFormatter();
+
+            if (typeof this.options.value !== "undefined") {
+                this.value = this.parser.parse(this.options.value, this.options.parserOptions);
+            } else {
+                this.value = new DateSliderModel(new InnerModel, null);
+            }
+
+            this.sliders = this.createAllSliders();
             this.sliders.forEach(slider => {
                 slider.on("onValueChanged", (context: Slider.Context.SliderValueChangeContext) => this.onSliderUpdate(context, slider.options));
             });
@@ -26,14 +36,9 @@ module DateSlider {
                 }
             });
 
-            if (!value) {
-                this.value = new DateSliderModel(new InnerModel(), null);
-            }
-
             if (this.options.callback) {
                 this.onValueChangeEvent.register(this.options.callback.onValueChanged);
             }
-            this.setOptions();
         }
 
         public getValue(): any {
@@ -54,13 +59,15 @@ module DateSlider {
         public updateOptions(options: DateSliderOptions): void {
             Helpers.deepMerge(this.options, options);
             // TODO update sliders
-            this.setOptions();
+            this.bindParser();
+            this.bindFormatter();
         }
 
         public replaceOptions(options: DateSliderOptions): void {
             this.options = options;
             // TODO update sliders
-            this.setOptions();
+            this.bindParser();
+            this.bindFormatter();
         }
 
         public on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => void): void {
@@ -69,9 +76,42 @@ module DateSlider {
             }
         }
 
-        private setOptions(): void {
-            this.bindParser();
-            this.bindFormatter();
+        public createAllSliders(): Slider.SliderInstance[] {
+            if (!this.options.sliders) {
+                throw new Error("Cannot create sliders because options.sliders is not set.");
+            }
+            let sliders: Slider.SliderInstance[] = [];
+            for (let sliderOptions of this.options.sliders) {
+                sliders.push(new Slider.SliderInstance(sliderOptions, this.getRangeFromType(sliderOptions)));
+            }
+            return sliders;
+        }
+
+        private getRangeFromType(sliderOptions: SliderOptions): Slider.SliderRange {
+            switch (sliderOptions.type) {
+                case "year":
+                    return new Slider.SliderRange(this.value.model.year - 10, this.value.model.year + 10, this.value.model.year);
+                case "month":
+                    return new Slider.SliderRange(1, 12, this.value.model.month);
+                case "day":
+                    return new Slider.SliderRange(1, 31, this.value.model.day);
+                case "hour":
+                    return new Slider.SliderRange(0, 23, this.value.model.hour);
+                case "minute":
+                    return new Slider.SliderRange(0, 59, this.value.model.minute);
+                case "second":
+                    return new Slider.SliderRange(0, 59, this.value.model.second);
+                case "universal":
+                    // TODO
+                    return new Slider.SliderRange(1, 12);
+                case "universal-date":
+                    // TODO
+                    return new Slider.SliderRange(1, 12);
+                case "universal-time":
+                    return new Slider.SliderRange(0, Constants.SecondsInDay - 1);
+                default:
+                    throw new Error("SliderOptions.type is not valid.");
+            }
         }
 
         private onSliderUpdate = (context: Slider.Context.SliderValueChangeContext, options: SliderOptions) => {
@@ -107,7 +147,11 @@ module DateSlider {
                     // TODO
                     break;
             }
-            this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, this.getValue()));
+
+            let newValue = this.getValue();
+            if (oldValue !== newValue) {
+                this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, newValue));
+            }
         }
 
         private updateSliders(): void {

@@ -70,19 +70,20 @@ declare module DateSlider {
     class DateSliderInstance {
         element: HTMLElement;
         private options;
-        private value;
         sliders: Slider.SliderInstance[];
         parser: Parser.IParser;
         formatter: Formatter.IFormatter;
+        value: DateSliderModel;
         private onValueChangeEvent;
-        constructor(element: HTMLElement, options: DateSliderOptions, value?: DateSliderModel);
+        constructor(element: HTMLElement, options: DateSliderOptions);
         getValue(): any;
         setValue(input: any): void;
         getOptions(): DateSliderOptions;
         updateOptions(options: DateSliderOptions): void;
         replaceOptions(options: DateSliderOptions): void;
         on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => void): void;
-        private setOptions();
+        createAllSliders(): Slider.SliderInstance[];
+        private getRangeFromType(sliderOptions);
         private onSliderUpdate;
         private updateSliders();
         private bindFormatter();
@@ -120,6 +121,7 @@ declare module DateSlider {
     type DateSliderEvent = "onValueChanged";
     type SliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
     interface DateSliderOptions {
+        value?: any;
         sliders?: SliderOptions[];
         interval?: boolean;
         parser?: "timestamp" | "string" | "date" | ((input: any, options: any) => DateSliderModel);
@@ -319,8 +321,6 @@ declare module DateSlider.Slider {
         private onSliderHandleMoveEvent;
         private events;
         private slideIntervalHandle;
-        static createAll(options: DateSliderOptions): SliderInstance[];
-        private static getRangeFromType(sliderOptions);
         constructor(options: SliderOptions, range: SliderRange);
         getValue(): number;
         slideTo(value: number): void;
@@ -367,7 +367,7 @@ declare module DateSlider.Slider {
         expandMaximum(by?: number): void;
         expandMinimum(by?: number): void;
         slide(by?: number): void;
-        slideTo(target: number): void;
+        slideTo(target: number, mustSlide?: boolean): void;
     }
 }
 declare module DateSlider.Slider.Context {

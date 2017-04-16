@@ -25,6 +25,7 @@ module DateSlider.Angular {
         public link = ($scope: IDateSliderDirectiveScope, $element: ng.IAugmentedJQuery, $attributes: ng.IAttributes, ngModelController: ng.INgModelController) => {
             $scope.options = $scope.options || {};
             $scope.options.validation = $scope.options.validation || {};
+            $scope.options.value = $scope.ngModel;
 
             if (typeof $scope.min !== "undefined") {
                 $scope.options.validation.min = $scope.min;
@@ -37,22 +38,54 @@ module DateSlider.Angular {
             $scope.instance = DateSlider.create($element[0], $scope.options);
 
             // Options changes
-            $scope.$watch(() => $scope.min, (newValue) => {
+            $scope.$watch(() => $scope.min, (newValue, oldValue) => {
+                if (newValue === oldValue) {
+                    return;
+                }
+
                 $scope.instance.updateOptions({ validation: { min: newValue } });
             });
-            $scope.$watch(() => $scope.max, (newValue) => {
+            $scope.$watch(() => $scope.max, (newValue, oldValue) => {
+                if (newValue === oldValue) {
+                    return;
+                }
+
                 $scope.instance.updateOptions({ validation: { max: newValue } });
             });
-            $scope.$watch(() => $scope.options, (newValue) => {
+            $scope.$watch(() => $scope.options, (newValue, oldValue) => {
+                if (newValue === oldValue) {
+                    return;
+                }
+
                 $scope.instance.updateOptions(newValue);
             });
 
+            // Touched
+            // for (let slider of $scope.instance.sliders) {
+            //     slider.on("onSliderBoxGrabbed", () => {
+            //         ngModelController.$setTouched();
+            //     });
+            // }
+
             // Model changes
-            $scope.$watch(() => $scope.ngModel, (newValue) => {
+            let changedFromEvent = false;
+            $scope.$watch(() => $scope.ngModel, (newValue, oldValue) => {
+                if (newValue === oldValue) {
+                    return;
+                }
+
+                if (changedFromEvent) {
+                    changedFromEvent = false;
+                    return;
+                }
+
                 $scope.instance.setValue(newValue);
             });
+
             $scope.instance.on("onValueChanged", (context: Context.ValueChangeContext): void => {
-                $scope.ngModel = context.newValue;
+                changedFromEvent = true;
+                ngModelController.$setViewValue(context.newValue);
+                ngModelController.$setTouched();
             });
         }
     }

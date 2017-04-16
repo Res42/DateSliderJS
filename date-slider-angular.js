@@ -17,6 +17,7 @@ var DateSlider;
                 this.link = function ($scope, $element, $attributes, ngModelController) {
                     $scope.options = $scope.options || {};
                     $scope.options.validation = $scope.options.validation || {};
+                    $scope.options.value = $scope.ngModel;
                     if (typeof $scope.min !== "undefined") {
                         $scope.options.validation.min = $scope.min;
                     }
@@ -25,21 +26,46 @@ var DateSlider;
                     }
                     $scope.instance = DateSlider.create($element[0], $scope.options);
                     // Options changes
-                    $scope.$watch(function () { return $scope.min; }, function (newValue) {
+                    $scope.$watch(function () { return $scope.min; }, function (newValue, oldValue) {
+                        if (newValue === oldValue) {
+                            return;
+                        }
                         $scope.instance.updateOptions({ validation: { min: newValue } });
                     });
-                    $scope.$watch(function () { return $scope.max; }, function (newValue) {
+                    $scope.$watch(function () { return $scope.max; }, function (newValue, oldValue) {
+                        if (newValue === oldValue) {
+                            return;
+                        }
                         $scope.instance.updateOptions({ validation: { max: newValue } });
                     });
-                    $scope.$watch(function () { return $scope.options; }, function (newValue) {
+                    $scope.$watch(function () { return $scope.options; }, function (newValue, oldValue) {
+                        if (newValue === oldValue) {
+                            return;
+                        }
                         $scope.instance.updateOptions(newValue);
                     });
+                    // Touched
+                    // for (let slider of $scope.instance.sliders) {
+                    //     slider.on("onSliderBoxGrabbed", () => {
+                    //         ngModelController.$setTouched();
+                    //     });
+                    // }
                     // Model changes
-                    $scope.$watch(function () { return $scope.ngModel; }, function (newValue) {
+                    var changedFromEvent = false;
+                    $scope.$watch(function () { return $scope.ngModel; }, function (newValue, oldValue) {
+                        if (newValue === oldValue) {
+                            return;
+                        }
+                        if (changedFromEvent) {
+                            changedFromEvent = false;
+                            return;
+                        }
                         $scope.instance.setValue(newValue);
                     });
                     $scope.instance.on("onValueChanged", function (context) {
-                        $scope.ngModel = context.newValue;
+                        changedFromEvent = true;
+                        ngModelController.$setViewValue(context.newValue);
+                        ngModelController.$setTouched();
                     });
                 };
             }
