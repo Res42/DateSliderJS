@@ -129,6 +129,11 @@ declare module DateSlider {
         callback?: {
             onValueChanged?: (context: Context.ValueChangeContext) => void;
         };
+        validation?: {
+            custom?: (value: any) => boolean;
+            min?: any;
+            max?: any;
+        };
     }
     interface SliderOptions {
         type: "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";

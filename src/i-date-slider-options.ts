@@ -13,9 +13,9 @@ module DateSlider {
             onValueChanged?: (context: Context.ValueChangeContext) => void;
         };
         validation?: {
-            custom: (value: any) => boolean;
-            min: any;
-            max: any;
+            custom?: (value: any) => boolean;
+            min?: any;
+            max?: any;
         };
     }
 

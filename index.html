@@ -1,53 +1,71 @@
 <!doctype html>
 <html lang="">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <title></title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="stylesheet" href="date-slider.css">
-        <script src="date-slider.js"></script>
-        <script src="date-slider-jquery.js"></script>
-    </head>
-    <body>
-        <h1>Alap</h1>
-        <div id="demo1" class="this-will-be-deleted"></div>
-        <input type="number" id="model" />
-        <div style="margin-bottom: 100px"></div>
-        <div id="demo2"></div>
-        <div style="margin-bottom: 100px"></div>
-        <div id="demo3"></div>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
 
-        <div style="display: none">
-            <div id="template2" class="slider-template" style="width: 500px; transform: rotate(20deg)">
-                <div class="slider-marker-template" style="border-left: 1px solid #000; height: 10px;"></div>
-                <div class="slider-control-template" style="height: 200px; position: relative">
-                    <img class="slider-handle-template" src="https://www.iconexperience.com/_img/g_collection_png/standard/48x48/dog.png">
-                    <div class="slider-control-start-template" style="position: absolute; top: 100px; right: 100px;">HÁZ</div>
-                    <div class="slider-control-end-template" style="position: absolute; top: 100px; left: 100px;">CSONT</div>
-                </div>
-            </div>
+    <link rel="stylesheet" href="date-slider.css">
+    <script src="date-slider.js"></script>
+    <script src="date-slider-jquery.js"></script>
+    <script src="date-slider-angular.js"></script>
+</head>
 
-            <div id="template3" class="slider-template" style="width: 500px;">
-                <div class="slider-marker-template" style="border-left: 1px solid #000; height: 10px;"></div>
-                <div class="slider-control-template" style="height: 400px; position: relative">
-                    <img class="slider-handle-template" src="https://www.iconexperience.com/_img/g_collection_png/standard/48x48/dog.png">
-                    <div class="slider-control-start-template" style="position: absolute; top: 100px; right: 100px;">HÁZ</div>
-                    <div class="slider-control-end-template" style="position: absolute; bottom: 100px; left: 100px;">CSONT</div>
-                </div>
+<body>
+    <h1>Alap</h1>
+    <div id="demo1" class="this-will-be-deleted"></div>
+    <input type="number" id="model" />
+    <div style="margin-bottom: 100px"></div>
+    <div id="demo2"></div>
+    <div style="margin-bottom: 100px"></div>
+    <div id="demo3"></div>
+
+    <div style="display: none">
+        <div id="template2" class="slider-template" style="width: 500px; transform: rotate(20deg)">
+            <div class="slider-marker-template" style="border-left: 1px solid #000; height: 10px;"></div>
+            <div class="slider-control-template" style="height: 200px; position: relative">
+                <img class="slider-handle-template" src="https://www.iconexperience.com/_img/g_collection_png/standard/48x48/dog.png">
+                <div class="slider-control-start-template" style="position: absolute; top: 100px; right: 100px;">HÁZ</div>
+                <div class="slider-control-end-template" style="position: absolute; top: 100px; left: 100px;">CSONT</div>
             </div>
         </div>
-        
-        <h1>jQuery</h1>
-        <div id="demo4"></div>
-        <div class="demo5"></div>
-        <div class="demo5"></div>
 
-        <script type="text/javascript">
+        <div id="template3" class="slider-template" style="width: 500px;">
+            <div class="slider-marker-template" style="border-left: 1px solid #000; height: 10px;"></div>
+            <div class="slider-control-template" style="height: 400px; position: relative">
+                <img class="slider-handle-template" src="https://www.iconexperience.com/_img/g_collection_png/standard/48x48/dog.png">
+                <div class="slider-control-start-template" style="position: absolute; top: 100px; right: 100px;">HÁZ</div>
+                <div class="slider-control-end-template" style="position: absolute; bottom: 100px; left: 100px;">CSONT</div>
+            </div>
+        </div>
+    </div>
+
+    <h1>jQuery</h1>
+    <div id="demo4"></div>
+    <div class="demo5"></div>
+    <div class="demo5"></div>
+
+    <div id="angularApp">
+        <h1>Angular</h1>
+        <div date-slider options="{sliders: [{ type: 'year' }]}"></div>
+    </div>
+
+    <script type="text/javascript">
+        angular.module("test", ["dateSlider"])
+            .config(["dateSliderOptionsProvider", (dateSliderOptions) => {
+                console.log(dateSliderOptions);
+            }]);
+        angular.bootstrap(document.getElementById("angularApp"), ["test"], { strictDi: true });
+    </script>
+
+    <script type="text/javascript">
             var options = {
                 parser: "timestamp",
                 parserOptions: { type: "seconds" },
@@ -56,19 +74,19 @@
                 sliders: [{
                     type: "year"
                 }],
-                callback: { 
-                    onValueChanged: function(context) {
+                callback: {
+                    onValueChanged: function (context) {
                         if (document.getElementById("model").value != context.newValue) {
-                             document.getElementById("model").value = context.newValue;
-                        } 
-                    } 
+                            document.getElementById("model").value = context.newValue;
+                        }
+                    }
                 }
             };
             document.getElementById("model").value = Math.floor(Date.now() / 1000);
             var instance = DateSlider.create(document.getElementById("demo1"), options);
             instance.setValue(parseInt(document.getElementById("model").value));
 
-            document.getElementById("model").addEventListener("change", function(event) {
+            document.getElementById("model").addEventListener("change", function (event) {
                 instance.setValue(parseInt(event.currentTarget.value));
             });
 
@@ -78,7 +96,7 @@
                 formatter: "timestamp",
                 formatterOptions: { type: "seconds" },
                 sliders: [{
-                    type: "month", 
+                    type: "month",
                     template: document.getElementById("template2")
                 }]
             };
@@ -90,7 +108,7 @@
                 formatter: "timestamp",
                 formatterOptions: { type: "seconds" },
                 sliders: [{
-                    type: "universal-time", 
+                    type: "universal-time",
                     template: document.getElementById("template3")
                 }]
             };
@@ -108,6 +126,7 @@
             $("#demo4").dateSlider(options4);
             $("#demo4").data("dateSlider").setValue((new Date()).getTime() / 1000);
             $(".demo5").dateSlider(options4);
-        </script>
-    </body>
+    </script>
+</body>
+
 </html>

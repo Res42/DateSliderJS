@@ -7,6 +7,7 @@
     "name": "Adam Reisinger"
   },
   "devDependencies": {
+    "@types/angular": "^1.6.14",
     "@types/jasmine": "^2.5.43",
     "@types/jquery": "^2.0.41",
     "gulp": "^3.9.1",
