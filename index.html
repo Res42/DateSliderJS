@@ -52,16 +52,23 @@
     <div class="demo5"></div>
     <div class="demo5"></div>
 
-    <div id="angularApp">
+    <div id="angularApp" ng-controller="TestController as testCtrl">
         <h1>Angular</h1>
-        <div date-slider options="{sliders: [{ type: 'year' }]}"></div>
+        <div date-slider options="{sliders: [{ type: 'year' }]}" ng-model="testCtrl.model"></div>
     </div>
 
     <script type="text/javascript">
+        var TestController = (function(){
+            function TestController() {
+                this.model = 0;
+            }
+            return TestController;
+        }());
         angular.module("test", ["dateSlider"])
             .config(["dateSliderOptionsProvider", (dateSliderOptions) => {
                 console.log(dateSliderOptions);
-            }]);
+            }])
+            .controller("TestController", [TestController]);
         angular.bootstrap(document.getElementById("angularApp"), ["test"], { strictDi: true });
     </script>
 

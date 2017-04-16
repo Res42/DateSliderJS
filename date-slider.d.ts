@@ -81,7 +81,7 @@ declare module DateSlider {
         getOptions(): DateSliderOptions;
         updateOptions(options: DateSliderOptions): void;
         replaceOptions(options: DateSliderOptions): void;
-        on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void;
+        on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => void): void;
         private setOptions();
         private onSliderUpdate;
         private updateSliders();

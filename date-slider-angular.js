@@ -6,13 +6,15 @@ var DateSlider;
         var DateSliderDirective = (function () {
             function DateSliderDirective() {
                 this.restrict = "A";
+                this.require = "ngModel";
                 this.scope = {
                     "dateSlider": "=?instance",
                     "max": "<?",
                     "min": "<?",
+                    "ngModel": "=",
                     "options": "=?",
                 };
-                this.link = function ($scope, $element, $attributes) {
+                this.link = function ($scope, $element, $attributes, ngModelController) {
                     $scope.options = $scope.options || {};
                     $scope.options.validation = $scope.options.validation || {};
                     if (typeof $scope.min !== "undefined") {
@@ -22,9 +24,23 @@ var DateSlider;
                         $scope.options.validation.max = $scope.max;
                     }
                     $scope.instance = DateSlider.create($element[0], $scope.options);
-                    $scope.$watch(function () { return $scope.min; }, function (newValue) { return $scope.instance.updateOptions({ validation: { min: newValue } }); });
-                    $scope.$watch(function () { return $scope.max; }, function (newValue) { return $scope.instance.updateOptions({ validation: { max: newValue } }); });
-                    $scope.$watch(function () { return $scope.options; }, function (newValue) { return $scope.instance.updateOptions(newValue); });
+                    // Options changes
+                    $scope.$watch(function () { return $scope.min; }, function (newValue) {
+                        $scope.instance.updateOptions({ validation: { min: newValue } });
+                    });
+                    $scope.$watch(function () { return $scope.max; }, function (newValue) {
+                        $scope.instance.updateOptions({ validation: { max: newValue } });
+                    });
+                    $scope.$watch(function () { return $scope.options; }, function (newValue) {
+                        $scope.instance.updateOptions(newValue);
+                    });
+                    // Model changes
+                    $scope.$watch(function () { return $scope.ngModel; }, function (newValue) {
+                        $scope.instance.setValue(newValue);
+                    });
+                    $scope.instance.on("onValueChanged", function (context) {
+                        $scope.ngModel = context.newValue;
+                    });
                 };
             }
             DateSliderDirective.factory = function () {

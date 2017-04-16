@@ -1,10 +1,20 @@
 module DateSlider.Angular {
+    export interface IDateSliderDirectiveScope extends ng.IScope {
+        min?: any;
+        max?: any;
+        options?: DateSliderOptions;
+        instance?: DateSliderInstance;
+        ngModel: any;
+    }
+
     export class DateSliderDirective implements ng.IDirective {
         public restrict = "A";
+        public require = "ngModel";
         public scope = {
             "dateSlider": "=?instance",
             "max": "<?",
             "min": "<?",
+            "ngModel": "=",
             "options": "=?",
         };
 
@@ -12,12 +22,12 @@ module DateSlider.Angular {
             return new DateSliderDirective();
         }
 
-        public link = ($scope: ng.IScope & { min?: any, max?: any, options?: DateSliderOptions, instance?: DateSliderInstance}, $element: ng.IAugmentedJQuery, $attributes: ng.IAttributes) => {
+        public link = ($scope: IDateSliderDirectiveScope, $element: ng.IAugmentedJQuery, $attributes: ng.IAttributes, ngModelController: ng.INgModelController) => {
             $scope.options = $scope.options || {};
             $scope.options.validation = $scope.options.validation || {};
 
             if (typeof $scope.min !== "undefined") {
-              $scope.options.validation.min = $scope.min;
+                $scope.options.validation.min = $scope.min;
             }
 
             if (typeof $scope.max !== "undefined") {
@@ -26,9 +36,24 @@ module DateSlider.Angular {
 
             $scope.instance = DateSlider.create($element[0], $scope.options);
 
-            $scope.$watch(() => $scope.min, (newValue) => $scope.instance.updateOptions({validation: {min: newValue}}));
-            $scope.$watch(() => $scope.max, (newValue) => $scope.instance.updateOptions({validation: {max: newValue}}));
-            $scope.$watch(() => $scope.options, (newValue) => $scope.instance.updateOptions(newValue));
+            // Options changes
+            $scope.$watch(() => $scope.min, (newValue) => {
+                $scope.instance.updateOptions({ validation: { min: newValue } });
+            });
+            $scope.$watch(() => $scope.max, (newValue) => {
+                $scope.instance.updateOptions({ validation: { max: newValue } });
+            });
+            $scope.$watch(() => $scope.options, (newValue) => {
+                $scope.instance.updateOptions(newValue);
+            });
+
+            // Model changes
+            $scope.$watch(() => $scope.ngModel, (newValue) => {
+                $scope.instance.setValue(newValue);
+            });
+            $scope.instance.on("onValueChanged", (context: Context.ValueChangeContext): void => {
+                $scope.ngModel = context.newValue;
+            });
         }
     }
 

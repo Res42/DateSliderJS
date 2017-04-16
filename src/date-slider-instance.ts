@@ -63,7 +63,7 @@ module DateSlider {
             this.setOptions();
         }
 
-        public on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => DateSliderEventContext): void {
+        public on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => void): void {
             if (eventName === "onValueChanged") {
                 this.onValueChangeEvent.register(callback);
             }

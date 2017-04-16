@@ -23,7 +23,7 @@ module DateSlider {
     // test range
     // demo: out of the box, full customization
     // slider distance of mouse from handle -> slowness of steps
-    // --> angular integration
+    // ✓ angular integration
     // --> expanding slider
     // when changing months, set days to montly maximum
     // --> validation: min, max, custom
