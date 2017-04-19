@@ -51,12 +51,23 @@ var DateSlider;
                     //     });
                     // }
                     // Model changes
+                    var fromEvent = false;
                     $scope.$watch(function () { return $scope.ngModel; }, function (newValue, oldValue) {
+                        if (newValue === oldValue) {
+                            return;
+                        }
+                        // if the model changed from the event then the slider is already has the same value
+                        // also if this isn't checked then it will cause the handle to jump sometimes
+                        if (fromEvent) {
+                            return;
+                        }
                         $scope.instance.setValue(newValue);
                     });
                     $scope.instance.on("onValueChanged", function (context) {
+                        fromEvent = true;
                         ngModelController.$setViewValue(context.newValue);
                         ngModelController.$setTouched();
+                        setTimeout(function () { fromEvent = false; });
                     });
                 };
             }

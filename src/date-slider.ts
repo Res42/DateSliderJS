@@ -31,5 +31,5 @@ module DateSlider {
     // --> slide, expand with acceleration!
     // --> slide + expand option
     // how to check timezone when comparing models?
-    // angular integration: fix jumping handle.
+    // ✓ angular integration: fix jumping handle.
 }

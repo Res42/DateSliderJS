@@ -68,13 +68,26 @@ module DateSlider.Angular {
             // }
 
             // Model changes
+            let fromEvent = false;
             $scope.$watch(() => $scope.ngModel, (newValue, oldValue) => {
+                if (newValue === oldValue) {
+                    return;
+                }
+
+                // if the model changed from the event then the slider is already has the same value
+                // also if this isn't checked then it will cause the handle to jump sometimes
+                if (fromEvent) {
+                    return;
+                }
+
                 $scope.instance.setValue(newValue);
             });
 
             $scope.instance.on("onValueChanged", (context: Context.ValueChangeContext): void => {
+                fromEvent = true;
                 ngModelController.$setViewValue(context.newValue);
                 ngModelController.$setTouched();
+                setTimeout(() => { fromEvent = false; });
             });
         }
     }

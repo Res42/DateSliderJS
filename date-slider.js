@@ -437,7 +437,7 @@ var DateSlider;
             this.value = newModel;
             this.updateDaySliders();
             var newModelValue = this.getValue();
-            this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, newValue));
+            this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldModelValue, newModelValue));
         };
         DateSliderInstance.prototype.createAllSliders = function () {
             if (!this.options.sliders) {
@@ -716,7 +716,7 @@ var DateSlider;
     // --> slide, expand with acceleration!
     // --> slide + expand option
     // how to check timezone when comparing models?
-    // angular integration: fix jumping handle.
+    // ✓ angular integration: fix jumping handle.
 })(DateSlider || (DateSlider = {}));
 "use strict";
 "use strict";

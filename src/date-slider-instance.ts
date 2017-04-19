@@ -140,7 +140,7 @@ module DateSlider {
             this.updateDaySliders();
 
             let newModelValue = this.getValue();
-            this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, newValue));
+            this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldModelValue, newModelValue));
         }
 
         private createAllSliders(): Slider.SliderInstance[] {
