@@ -25,8 +25,10 @@ module DateSlider {
     // slider distance of mouse from handle -> slowness of steps
     // ✓ angular integration
     // --> expanding slider
-    // when changing months, set days to montly maximum
+    // when changing months, set days to monthly maximum
     // --> validation: min, max, custom
     // --> slide, expand with acceleration!
     // --> slide + expand option
+    // how to check timezone when comparing models?
+    // angular integration: fix jumping handle.
 }

@@ -20,5 +20,48 @@ module DateSlider {
             public timezone = "",
         ) {
         }
+
+        public greaterThan(other: InnerModel): boolean {
+            return this.compare(other, (a, b) => a > b, false);
+        }
+
+        public greaterThanOrEqual(other: InnerModel): boolean {
+            return this.compare(other, (a, b) => a > b, true);
+        }
+
+        public lessThan(other: InnerModel): boolean {
+            return this.compare(other, (a, b) => a < b, false);
+        }
+
+        public lessThanOrEqual(other: InnerModel): boolean {
+            return this.compare(other, (a, b) => a < b, true);
+        }
+
+        public equal(other: InnerModel): boolean {
+            return this.compare(other, (a, b) => false, true);
+        }
+
+        private compare(other: InnerModel, compareMethod: (first: number, second: number) => boolean, equalPermitted: boolean): boolean {
+            if (this.year !== other.year) {
+                return compareMethod(this.year, other.year);
+            }
+            if (this.month !== other.month) {
+                return compareMethod(this.month, other.month);
+            }
+            if (this.day !== other.day) {
+                return compareMethod(this.day, other.day);
+            }
+            if (this.hour !== other.hour) {
+                return compareMethod(this.hour, other.hour);
+            }
+            if (this.minute !== other.minute) {
+                return compareMethod(this.minute, other.minute);
+            }
+            if (this.second !== other.second) {
+                return compareMethod(this.second, other.second);
+            }
+            // If the execution reaches this line then the two models are equal.
+            return equalPermitted;
+        }
     }
 }

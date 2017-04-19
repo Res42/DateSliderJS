@@ -51,19 +51,10 @@ var DateSlider;
                     //     });
                     // }
                     // Model changes
-                    var changedFromEvent = false;
                     $scope.$watch(function () { return $scope.ngModel; }, function (newValue, oldValue) {
-                        if (newValue === oldValue) {
-                            return;
-                        }
-                        if (changedFromEvent) {
-                            changedFromEvent = false;
-                            return;
-                        }
                         $scope.instance.setValue(newValue);
                     });
                     $scope.instance.on("onValueChanged", function (context) {
-                        changedFromEvent = true;
                         ngModelController.$setViewValue(context.newValue);
                         ngModelController.$setTouched();
                     });

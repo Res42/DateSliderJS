@@ -25,6 +25,12 @@ var DateSlider;
     var Helpers = (function () {
         function Helpers() {
         }
+        Helpers.isDefined = function (value) {
+            return typeof value !== "undefined";
+        };
+        Helpers.isSet = function (value) {
+            return Helpers.isDefined(value) && value !== null;
+        };
         Helpers.getDaysinYear = function (year) {
             if (typeof year === "undefined" || year === null) {
                 year = (new Date()).getUTCFullYear();
@@ -264,7 +270,7 @@ var DateSlider;
             if (typeof handler !== "function") {
                 throw new Error("DateSliderEventHandler.register(): handler is not given or not a function.");
             }
-            if ((typeof index !== "undefined" || index !== null) && 0 <= index && index < this.events.length) {
+            if (DateSlider.Helpers.isSet(index) && 0 <= index && index < this.events.length) {
                 this.events.splice(index, 0, handler);
             }
             else {
@@ -301,37 +307,46 @@ var DateSlider;
             this.onValueChangeEvent = new DateSlider.DateSliderEventHandler();
             this.onSliderUpdate = function (context, options) {
                 var oldValue = _this.getValue();
+                var newModel = DateSlider.Helpers.deepMerge({}, _this.value);
                 switch (options.type) {
                     case "year":
-                        _this.value.model.year = context.newValue;
+                        newModel.model.year = context.newValue;
                         break;
                     case "month":
-                        _this.value.model.month = context.newValue;
+                        newModel.model.month = context.newValue;
                         break;
                     case "day":
-                        _this.value.model.day = context.newValue;
+                        newModel.model.day = context.newValue;
                         break;
                     case "hour":
-                        _this.value.model.hour = context.newValue;
+                        newModel.model.hour = context.newValue;
                         break;
                     case "minute":
-                        _this.value.model.minute = context.newValue;
+                        newModel.model.minute = context.newValue;
                         break;
                     case "second":
-                        _this.value.model.second = context.newValue;
+                        newModel.model.second = context.newValue;
                         break;
                     case "universal-date":
                         // TODO
                         break;
                     case "universal-time":
-                        _this.value.model.hour = Math.floor(context.newValue / 3600);
-                        _this.value.model.minute = Math.floor(context.newValue / 60) % 60;
-                        _this.value.model.second = context.newValue % 60;
+                        newModel.model.hour = Math.floor(context.newValue / 3600);
+                        newModel.model.minute = Math.floor(context.newValue / 60) % 60;
+                        newModel.model.second = context.newValue % 60;
                         break;
                     case "universal":
                         // TODO
                         break;
                 }
+                // check validity
+                if (!_this.isValid(newModel)) {
+                    // rollback to the last valid value if the new model is not valid
+                    _this.updateSliders();
+                    return;
+                }
+                // if the new model is valid, then it is saved as the new value
+                _this.value = newModel;
                 var newValue = _this.getValue();
                 if (oldValue !== newValue) {
                     _this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, newValue));
@@ -342,8 +357,8 @@ var DateSlider;
             }
             this.bindParser();
             this.bindFormatter();
-            if (typeof this.options.value !== "undefined") {
-                this.value = this.parser.parse(this.options.value, this.options.parserOptions);
+            if (DateSlider.Helpers.isSet(this.options.value)) {
+                this.value = this.parse(this.options.value);
             }
             else {
                 this.value = new DateSlider.DateSliderModel(new DateSlider.InnerModel, null);
@@ -363,14 +378,29 @@ var DateSlider;
                 this.onValueChangeEvent.register(this.options.callback.onValueChanged);
             }
         }
+        DateSliderInstance.prototype.parse = function (value) {
+            return this.parser.parse(value, this.options.parserOptions);
+        };
+        DateSliderInstance.prototype.format = function (value) {
+            return this.formatter.format(value, this.options.formatterOptions);
+        };
         DateSliderInstance.prototype.getValue = function () {
-            return this.formatter.format(this.value, this.options.formatterOptions);
+            return this.format(this.value);
         };
         DateSliderInstance.prototype.setValue = function (input) {
             var oldValue = this.getValue();
-            this.value = this.parser.parse(input, this.options.parserOptions);
+            var newModel = this.parse(input);
+            if (!this.isValid(newModel)) {
+                // alert the outside that their new input is not valid
+                this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, oldValue));
+                return;
+            }
+            this.value = newModel;
             this.updateSliders();
-            this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, this.getValue()));
+            var newValue = this.getValue();
+            if (oldValue !== newValue) {
+                this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, newValue));
+            }
         };
         DateSliderInstance.prototype.getOptions = function () {
             return this.options;
@@ -402,6 +432,23 @@ var DateSlider;
                 sliders.push(new DateSlider.Slider.SliderInstance(sliderOptions, this.getRangeFromType(sliderOptions)));
             }
             return sliders;
+        };
+        DateSliderInstance.prototype.isValid = function (model) {
+            if (!this.options.validation) {
+                return true;
+            }
+            if (DateSlider.Helpers.isSet(this.options.validation.min)) {
+                var minimum = this.parse(this.options.validation.min);
+                return minimum.model.lessThanOrEqual(model.model);
+            }
+            if (DateSlider.Helpers.isSet(this.options.validation.max)) {
+                var maximum = this.parse(this.options.validation.max);
+                return maximum.model.greaterThanOrEqual(model.model);
+            }
+            if (DateSlider.Helpers.isSet(this.options.validation.custom)) {
+                return this.options.validation.custom(this.format(model));
+            }
+            return true;
         };
         DateSliderInstance.prototype.getRangeFromType = function (sliderOptions) {
             switch (sliderOptions.type) {
@@ -561,6 +608,43 @@ var DateSlider;
             this.second = second;
             this.timezone = timezone;
         }
+        InnerModel.prototype.greaterThan = function (other) {
+            return this.compare(other, function (a, b) { return a > b; }, false);
+        };
+        InnerModel.prototype.greaterThanOrEqual = function (other) {
+            return this.compare(other, function (a, b) { return a > b; }, true);
+        };
+        InnerModel.prototype.lessThan = function (other) {
+            return this.compare(other, function (a, b) { return a < b; }, false);
+        };
+        InnerModel.prototype.lessThanOrEqual = function (other) {
+            return this.compare(other, function (a, b) { return a < b; }, true);
+        };
+        InnerModel.prototype.equal = function (other) {
+            return this.compare(other, function (a, b) { return false; }, true);
+        };
+        InnerModel.prototype.compare = function (other, compareMethod, equalPermitted) {
+            if (this.year !== other.year) {
+                return compareMethod(this.year, other.year);
+            }
+            if (this.month !== other.month) {
+                return compareMethod(this.month, other.month);
+            }
+            if (this.day !== other.day) {
+                return compareMethod(this.day, other.day);
+            }
+            if (this.hour !== other.hour) {
+                return compareMethod(this.hour, other.hour);
+            }
+            if (this.minute !== other.minute) {
+                return compareMethod(this.minute, other.minute);
+            }
+            if (this.second !== other.second) {
+                return compareMethod(this.second, other.second);
+            }
+            // If the execution reaches this line then the two models are equal.
+            return equalPermitted;
+        };
         return InnerModel;
     }());
     DateSlider.InnerModel = InnerModel;
@@ -591,10 +675,12 @@ var DateSlider;
     // slider distance of mouse from handle -> slowness of steps
     // ✓ angular integration
     // --> expanding slider
-    // when changing months, set days to montly maximum
+    // when changing months, set days to monthly maximum
     // --> validation: min, max, custom
     // --> slide, expand with acceleration!
     // --> slide + expand option
+    // how to check timezone when comparing models?
+    // angular integration: fix jumping handle.
 })(DateSlider || (DateSlider = {}));
 "use strict";
 "use strict";
@@ -877,7 +963,7 @@ var DateSlider;
                 this.destroy = function (event) {
                     window.removeEventListener("load", _this.events.load);
                     window.removeEventListener("resize", _this.events.resize);
-                    if (typeof _this.slideIntervalHandle !== "undefined" && _this.slideIntervalHandle !== null) {
+                    if (DateSlider.Helpers.isSet(_this.slideIntervalHandle)) {
                         window.clearInterval(_this.slideIntervalHandle);
                     }
                     _this.removeMovementListeners();

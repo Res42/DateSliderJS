@@ -8,6 +8,14 @@ module DateSlider {
     }
 
     export class Helpers {
+        public static isDefined(value: any) {
+            return typeof value !== "undefined";
+        }
+
+        public static isSet(value: any) {
+            return Helpers.isDefined(value) && value !== null;
+        }
+
         public static getDaysinYear(year?: number): number {
             if (typeof year === "undefined" || year === null) {
                 year = (new Date()).getUTCFullYear();

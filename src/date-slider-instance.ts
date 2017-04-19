@@ -18,8 +18,8 @@ module DateSlider {
             this.bindParser();
             this.bindFormatter();
 
-            if (typeof this.options.value !== "undefined") {
-                this.value = this.parser.parse(this.options.value, this.options.parserOptions);
+            if (Helpers.isSet(this.options.value)) {
+                this.value = this.parse(this.options.value);
             } else {
                 this.value = new DateSliderModel(new InnerModel, null);
             }
@@ -41,15 +41,34 @@ module DateSlider {
             }
         }
 
+        public parse(value: any): DateSliderModel {
+            return this.parser.parse(value, this.options.parserOptions);
+        }
+
+        public format(value: DateSliderModel): any {
+            return this.formatter.format(value, this.options.formatterOptions);
+        }
+
         public getValue(): any {
-            return this.formatter.format(this.value, this.options.formatterOptions);
+            return this.format(this.value);
         }
 
         public setValue(input: any): void {
             let oldValue = this.getValue();
-            this.value = this.parser.parse(input, this.options.parserOptions);
+            let newModel = this.parse(input);
+
+            if (!this.isValid(newModel)) {
+                // alert the outside that their new input is not valid
+                this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, oldValue));
+                return;
+            }
+            this.value = newModel;
+
             this.updateSliders();
-            this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, this.getValue()));
+            let newValue = this.getValue();
+            if (oldValue !== newValue) {
+                this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, newValue));
+            }
         }
 
         public getOptions(): DateSliderOptions {
@@ -87,6 +106,28 @@ module DateSlider {
             return sliders;
         }
 
+        private isValid(model: DateSliderModel): boolean {
+            if (!this.options.validation) {
+                return true;
+            }
+
+            if (Helpers.isSet(this.options.validation.min)) {
+                let minimum = this.parse(this.options.validation.min);
+                return minimum.model.lessThanOrEqual(model.model);
+            }
+
+            if (Helpers.isSet(this.options.validation.max)) {
+                let maximum = this.parse(this.options.validation.max);
+                return maximum.model.greaterThanOrEqual(model.model);
+            }
+
+            if (Helpers.isSet(this.options.validation.custom)) {
+                return this.options.validation.custom(this.format(model));
+            }
+
+            return true;
+        }
+
         private getRangeFromType(sliderOptions: SliderOptions): Slider.SliderRange {
             switch (sliderOptions.type) {
                 case "year":
@@ -116,37 +157,47 @@ module DateSlider {
 
         private onSliderUpdate = (context: Slider.Context.SliderValueChangeContext, options: SliderOptions) => {
             let oldValue = this.getValue();
+            let newModel = Helpers.deepMerge({}, this.value);
             switch (options.type) {
                 case "year":
-                    this.value.model.year = context.newValue;
+                    newModel.model.year = context.newValue;
                     break;
                 case "month":
-                    this.value.model.month = context.newValue;
+                    newModel.model.month = context.newValue;
                     break;
                 case "day":
-                    this.value.model.day = context.newValue;
+                    newModel.model.day = context.newValue;
                     break;
                 case "hour":
-                    this.value.model.hour = context.newValue;
+                    newModel.model.hour = context.newValue;
                     break;
                 case "minute":
-                    this.value.model.minute = context.newValue;
+                    newModel.model.minute = context.newValue;
                     break;
                 case "second":
-                    this.value.model.second = context.newValue;
+                    newModel.model.second = context.newValue;
                     break;
                 case "universal-date":
                     // TODO
                     break;
                 case "universal-time":
-                    this.value.model.hour = Math.floor(context.newValue / 3600);
-                    this.value.model.minute = Math.floor(context.newValue / 60) % 60;
-                    this.value.model.second = context.newValue % 60;
+                    newModel.model.hour = Math.floor(context.newValue / 3600);
+                    newModel.model.minute = Math.floor(context.newValue / 60) % 60;
+                    newModel.model.second = context.newValue % 60;
                     break;
                 case "universal":
                     // TODO
                     break;
             }
+
+            // check validity
+            if (! this.isValid(newModel)) {
+                // rollback to the last valid value if the new model is not valid
+                this.updateSliders();
+                return;
+            }
+            // if the new model is valid, then it is saved as the new value
+            this.value = newModel;
 
             let newValue = this.getValue();
             if (oldValue !== newValue) {

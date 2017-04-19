@@ -7,6 +7,8 @@ declare module DateSlider {
         static MillisecondsInDay: number;
     }
     class Helpers {
+        static isDefined(value: any): boolean;
+        static isSet(value: any): boolean;
         static getDaysinYear(year?: number): number;
         static findChildWithClass(element: HTMLElement, className: string, required?: boolean): HTMLElement;
         static calculateCenterPosition(element: HTMLElement | ClientRect): Vector;
@@ -78,6 +80,8 @@ declare module DateSlider {
         value: DateSliderModel;
         private onValueChangeEvent;
         constructor(element: HTMLElement, options: DateSliderOptions);
+        parse(value: any): DateSliderModel;
+        format(value: DateSliderModel): any;
         getValue(): any;
         setValue(input: any): void;
         getOptions(): DateSliderOptions;
@@ -85,6 +89,7 @@ declare module DateSlider {
         replaceOptions(options: DateSliderOptions): void;
         on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => void): void;
         createAllSliders(): Slider.SliderInstance[];
+        private isValid(model);
         private getRangeFromType(sliderOptions);
         private onSliderUpdate;
         private updateSliders();
@@ -114,6 +119,12 @@ declare module DateSlider {
             month?: number, 
             /** In the range of [1, 31]. */
             day?: number, hour?: number, minute?: number, second?: number, timezone?: string);
+        greaterThan(other: InnerModel): boolean;
+        greaterThanOrEqual(other: InnerModel): boolean;
+        lessThan(other: InnerModel): boolean;
+        lessThanOrEqual(other: InnerModel): boolean;
+        equal(other: InnerModel): boolean;
+        private compare(other, compareMethod, equalPermitted);
     }
 }
 declare module DateSlider {

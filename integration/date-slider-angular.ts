@@ -68,22 +68,11 @@ module DateSlider.Angular {
             // }
 
             // Model changes
-            let changedFromEvent = false;
             $scope.$watch(() => $scope.ngModel, (newValue, oldValue) => {
-                if (newValue === oldValue) {
-                    return;
-                }
-
-                if (changedFromEvent) {
-                    changedFromEvent = false;
-                    return;
-                }
-
                 $scope.instance.setValue(newValue);
             });
 
             $scope.instance.on("onValueChanged", (context: Context.ValueChangeContext): void => {
-                changedFromEvent = true;
                 ngModelController.$setViewValue(context.newValue);
                 ngModelController.$setTouched();
             });

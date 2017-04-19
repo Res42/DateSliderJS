@@ -99,7 +99,7 @@ module DateSlider.Slider {
         public destroy = (event?: Event): void => {
             window.removeEventListener("load", this.events.load);
             window.removeEventListener("resize", this.events.resize);
-            if (typeof this.slideIntervalHandle !== "undefined" && this.slideIntervalHandle !== null) {
+            if (Helpers.isSet(this.slideIntervalHandle)) {
                 window.clearInterval(this.slideIntervalHandle);
             }
             this.removeMovementListeners();

@@ -10,7 +10,7 @@ module DateSlider {
             if (typeof handler !== "function") {
                 throw new Error("DateSliderEventHandler.register(): handler is not given or not a function.");
             }
-            if ((typeof index !== "undefined" || index !== null) && 0 <= index && index < this.events.length) {
+            if (Helpers.isSet(index) && 0 <= index && index < this.events.length) {
                 this.events.splice(index, 0, handler);
             } else {
                 this.events.push(handler);
