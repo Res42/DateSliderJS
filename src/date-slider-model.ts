@@ -19,6 +19,10 @@ module DateSlider {
             public second = 0,
             public timezone = "",
         ) {
+            let daysInMonth = Helpers.getDaysInMonth(this.year, this.month);
+            if (this.day > daysInMonth) {
+                this.day = daysInMonth;
+            }
         }
 
         public greaterThan(other: InnerModel): boolean {

@@ -39,6 +39,18 @@ var DateSlider;
             var endOfYear = new Date(year + 1, 0, 0).getTime();
             return (endOfYear - startOfYear) / (Constants.MillisecondsInDay);
         };
+        Helpers.getDaysInMonth = function (year, month) {
+            return new Date(year, month, 0).getDate();
+        };
+        Helpers.getPositionFromEvent = function (e) {
+            if (e instanceof MouseEvent) {
+                return new DateSlider.Vector(e.clientX, e.clientY);
+            }
+            else if (e instanceof TouchEvent) {
+                return new DateSlider.Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
+            }
+            throw new Error("Cannot extract position from event.");
+        };
         Helpers.findChildWithClass = function (element, className, required) {
             if (required === void 0) { required = true; }
             var found = element.getElementsByClassName(className);
@@ -305,53 +317,6 @@ var DateSlider;
             this.element = element;
             this.options = options;
             this.onValueChangeEvent = new DateSlider.DateSliderEventHandler();
-            this.onSliderUpdate = function (context, options) {
-                var oldValue = _this.getValue();
-                var newModel = DateSlider.Helpers.deepMerge({}, _this.value);
-                switch (options.type) {
-                    case "year":
-                        newModel.model.year = context.newValue;
-                        break;
-                    case "month":
-                        newModel.model.month = context.newValue;
-                        break;
-                    case "day":
-                        newModel.model.day = context.newValue;
-                        break;
-                    case "hour":
-                        newModel.model.hour = context.newValue;
-                        break;
-                    case "minute":
-                        newModel.model.minute = context.newValue;
-                        break;
-                    case "second":
-                        newModel.model.second = context.newValue;
-                        break;
-                    case "universal-date":
-                        // TODO
-                        break;
-                    case "universal-time":
-                        newModel.model.hour = Math.floor(context.newValue / 3600);
-                        newModel.model.minute = Math.floor(context.newValue / 60) % 60;
-                        newModel.model.second = context.newValue % 60;
-                        break;
-                    case "universal":
-                        // TODO
-                        break;
-                }
-                // check validity
-                if (!_this.isValid(newModel)) {
-                    // rollback to the last valid value if the new model is not valid
-                    _this.updateSliders();
-                    return;
-                }
-                // if the new model is valid, then it is saved as the new value
-                _this.value = newModel;
-                var newValue = _this.getValue();
-                if (oldValue !== newValue) {
-                    _this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, newValue));
-                }
-            };
             if (!element || !element.parentNode) {
                 throw new Error("DateSlider.create(): Given HTML element is invalid.");
             }
@@ -364,9 +329,6 @@ var DateSlider;
                 this.value = new DateSlider.DateSliderModel(new DateSlider.InnerModel, null);
             }
             this.sliders = this.createAllSliders();
-            this.sliders.forEach(function (slider) {
-                slider.on("onValueChanged", function (context) { return _this.onSliderUpdate(context, slider.options); });
-            });
             this.bootstrapSliders(this.sliders);
             DateSlider.Helpers.registerOnDestroy(element, function (event) {
                 for (var _i = 0, _a = _this.sliders; _i < _a.length; _i++) {
@@ -398,9 +360,7 @@ var DateSlider;
             this.value = newModel;
             this.updateSliders();
             var newValue = this.getValue();
-            if (oldValue !== newValue) {
-                this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, newValue));
-            }
+            this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, newValue));
         };
         DateSliderInstance.prototype.getOptions = function () {
             return this.options;
@@ -422,6 +382,51 @@ var DateSlider;
                 this.onValueChangeEvent.register(callback);
             }
         };
+        DateSliderInstance.prototype.updateFromSlider = function (sliderType, newValue, oldValue) {
+            var oldModelValue = this.getValue();
+            var newModel = DateSlider.Helpers.deepMerge({}, this.value);
+            switch (sliderType) {
+                case "year":
+                    newModel.model.year = newValue;
+                    break;
+                case "month":
+                    newModel.model.month = newValue;
+                    break;
+                case "day":
+                    newModel.model.day = newValue;
+                    break;
+                case "hour":
+                    newModel.model.hour = newValue;
+                    break;
+                case "minute":
+                    newModel.model.minute = newValue;
+                    break;
+                case "second":
+                    newModel.model.second = newValue;
+                    break;
+                case "universal-date":
+                    // TODO
+                    break;
+                case "universal-time":
+                    newModel.model.hour = Math.floor(newValue / 3600);
+                    newModel.model.minute = Math.floor(newValue / 60) % 60;
+                    newModel.model.second = newValue % 60;
+                    break;
+                case "universal":
+                    // TODO
+                    break;
+            }
+            // check validity
+            if (!this.isValid(newModel)) {
+                // rollback to the last valid value if the new model is not valid
+                this.updateSliders();
+                return;
+            }
+            // if the new model is valid, then it is saved as the new value
+            this.value = newModel;
+            var newModelValue = this.getValue();
+            this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, newValue));
+        };
         DateSliderInstance.prototype.createAllSliders = function () {
             if (!this.options.sliders) {
                 throw new Error("Cannot create sliders because options.sliders is not set.");
@@ -429,7 +434,7 @@ var DateSlider;
             var sliders = [];
             for (var _i = 0, _a = this.options.sliders; _i < _a.length; _i++) {
                 var sliderOptions = _a[_i];
-                sliders.push(new DateSlider.Slider.SliderInstance(sliderOptions, this.getRangeFromType(sliderOptions)));
+                sliders.push(DateSlider.Slider.create(this, sliderOptions, this.getRangeFromType(sliderOptions)));
             }
             return sliders;
         };
@@ -476,33 +481,41 @@ var DateSlider;
                     throw new Error("SliderOptions.type is not valid.");
             }
         };
+        DateSliderInstance.prototype.updateDaySliders = function () {
+            for (var _i = 0, _a = this.sliders; _i < _a.length; _i++) {
+                var slider = _a[_i];
+                if (slider.options.type === "day") {
+                    slider.setMaximum(DateSlider.Helpers.getDaysInMonth(this.value.model.year, this.value.model.month));
+                }
+            }
+        };
         DateSliderInstance.prototype.updateSliders = function () {
             for (var _i = 0, _a = this.sliders; _i < _a.length; _i++) {
                 var slider = _a[_i];
                 switch (slider.options.type) {
                     case "year":
-                        slider.slideTo(this.value.model.year);
+                        slider.updateValue(this.value.model.year);
                         break;
                     case "month":
-                        slider.setValue(this.value.model.month);
+                        slider.updateValue(this.value.model.month);
                         break;
                     case "day":
-                        slider.setValue(this.value.model.day);
+                        slider.updateValue(this.value.model.day);
                         break;
                     case "hour":
-                        slider.setValue(this.value.model.hour);
+                        slider.updateValue(this.value.model.hour);
                         break;
                     case "minute":
-                        slider.setValue(this.value.model.minute);
+                        slider.updateValue(this.value.model.minute);
                         break;
                     case "second":
-                        slider.setValue(this.value.model.second);
+                        slider.updateValue(this.value.model.second);
                         break;
                     case "universal-date":
                         // TODO
                         break;
                     case "universal-time":
-                        slider.setValue(this.value.model.hour * 3600 + this.value.model.minute * 60 + this.value.model.second);
+                        slider.updateValue(this.value.model.hour * 3600 + this.value.model.minute * 60 + this.value.model.second);
                         break;
                     case "universal":
                         // TODO
@@ -607,6 +620,10 @@ var DateSlider;
             this.minute = minute;
             this.second = second;
             this.timezone = timezone;
+            var daysInMonth = DateSlider.Helpers.getDaysInMonth(this.year, this.month);
+            if (this.day > daysInMonth) {
+                this.day = daysInMonth;
+            }
         }
         InnerModel.prototype.greaterThan = function (other) {
             return this.compare(other, function (a, b) { return a > b; }, false);
@@ -671,12 +688,13 @@ var DateSlider;
     // string parser / formatter + tests
     // range interval
     // test range
+    // test model compare methods
     // demo: out of the box, full customization
     // slider distance of mouse from handle -> slowness of steps
     // ✓ angular integration
     // --> expanding slider
     // when changing months, set days to monthly maximum
-    // --> validation: min, max, custom
+    // ✓ validation: min, max, custom
     // --> slide, expand with acceleration!
     // --> slide + expand option
     // how to check timezone when comparing models?
@@ -939,9 +957,21 @@ var DateSlider;
 (function (DateSlider) {
     var Slider;
     (function (Slider) {
+        function create(dateSlider, options, range) {
+            switch (options.movement) {
+                default:
+                case "none":
+                    return new Slider.SliderInstance(dateSlider, options, range);
+                case "slide":
+                    return new Slider.SliderSlidingInstance(dateSlider, options, range);
+            }
+        }
+        Slider.create = create;
+        ;
         var SliderInstance = (function () {
-            function SliderInstance(options, range) {
+            function SliderInstance(dateSlider, options, range) {
                 var _this = this;
+                this.dateSlider = dateSlider;
                 this.options = options;
                 this.range = range;
                 this.toDiscrete = Math.round;
@@ -960,14 +990,6 @@ var DateSlider;
                     touchmove: function (e) { return _this.handleMouseMove(e); },
                     touchstart: function (e) { return _this.handleMouseDown(e); },
                 };
-                this.destroy = function (event) {
-                    window.removeEventListener("load", _this.events.load);
-                    window.removeEventListener("resize", _this.events.resize);
-                    if (DateSlider.Helpers.isSet(_this.slideIntervalHandle)) {
-                        window.clearInterval(_this.slideIntervalHandle);
-                    }
-                    _this.removeMovementListeners();
-                };
                 this.handleMouseDown = function (e) {
                     // only move handler with the left mouse button
                     if (_this.isHandleReleased(e)) {
@@ -975,14 +997,14 @@ var DateSlider;
                         return;
                     }
                     e.preventDefault();
-                    _this.lastPointerPosition = _this.getPositionFromEvent(e);
+                    _this.lastPointerPosition = DateSlider.Helpers.getPositionFromEvent(e);
                     _this.isDragging = true;
                     _this.addMovementListeners();
                     _this.onSliderHandleGrabEvent.fire(new DateSlider.DateSliderEventContext());
                 };
                 this.handleMouseUp = function (e) {
                     _this.isDragging = false;
-                    _this.lastPointerPosition = _this.getPositionFromEvent(e);
+                    _this.lastPointerPosition = DateSlider.Helpers.getPositionFromEvent(e);
                     _this.setValue(_this.toDiscrete(_this.calculateValue(_this.lastPointerPosition)));
                     _this.removeMovementListeners();
                     _this.onSliderHandleReleaseEvent.fire(new DateSlider.DateSliderEventContext());
@@ -997,31 +1019,9 @@ var DateSlider;
                         _this.isDragging = false;
                         return;
                     }
-                    _this.lastPointerPosition = _this.getPositionFromEvent(e);
+                    _this.lastPointerPosition = DateSlider.Helpers.getPositionFromEvent(e);
                     _this.setValue(_this.calculateValue(_this.lastPointerPosition));
                     _this.onSliderHandleMoveEvent.fire(new DateSlider.DateSliderEventContext());
-                };
-                this.sliding = function () {
-                    var direction;
-                    if (_this.range.value === _this.range.maximum) {
-                        direction = 1;
-                    }
-                    else if (_this.range.value === _this.range.minimum) {
-                        direction = -1;
-                    }
-                    else {
-                        direction = 0;
-                    }
-                    if (direction !== 0) {
-                        _this.updateAfter(function () {
-                            _this.range.slide(direction * (_this.options.movementStep || 1));
-                            if (_this.isDragging) {
-                                _this.setValue(_this.calculateValue(_this.lastPointerPosition));
-                            }
-                        });
-                        _this.createMarkers();
-                        _this.updateMarkersPosition();
-                    }
                 };
                 this.updateValueDisplay = function () {
                     if (_this.valueContainerElement) {
@@ -1044,10 +1044,6 @@ var DateSlider;
                     this.onSliderHandleMoveEvent.register(options.callback.onSliderHandleMoved);
                     this.onSliderHandleReleaseEvent.register(options.callback.onSliderHandleReleased);
                 }
-                if (this.options.movement === "slide") {
-                    this.range.value = this.toDiscrete((this.range.maximum + this.range.minimum) / 2);
-                    this.registerSliding();
-                }
                 if (this.options.template instanceof HTMLElement) {
                     this.bootstrapSliderToTemplate();
                 }
@@ -1060,21 +1056,27 @@ var DateSlider;
             SliderInstance.prototype.getValue = function () {
                 return this.toDiscrete(this.range.value);
             };
-            SliderInstance.prototype.slideTo = function (value) {
-                var _this = this;
-                this.updateAfter(function () {
-                    if (_this.options.movement === "slide") {
-                        _this.range.slideTo(value, false);
-                    }
-                });
-                this.createMarkers();
-                this.updateMarkersPosition();
-            };
-            SliderInstance.prototype.setValue = function (value) {
+            SliderInstance.prototype.updateValue = function (value) {
                 var _this = this;
                 this.updateAfter(function () {
                     _this.range.value = value;
                 });
+            };
+            SliderInstance.prototype.setMaximum = function (maximum) {
+                var _this = this;
+                this.updateAfter(function () {
+                    _this.range.maximum = maximum;
+                });
+                this.createMarkers();
+                this.updateMarkersPosition();
+            };
+            SliderInstance.prototype.setMininum = function (minimum) {
+                var _this = this;
+                this.updateAfter(function () {
+                    _this.range.minimum = minimum;
+                });
+                this.createMarkers();
+                this.updateMarkersPosition();
             };
             SliderInstance.prototype.on = function (eventName, callback) {
                 switch (eventName) {
@@ -1090,6 +1092,71 @@ var DateSlider;
                     case "onSliderBoxReleased":
                         this.onSliderHandleReleaseEvent.register(callback);
                         break;
+                }
+            };
+            SliderInstance.prototype.destroy = function (event) {
+                window.removeEventListener("load", this.events.load);
+                window.removeEventListener("resize", this.events.resize);
+                this.removeMovementListeners();
+            };
+            SliderInstance.prototype.setValue = function (value) {
+                var _this = this;
+                this.updateAfter(function () {
+                    _this.range.value = value;
+                });
+            };
+            SliderInstance.prototype.updateAfter = function (callback) {
+                var oldValue = this.toDiscrete(this.range.value);
+                callback();
+                var newValue = this.toDiscrete(this.range.value);
+                this.updateValueDisplay();
+                this.updateHandlePosition();
+                // this.dateSlider.updateFromSlider(this.options.type, newValue, oldValue);
+                this.onValueChangeEvent.fire(new Slider.Context.SliderValueChangeContext(oldValue, newValue));
+            };
+            SliderInstance.prototype.createMarkers = function () {
+                if (this.markerElement && this.options.markers && this.options.markers.showValueMarker) {
+                    if (this.markers) {
+                        for (var _i = 0, _a = this.markers; _i < _a.length; _i++) {
+                            var marker = _a[_i];
+                            marker.element.remove();
+                        }
+                    }
+                    this.markers = [];
+                    for (var v = this.range.minimum; v <= this.range.maximum; v++) {
+                        var classNames = this.options.markers.showValueMarker(v, this.range.minimum, this.range.maximum);
+                        if (classNames !== null) {
+                            var marker = this.markerElement.cloneNode(true);
+                            if (typeof classNames === "string" && classNames.length > 0) {
+                                marker.classList.add(classNames);
+                            }
+                            else if (classNames instanceof Array) {
+                                (_b = marker.classList).add.apply(_b, classNames);
+                            }
+                            var valueContainers = marker.getElementsByClassName(DateSlider.Constants.SliderMarkerValueContainer);
+                            this.markers.push({ element: marker, valueContainers: valueContainers, value: v });
+                            this.sliderElement.appendChild(marker);
+                            this.updateMarkerValue(this.markers[this.markers.length - 1]);
+                        }
+                    }
+                    this.sliderElement.style.overflow = "hidden";
+                }
+                var _b;
+            };
+            SliderInstance.prototype.updateMarkerValue = function (marker) {
+                var text;
+                if (this.options.markers.displayValueFormatter) {
+                    text = this.options.markers.displayValueFormatter(marker.value, this.range.minimum, this.range.maximum);
+                }
+                else if (this.options.displayValueFormatter) {
+                    text = this.options.displayValueFormatter(marker.value);
+                }
+                else {
+                    text = marker.value.toString();
+                }
+                for (var i = 0; i < marker.valueContainers.length; i++) {
+                    var container = marker.valueContainers.item(i);
+                    container.innerHTML = text;
                 }
             };
             SliderInstance.prototype.bootstrapSliderToTemplate = function () {
@@ -1159,64 +1226,6 @@ var DateSlider;
                 return e instanceof TouchEvent && e.targetTouches.length <= 0
                     || e instanceof MouseEvent && (1 & e.buttons) !== 1;
             };
-            SliderInstance.prototype.updateAfter = function (callback) {
-                var oldValue = this.toDiscrete(this.range.value);
-                callback();
-                var newValue = this.toDiscrete(this.range.value);
-                this.updateValueDisplay();
-                this.updateHandlePosition();
-                if (oldValue !== newValue) {
-                    this.onValueChangeEvent.fire(new Slider.Context.SliderValueChangeContext(oldValue, newValue));
-                }
-            };
-            SliderInstance.prototype.registerSliding = function () {
-                this.slideIntervalHandle = window.setInterval(this.sliding, this.options.movementSpeed || 0);
-            };
-            SliderInstance.prototype.createMarkers = function () {
-                if (this.markerElement && this.options.markers && this.options.markers.showValueMarker) {
-                    if (this.markers) {
-                        for (var _i = 0, _a = this.markers; _i < _a.length; _i++) {
-                            var marker = _a[_i];
-                            marker.element.remove();
-                        }
-                    }
-                    this.markers = [];
-                    for (var v = this.range.minimum; v <= this.range.maximum; v++) {
-                        var classNames = this.options.markers.showValueMarker(v, this.range.minimum, this.range.maximum);
-                        if (classNames !== null) {
-                            var marker = this.markerElement.cloneNode(true);
-                            if (typeof classNames === "string" && classNames.length > 0) {
-                                marker.classList.add(classNames);
-                            }
-                            else if (classNames instanceof Array) {
-                                (_b = marker.classList).add.apply(_b, classNames);
-                            }
-                            var valueContainers = marker.getElementsByClassName(DateSlider.Constants.SliderMarkerValueContainer);
-                            this.markers.push({ element: marker, valueContainers: valueContainers, value: v });
-                            this.sliderElement.appendChild(marker);
-                            this.updateMarkerValue(this.markers[this.markers.length - 1]);
-                        }
-                    }
-                    this.sliderElement.style.overflow = "hidden";
-                }
-                var _b;
-            };
-            SliderInstance.prototype.updateMarkerValue = function (marker) {
-                var text;
-                if (this.options.markers.displayValueFormatter) {
-                    text = this.options.markers.displayValueFormatter(marker.value, this.range.minimum, this.range.maximum);
-                }
-                else if (this.options.displayValueFormatter) {
-                    text = this.options.displayValueFormatter(marker.value);
-                }
-                else {
-                    text = marker.value.toString();
-                }
-                for (var i = 0; i < marker.valueContainers.length; i++) {
-                    var container = marker.valueContainers.item(i);
-                    container.innerHTML = text;
-                }
-            };
             SliderInstance.prototype.updateMarkersPosition = function () {
                 if (!this.markers || this.markers.length <= 0) {
                     return;
@@ -1241,15 +1250,6 @@ var DateSlider;
                     marker.element.style.top = (markerYPosition.y - marker.element.scrollHeight).toFixed(2) + "px";
                     marker.element.style.left = markerXPosition.x.toFixed(2) + "px";
                 }
-            };
-            SliderInstance.prototype.getPositionFromEvent = function (e) {
-                if (e instanceof MouseEvent) {
-                    return new DateSlider.Vector(e.clientX, e.clientY);
-                }
-                else if (e instanceof TouchEvent) {
-                    return new DateSlider.Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
-                }
-                throw new Error("Cannot extract position from event.");
             };
             SliderInstance.prototype.calculateValue = function (position) {
                 var r = this.calculateOrthogonalProjectionRatio(position);
@@ -1291,6 +1291,50 @@ var DateSlider;
             return SliderInstance;
         }());
         Slider.SliderInstance = SliderInstance;
+        var SliderSlidingInstance = (function (_super) {
+            __extends(SliderSlidingInstance, _super);
+            function SliderSlidingInstance(dateSlider, options, range) {
+                var _this = _super.call(this, dateSlider, options, range) || this;
+                _this.sliding = function () {
+                    var direction;
+                    if (_this.range.value === _this.range.maximum) {
+                        direction = 1;
+                    }
+                    else if (_this.range.value === _this.range.minimum) {
+                        direction = -1;
+                    }
+                    else {
+                        direction = 0;
+                    }
+                    if (direction !== 0) {
+                        _this.updateAfter(function () {
+                            _this.range.slide(direction * (_this.options.movementStep || 1));
+                            if (_this.isDragging) {
+                                _this.range.value = _this.calculateValue(_this.lastPointerPosition);
+                            }
+                        });
+                        _this.createMarkers();
+                        _this.updateMarkersPosition();
+                    }
+                };
+                _this.slideIntervalHandle = window.setInterval(_this.sliding, _this.options.movementSpeed || 0);
+                return _this;
+            }
+            SliderSlidingInstance.prototype.destroy = function (event) {
+                _super.prototype.destroy.call(this, event);
+                window.clearInterval(this.slideIntervalHandle);
+            };
+            SliderSlidingInstance.prototype.updateValue = function (value) {
+                var _this = this;
+                this.updateAfter(function () {
+                    _this.range.slideTo(value, false);
+                });
+                this.createMarkers();
+                this.updateMarkersPosition();
+            };
+            return SliderSlidingInstance;
+        }(SliderInstance));
+        Slider.SliderSlidingInstance = SliderSlidingInstance;
     })(Slider = DateSlider.Slider || (DateSlider.Slider = {}));
 })(DateSlider || (DateSlider = {}));
 "use strict";

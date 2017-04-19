@@ -27,6 +27,20 @@ module DateSlider {
             return (endOfYear - startOfYear) / (Constants.MillisecondsInDay);
         }
 
+        public static getDaysInMonth(year: number, month: number): number {
+            return new Date(year, month, 0).getDate();
+        }
+
+        public static getPositionFromEvent(e: MouseEvent | TouchEvent): Vector {
+            if (e instanceof MouseEvent) {
+                return new Vector(e.clientX, e.clientY);
+            } else if (e instanceof TouchEvent) {
+                return new Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
+            }
+
+            throw new Error("Cannot extract position from event.");
+        }
+
         public static findChildWithClass(element: HTMLElement, className: string, required = true): HTMLElement {
             let found = element.getElementsByClassName(className);
             if (found.length > 0) {

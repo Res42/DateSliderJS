@@ -1,25 +1,35 @@
 module DateSlider.Slider {
+    export function create(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange) {
+        switch (options.movement) {
+            default:
+            case "none":
+                return new Slider.SliderInstance(dateSlider, options, range);
+            case "slide":
+                return new Slider.SliderSlidingInstance(dateSlider, options, range);
+        }
+    };
+
     export class SliderInstance {
         public element: HTMLElement;
-        private sliderElement: HTMLElement;
-        private sliderLineStart: HTMLElement;
-        private sliderLineElement?: HTMLDivElement;
-        private sliderLineEnd: HTMLElement;
-        private handleElement: HTMLElement;
-        private valueContainerElement?: HTMLElement;
-        private markerElement?: HTMLElement;
-        private markers: Array<{ element: HTMLElement, valueContainers: NodeListOf<HTMLElement>, value: number }>;
+        protected sliderElement: HTMLElement;
+        protected sliderLineStart: HTMLElement;
+        protected sliderLineElement?: HTMLDivElement;
+        protected sliderLineEnd: HTMLElement;
+        protected handleElement: HTMLElement;
+        protected valueContainerElement?: HTMLElement;
+        protected markerElement?: HTMLElement;
+        protected markers: Array<{ element: HTMLElement, valueContainers: NodeListOf<HTMLElement>, value: number }>;
 
-        private toDiscrete = Math.round;
-        private lastPointerPosition: Vector;
-        private isDragging = false;
+        protected toDiscrete = Math.round;
+        protected lastPointerPosition: Vector;
+        protected isDragging = false;
 
-        private onValueChangeEvent = new DateSliderEventHandler();
-        private onSliderHandleGrabEvent = new DateSliderEventHandler();
-        private onSliderHandleReleaseEvent = new DateSliderEventHandler();
-        private onSliderHandleMoveEvent = new DateSliderEventHandler();
+        protected onValueChangeEvent = new DateSliderEventHandler();
+        protected onSliderHandleGrabEvent = new DateSliderEventHandler();
+        protected onSliderHandleReleaseEvent = new DateSliderEventHandler();
+        protected onSliderHandleMoveEvent = new DateSliderEventHandler();
 
-        private events = {
+        protected events = {
             load: () => { this.updateHandlePosition(); this.updateValueDisplay(); this.createMarkers(); this.updateMarkersPosition(); },
             mousedown: (e: MouseEvent) => this.handleMouseDown(e),
             mousemove: (e: MouseEvent) => this.handleMouseMove(e),
@@ -30,22 +40,16 @@ module DateSlider.Slider {
             touchstart: (e: TouchEvent) => this.handleMouseDown(e),
         };
 
-        private slideIntervalHandle: number;
-
         constructor(
+            public dateSlider: DateSliderInstance,
             public options: SliderOptions,
-            private range: SliderRange,
+            public range: SliderRange,
         ) {
             if (options.callback) {
                 this.onValueChangeEvent.register(options.callback.onValueChanged);
                 this.onSliderHandleGrabEvent.register(options.callback.onSliderHandleGrabbed);
                 this.onSliderHandleMoveEvent.register(options.callback.onSliderHandleMoved);
                 this.onSliderHandleReleaseEvent.register(options.callback.onSliderHandleReleased);
-            }
-
-            if (this.options.movement === "slide") {
-                this.range.value = this.toDiscrete((this.range.maximum + this.range.minimum) / 2);
-                this.registerSliding();
             }
 
             if (this.options.template instanceof HTMLElement) {
@@ -63,20 +67,26 @@ module DateSlider.Slider {
             return this.toDiscrete(this.range.value);
         }
 
-        public slideTo(value: number): void {
+        public updateValue(value: number): void {
             this.updateAfter(() => {
-                if (this.options.movement === "slide") {
-                     this.range.slideTo(value, false);
-                }
+                this.range.value = value;
+            });
+        }
+
+        public setMaximum(maximum: number): void {
+            this.updateAfter(() => {
+                this.range.maximum = maximum;
             });
             this.createMarkers();
             this.updateMarkersPosition();
         }
 
-        public setValue(value: number): void {
+        public setMininum(minimum: number): void {
             this.updateAfter(() => {
-                this.range.value = value;
+                this.range.minimum = minimum;
             });
+            this.createMarkers();
+            this.updateMarkersPosition();
         }
 
         public on(eventName: SliderEvent, callback: (context: DateSliderEventContext) => void): void {
@@ -96,16 +106,78 @@ module DateSlider.Slider {
             }
         }
 
-        public destroy = (event?: Event): void => {
+        public destroy(event?: Event): void {
             window.removeEventListener("load", this.events.load);
             window.removeEventListener("resize", this.events.resize);
-            if (Helpers.isSet(this.slideIntervalHandle)) {
-                window.clearInterval(this.slideIntervalHandle);
-            }
             this.removeMovementListeners();
         }
 
-        private bootstrapSliderToTemplate(): void {
+        protected setValue(value: number): void {
+            this.updateAfter(() => {
+                this.range.value = value;
+            });
+        }
+
+        protected updateAfter(callback: () => void) {
+            let oldValue = this.toDiscrete(this.range.value);
+            callback();
+            let newValue = this.toDiscrete(this.range.value);
+            this.updateValueDisplay();
+            this.updateHandlePosition();
+            // this.dateSlider.updateFromSlider(this.options.type, newValue, oldValue);
+            this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(oldValue, newValue));
+        }
+
+        protected createMarkers() {
+            if (this.markerElement && this.options.markers && this.options.markers.showValueMarker) {
+
+                if (this.markers) {
+                    for (let marker of this.markers) {
+                        marker.element.remove();
+                    }
+                }
+                this.markers = [];
+
+                for (let v = this.range.minimum; v <= this.range.maximum; v++) {
+                    let classNames = this.options.markers.showValueMarker(v, this.range.minimum, this.range.maximum);
+                    if (classNames !== null) {
+                        let marker = this.markerElement.cloneNode(true) as HTMLElement;
+
+                        if (typeof classNames === "string" && classNames.length > 0) {
+                            marker.classList.add(classNames);
+                        } else if (classNames instanceof Array) {
+                            marker.classList.add(...classNames);
+                        }
+
+                        let valueContainers = marker.getElementsByClassName(Constants.SliderMarkerValueContainer) as NodeListOf<HTMLElement>;
+                        this.markers.push({ element: marker, valueContainers: valueContainers, value: v });
+                        this.sliderElement.appendChild(marker);
+
+                        this.updateMarkerValue(this.markers[this.markers.length - 1]);
+                    }
+                }
+
+                this.sliderElement.style.overflow = "hidden";
+            }
+        }
+
+        protected updateMarkerValue(marker: { element: HTMLElement, valueContainers: NodeListOf<HTMLElement>, value: number }): void {
+            let text: string;
+            if (this.options.markers.displayValueFormatter) {
+                text = this.options.markers.displayValueFormatter(marker.value, this.range.minimum, this.range.maximum);
+            } else if (this.options.displayValueFormatter) {
+                text = this.options.displayValueFormatter(marker.value);
+            } else {
+                text = marker.value.toString();
+            }
+
+            for (let i = 0; i < marker.valueContainers.length; i++) {
+                let container = marker.valueContainers.item(i);
+                container.innerHTML = text;
+            }
+        }
+
+        protected bootstrapSliderToTemplate(): void {
             this.element = (this.options.template as HTMLElement).cloneNode(true) as HTMLElement;
 
             this.sliderElement = Helpers.findChildWithClass(this.element, "slider-control-template");
@@ -118,7 +190,7 @@ module DateSlider.Slider {
             this.markerElement.remove();
         }
 
-        private createSliderElement(): void {
+        protected createSliderElement(): void {
             this.element = document.createElement("div");
             this.element.classList.add("slider");
 
@@ -161,7 +233,7 @@ module DateSlider.Slider {
             this.sliderElement.appendChild(this.handleElement);
         }
 
-        private registerListeners(): void {
+        protected registerListeners(): void {
             this.handleElement.addEventListener("mousedown", this.events.mousedown, false);
             this.handleElement.addEventListener("touchstart", this.events.touchstart, true);
 
@@ -169,7 +241,7 @@ module DateSlider.Slider {
             window.addEventListener("resize", this.events.resize);
         }
 
-        private addMovementListeners(): void {
+        protected addMovementListeners(): void {
             window.addEventListener("touchmove", this.events.touchmove, true);
             window.addEventListener("mousemove", this.events.mousemove, true);
 
@@ -177,7 +249,7 @@ module DateSlider.Slider {
             window.addEventListener("touchend", this.events.touchend, false);
         }
 
-        private removeMovementListeners(): void {
+        protected removeMovementListeners(): void {
             window.removeEventListener("touchmove", this.events.touchmove, true);
             window.removeEventListener("mousemove", this.events.mousemove, true);
 
@@ -185,7 +257,7 @@ module DateSlider.Slider {
             window.removeEventListener("touchend", this.events.touchend, false);
         }
 
-        private handleMouseDown = (e: MouseEvent | TouchEvent): void => {
+        protected handleMouseDown = (e: MouseEvent | TouchEvent): void => {
             // only move handler with the left mouse button
             if (this.isHandleReleased(e)) {
                 this.isDragging = false;
@@ -194,23 +266,23 @@ module DateSlider.Slider {
 
             e.preventDefault();
 
-            this.lastPointerPosition = this.getPositionFromEvent(e);
+            this.lastPointerPosition = Helpers.getPositionFromEvent(e);
             this.isDragging = true;
 
             this.addMovementListeners();
             this.onSliderHandleGrabEvent.fire(new DateSliderEventContext());
         }
 
-        private handleMouseUp = (e: MouseEvent | TouchEvent): void => {
+        protected handleMouseUp = (e: MouseEvent | TouchEvent): void => {
             this.isDragging = false;
-            this.lastPointerPosition = this.getPositionFromEvent(e);
+            this.lastPointerPosition = Helpers.getPositionFromEvent(e);
             this.setValue(this.toDiscrete(this.calculateValue(this.lastPointerPosition)));
 
             this.removeMovementListeners();
             this.onSliderHandleReleaseEvent.fire(new DateSliderEventContext());
         }
 
-        private handleMouseMove = (e: MouseEvent | TouchEvent): void => {
+        protected handleMouseMove = (e: MouseEvent | TouchEvent): void => {
             if (e instanceof MouseEvent) {
                 // prevent default: for example to disable the default image dragging
                 e.preventDefault();
@@ -222,106 +294,20 @@ module DateSlider.Slider {
                 return;
             }
 
-            this.lastPointerPosition = this.getPositionFromEvent(e);
+            this.lastPointerPosition = Helpers.getPositionFromEvent(e);
             this.setValue(this.calculateValue(this.lastPointerPosition));
 
             this.onSliderHandleMoveEvent.fire(new DateSliderEventContext());
         }
 
-        private isHandleReleased(e: MouseEvent | TouchEvent): boolean {
+        protected isHandleReleased(e: MouseEvent | TouchEvent): boolean {
             // no touches
             return e instanceof TouchEvent && e.targetTouches.length <= 0
                 // not holding the left button
                 || e instanceof MouseEvent && (1 & e.buttons) !== 1;
         }
 
-        private updateAfter(callback: () => void) {
-            let oldValue = this.toDiscrete(this.range.value);
-            callback();
-            let newValue = this.toDiscrete(this.range.value);
-            this.updateValueDisplay();
-            this.updateHandlePosition();
-            if (oldValue !== newValue) {
-                this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(oldValue, newValue));
-            }
-        }
-
-        private sliding = () => {
-            let direction: number;
-            if (this.range.value === this.range.maximum) {
-                direction = 1;
-            } else if (this.range.value === this.range.minimum) {
-                direction = -1;
-            } else {
-                direction = 0;
-            }
-
-            if (direction !== 0) {
-                this.updateAfter(() => {
-                    this.range.slide(direction * (this.options.movementStep || 1));
-                    if (this.isDragging) {
-                        this.setValue(this.calculateValue(this.lastPointerPosition));
-                    }
-                });
-                this.createMarkers();
-                this.updateMarkersPosition();
-            }
-        }
-
-        private registerSliding() {
-            this.slideIntervalHandle = window.setInterval(this.sliding, this.options.movementSpeed || 0);
-        }
-
-        private createMarkers() {
-            if (this.markerElement && this.options.markers && this.options.markers.showValueMarker) {
-
-                if (this.markers) {
-                    for (let marker of this.markers) {
-                        marker.element.remove();
-                    }
-                }
-                this.markers = [];
-
-                for (let v = this.range.minimum; v <= this.range.maximum; v++) {
-                    let classNames = this.options.markers.showValueMarker(v, this.range.minimum, this.range.maximum);
-                    if (classNames !== null) {
-                        let marker = this.markerElement.cloneNode(true) as HTMLElement;
-
-                        if (typeof classNames === "string" && classNames.length > 0) {
-                            marker.classList.add(classNames);
-                        } else if (classNames instanceof Array) {
-                            marker.classList.add(...classNames);
-                        }
-
-                        let valueContainers = marker.getElementsByClassName(Constants.SliderMarkerValueContainer) as NodeListOf<HTMLElement>;
-                        this.markers.push({ element: marker, valueContainers: valueContainers, value: v });
-                        this.sliderElement.appendChild(marker);
-
-                        this.updateMarkerValue(this.markers[this.markers.length - 1]);
-                    }
-                }
-
-                this.sliderElement.style.overflow = "hidden";
-            }
-        }
-
-        private updateMarkerValue(marker: { element: HTMLElement, valueContainers: NodeListOf<HTMLElement>, value: number }): void {
-            let text: string;
-            if (this.options.markers.displayValueFormatter) {
-                text = this.options.markers.displayValueFormatter(marker.value, this.range.minimum, this.range.maximum);
-            } else if (this.options.displayValueFormatter) {
-                text = this.options.displayValueFormatter(marker.value);
-            } else {
-                text = marker.value.toString();
-            }
-
-            for (let i = 0; i < marker.valueContainers.length; i++) {
-                let container = marker.valueContainers.item(i);
-                container.innerHTML = text;
-            }
-        }
-
-        private updateMarkersPosition(): void {
+        protected updateMarkersPosition(): void {
             if (!this.markers || this.markers.length <= 0) {
                 return;
             }
@@ -350,7 +336,7 @@ module DateSlider.Slider {
             }
         }
 
-        private updateValueDisplay = (): void => {
+        protected updateValueDisplay = (): void => {
             if (this.valueContainerElement) {
                 let value = this.getValue();
                 let displayedValue = this.options.displayValueFormatter
@@ -360,29 +346,19 @@ module DateSlider.Slider {
             }
         }
 
-        private updateHandlePosition = (): void => {
+        protected updateHandlePosition = (): void => {
             let position = this.calculateHandlePosition();
             this.handleElement.style.position = "absolute";
             this.handleElement.style.left = position.x + "px";
             this.handleElement.style.top = position.y + "px";
         }
 
-        private getPositionFromEvent(e: MouseEvent | TouchEvent): Vector {
-            if (e instanceof MouseEvent) {
-                return new Vector(e.clientX, e.clientY);
-            } else if (e instanceof TouchEvent) {
-                return new Vector(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
-            }
-
-            throw new Error("Cannot extract position from event.");
-        }
-
-        private calculateValue(position: Vector) {
+        protected calculateValue(position: Vector) {
             let r = this.calculateOrthogonalProjectionRatio(position);
             return (this.range.maximum - this.range.minimum) * r.ratio + this.range.minimum;
         }
 
-        private calculateOrthogonalProjectionRatio(position: Vector): { ratio: number, distance: number } {
+        protected calculateOrthogonalProjectionRatio(position: Vector): { ratio: number, distance: number } {
             // the ratio of the projection of the s->p vector on the s->e vector
             // imagine that the /'s are orthogonal to the slider line
             // |---------->
@@ -408,7 +384,7 @@ module DateSlider.Slider {
             };
         }
 
-        private calculateHandlePosition(): Vector {
+        protected calculateHandlePosition(): Vector {
             // calculates the center of an absolute positioned element
 
             let ratioInSlider = this.range.ratio;
@@ -420,6 +396,54 @@ module DateSlider.Slider {
             // finally, calculate the handle's position in the line by it's range value (min: 0% -> max: 100%)
             return new Vector(startPosition.x - this.handleElement.offsetWidth / 2 + (endPosition.x - startPosition.x) * ratioInSlider,
                 startPosition.y - this.handleElement.offsetHeight / 2 + (endPosition.y - startPosition.y) * ratioInSlider);
+        }
+    }
+
+    export class SliderSlidingInstance extends SliderInstance {
+        protected slideIntervalHandle: number;
+
+        constructor(
+            dateSlider: DateSliderInstance,
+            options: SliderOptions,
+            range: SliderRange,
+        ) {
+            super(dateSlider, options, range);
+            this.slideIntervalHandle = window.setInterval(this.sliding, this.options.movementSpeed || 0);
+        }
+
+        public destroy(event?: Event): void {
+            super.destroy(event);
+            window.clearInterval(this.slideIntervalHandle);
+        }
+
+        public updateValue(value: number): void {
+            this.updateAfter(() => {
+                this.range.slideTo(value, false);
+            });
+            this.createMarkers();
+            this.updateMarkersPosition();
+        }
+
+        protected sliding = () => {
+            let direction: number;
+            if (this.range.value === this.range.maximum) {
+                direction = 1;
+            } else if (this.range.value === this.range.minimum) {
+                direction = -1;
+            } else {
+                direction = 0;
+            }
+
+            if (direction !== 0) {
+                this.updateAfter(() => {
+                    this.range.slide(direction * (this.options.movementStep || 1));
+                    if (this.isDragging) {
+                        this.range.value = this.calculateValue(this.lastPointerPosition);
+                    }
+                });
+                this.createMarkers();
+                this.updateMarkersPosition();
+            }
         }
     }
 }

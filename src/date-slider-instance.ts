@@ -25,9 +25,6 @@ module DateSlider {
             }
 
             this.sliders = this.createAllSliders();
-            this.sliders.forEach(slider => {
-                slider.on("onValueChanged", (context: Slider.Context.SliderValueChangeContext) => this.onSliderUpdate(context, slider.options));
-            });
 
             this.bootstrapSliders(this.sliders);
             Helpers.registerOnDestroy(element, (event) => {
@@ -66,9 +63,7 @@ module DateSlider {
 
             this.updateSliders();
             let newValue = this.getValue();
-            if (oldValue !== newValue) {
-                this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, newValue));
-            }
+            this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, newValue));
         }
 
         public getOptions(): DateSliderOptions {
@@ -95,13 +90,61 @@ module DateSlider {
             }
         }
 
-        public createAllSliders(): Slider.SliderInstance[] {
+        public updateFromSlider(sliderType: SliderType, newValue: number, oldValue: number) {
+            let oldModelValue = this.getValue();
+            let newModel = Helpers.deepMerge({}, this.value);
+            switch (sliderType) {
+                case "year":
+                    newModel.model.year = newValue;
+                    break;
+                case "month":
+                    newModel.model.month = newValue;
+                    break;
+                case "day":
+                    newModel.model.day = newValue;
+                    break;
+                case "hour":
+                    newModel.model.hour = newValue;
+                    break;
+                case "minute":
+                    newModel.model.minute = newValue;
+                    break;
+                case "second":
+                    newModel.model.second = newValue;
+                    break;
+                case "universal-date":
+                    // TODO
+                    break;
+                case "universal-time":
+                    newModel.model.hour = Math.floor(newValue / 3600);
+                    newModel.model.minute = Math.floor(newValue / 60) % 60;
+                    newModel.model.second = newValue % 60;
+                    break;
+                case "universal":
+                    // TODO
+                    break;
+            }
+
+            // check validity
+            if (!this.isValid(newModel)) {
+                // rollback to the last valid value if the new model is not valid
+                this.updateSliders();
+                return;
+            }
+            // if the new model is valid, then it is saved as the new value
+            this.value = newModel;
+
+            let newModelValue = this.getValue();
+            this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, newValue));
+        }
+
+        private createAllSliders(): Slider.SliderInstance[] {
             if (!this.options.sliders) {
                 throw new Error("Cannot create sliders because options.sliders is not set.");
             }
             let sliders: Slider.SliderInstance[] = [];
             for (let sliderOptions of this.options.sliders) {
-                sliders.push(new Slider.SliderInstance(sliderOptions, this.getRangeFromType(sliderOptions)));
+                sliders.push(Slider.create(this, sliderOptions, this.getRangeFromType(sliderOptions)));
             }
             return sliders;
         }
@@ -155,53 +198,11 @@ module DateSlider {
             }
         }
 
-        private onSliderUpdate = (context: Slider.Context.SliderValueChangeContext, options: SliderOptions) => {
-            let oldValue = this.getValue();
-            let newModel = Helpers.deepMerge({}, this.value);
-            switch (options.type) {
-                case "year":
-                    newModel.model.year = context.newValue;
-                    break;
-                case "month":
-                    newModel.model.month = context.newValue;
-                    break;
-                case "day":
-                    newModel.model.day = context.newValue;
-                    break;
-                case "hour":
-                    newModel.model.hour = context.newValue;
-                    break;
-                case "minute":
-                    newModel.model.minute = context.newValue;
-                    break;
-                case "second":
-                    newModel.model.second = context.newValue;
-                    break;
-                case "universal-date":
-                    // TODO
-                    break;
-                case "universal-time":
-                    newModel.model.hour = Math.floor(context.newValue / 3600);
-                    newModel.model.minute = Math.floor(context.newValue / 60) % 60;
-                    newModel.model.second = context.newValue % 60;
-                    break;
-                case "universal":
-                    // TODO
-                    break;
-            }
-
-            // check validity
-            if (! this.isValid(newModel)) {
-                // rollback to the last valid value if the new model is not valid
-                this.updateSliders();
-                return;
-            }
-            // if the new model is valid, then it is saved as the new value
-            this.value = newModel;
-
-            let newValue = this.getValue();
-            if (oldValue !== newValue) {
-                this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, newValue));
+        private updateDaySliders(): void {
+            for (let slider of this.sliders) {
+                if (slider.options.type === "day") {
+                    slider.setMaximum(Helpers.getDaysInMonth(this.value.model.year, this.value.model.month));
+                }
             }
         }
 
@@ -209,28 +210,28 @@ module DateSlider {
             for (let slider of this.sliders) {
                 switch (slider.options.type) {
                     case "year":
-                        slider.slideTo(this.value.model.year);
+                        slider.updateValue(this.value.model.year);
                         break;
                     case "month":
-                        slider.setValue(this.value.model.month);
+                        slider.updateValue(this.value.model.month);
                         break;
                     case "day":
-                        slider.setValue(this.value.model.day);
+                        slider.updateValue(this.value.model.day);
                         break;
                     case "hour":
-                        slider.setValue(this.value.model.hour);
+                        slider.updateValue(this.value.model.hour);
                         break;
                     case "minute":
-                        slider.setValue(this.value.model.minute);
+                        slider.updateValue(this.value.model.minute);
                         break;
                     case "second":
-                        slider.setValue(this.value.model.second);
+                        slider.updateValue(this.value.model.second);
                         break;
                     case "universal-date":
                         // TODO
                         break;
                     case "universal-time":
-                        slider.setValue(this.value.model.hour * 3600 + this.value.model.minute * 60 + this.value.model.second);
+                        slider.updateValue(this.value.model.hour * 3600 + this.value.model.minute * 60 + this.value.model.second);
                         break;
                     case "universal":
                         // TODO

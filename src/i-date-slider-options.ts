@@ -1,6 +1,8 @@
 module DateSlider {
     export type DateSliderEvent = "onValueChanged";
     export type SliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
+    export type SliderType = "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
+    export type SliderMovement = "none" | "slide" | "expand";
 
     export interface DateSliderOptions {
         value?: any;
@@ -21,8 +23,8 @@ module DateSlider {
     }
 
     export interface SliderOptions {
-        type: "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
-        movement?: "none" | "slide" | "expand";
+        type: SliderType;
+        movement?: SliderMovement;
         /** In milliseconds. Sets the interval's execution frequrency. */
         movementSpeed?: number;
         movementStep?: number;

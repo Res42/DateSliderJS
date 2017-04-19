@@ -10,6 +10,8 @@ declare module DateSlider {
         static isDefined(value: any): boolean;
         static isSet(value: any): boolean;
         static getDaysinYear(year?: number): number;
+        static getDaysInMonth(year: number, month: number): number;
+        static getPositionFromEvent(e: MouseEvent | TouchEvent): Vector;
         static findChildWithClass(element: HTMLElement, className: string, required?: boolean): HTMLElement;
         static calculateCenterPosition(element: HTMLElement | ClientRect): Vector;
         /**
@@ -88,10 +90,11 @@ declare module DateSlider {
         updateOptions(options: DateSliderOptions): void;
         replaceOptions(options: DateSliderOptions): void;
         on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => void): void;
-        createAllSliders(): Slider.SliderInstance[];
+        updateFromSlider(sliderType: SliderType, newValue: number, oldValue: number): void;
+        private createAllSliders();
         private isValid(model);
         private getRangeFromType(sliderOptions);
-        private onSliderUpdate;
+        private updateDaySliders();
         private updateSliders();
         private bindFormatter();
         private bindParser();
@@ -133,6 +136,8 @@ declare module DateSlider {
 declare module DateSlider {
     type DateSliderEvent = "onValueChanged";
     type SliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
+    type SliderType = "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
+    type SliderMovement = "none" | "slide" | "expand";
     interface DateSliderOptions {
         value?: any;
         sliders?: SliderOptions[];
@@ -151,8 +156,8 @@ declare module DateSlider {
         };
     }
     interface SliderOptions {
-        type: "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
-        movement?: "none" | "slide" | "expand";
+        type: SliderType;
+        movement?: SliderMovement;
         /** In milliseconds. Sets the interval's execution frequrency. */
         movementSpeed?: number;
         movementStep?: number;
@@ -313,54 +318,81 @@ declare module DateSlider.Parser {
     }
 }
 declare module DateSlider.Slider {
+    function create(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange): SliderInstance;
     class SliderInstance {
+        dateSlider: DateSliderInstance;
         options: SliderOptions;
-        private range;
+        range: SliderRange;
         element: HTMLElement;
-        private sliderElement;
-        private sliderLineStart;
-        private sliderLineElement?;
-        private sliderLineEnd;
-        private handleElement;
-        private valueContainerElement?;
-        private markerElement?;
-        private markers;
-        private toDiscrete;
-        private lastPointerPosition;
-        private isDragging;
-        private onValueChangeEvent;
-        private onSliderHandleGrabEvent;
-        private onSliderHandleReleaseEvent;
-        private onSliderHandleMoveEvent;
-        private events;
-        private slideIntervalHandle;
-        constructor(options: SliderOptions, range: SliderRange);
+        protected sliderElement: HTMLElement;
+        protected sliderLineStart: HTMLElement;
+        protected sliderLineElement?: HTMLDivElement;
+        protected sliderLineEnd: HTMLElement;
+        protected handleElement: HTMLElement;
+        protected valueContainerElement?: HTMLElement;
+        protected markerElement?: HTMLElement;
+        protected markers: Array<{
+            element: HTMLElement;
+            valueContainers: NodeListOf<HTMLElement>;
+            value: number;
+        }>;
+        protected toDiscrete: (x: number) => number;
+        protected lastPointerPosition: Vector;
+        protected isDragging: boolean;
+        protected onValueChangeEvent: DateSliderEventHandler;
+        protected onSliderHandleGrabEvent: DateSliderEventHandler;
+        protected onSliderHandleReleaseEvent: DateSliderEventHandler;
+        protected onSliderHandleMoveEvent: DateSliderEventHandler;
+        protected events: {
+            load: () => void;
+            mousedown: (e: MouseEvent) => void;
+            mousemove: (e: MouseEvent) => void;
+            mouseup: (e: MouseEvent) => void;
+            resize: () => void;
+            touchend: (e: TouchEvent) => void;
+            touchmove: (e: TouchEvent) => void;
+            touchstart: (e: TouchEvent) => void;
+        };
+        constructor(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange);
         getValue(): number;
-        slideTo(value: number): void;
-        setValue(value: number): void;
+        updateValue(value: number): void;
+        setMaximum(maximum: number): void;
+        setMininum(minimum: number): void;
         on(eventName: SliderEvent, callback: (context: DateSliderEventContext) => void): void;
-        destroy: (event?: Event) => void;
-        private bootstrapSliderToTemplate();
-        private createSliderElement();
-        private registerListeners();
-        private addMovementListeners();
-        private removeMovementListeners();
-        private handleMouseDown;
-        private handleMouseUp;
-        private handleMouseMove;
-        private isHandleReleased(e);
-        private updateAfter(callback);
-        private sliding;
-        private registerSliding();
-        private createMarkers();
-        private updateMarkerValue(marker);
-        private updateMarkersPosition();
-        private updateValueDisplay;
-        private updateHandlePosition;
-        private getPositionFromEvent(e);
-        private calculateValue(position);
-        private calculateOrthogonalProjectionRatio(position);
-        private calculateHandlePosition();
+        destroy(event?: Event): void;
+        protected setValue(value: number): void;
+        protected updateAfter(callback: () => void): void;
+        protected createMarkers(): void;
+        protected updateMarkerValue(marker: {
+            element: HTMLElement;
+            valueContainers: NodeListOf<HTMLElement>;
+            value: number;
+        }): void;
+        protected bootstrapSliderToTemplate(): void;
+        protected createSliderElement(): void;
+        protected registerListeners(): void;
+        protected addMovementListeners(): void;
+        protected removeMovementListeners(): void;
+        protected handleMouseDown: (e: MouseEvent | TouchEvent) => void;
+        protected handleMouseUp: (e: MouseEvent | TouchEvent) => void;
+        protected handleMouseMove: (e: MouseEvent | TouchEvent) => void;
+        protected isHandleReleased(e: MouseEvent | TouchEvent): boolean;
+        protected updateMarkersPosition(): void;
+        protected updateValueDisplay: () => void;
+        protected updateHandlePosition: () => void;
+        protected calculateValue(position: Vector): number;
+        protected calculateOrthogonalProjectionRatio(position: Vector): {
+            ratio: number;
+            distance: number;
+        };
+        protected calculateHandlePosition(): Vector;
+    }
+    class SliderSlidingInstance extends SliderInstance {
+        protected slideIntervalHandle: number;
+        constructor(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange);
+        destroy(event?: Event): void;
+        updateValue(value: number): void;
+        protected sliding: () => void;
     }
 }
 declare module DateSlider.Slider {

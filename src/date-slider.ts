@@ -21,12 +21,13 @@ module DateSlider {
     // string parser / formatter + tests
     // range interval
     // test range
+    // test model compare methods
     // demo: out of the box, full customization
     // slider distance of mouse from handle -> slowness of steps
     // ✓ angular integration
     // --> expanding slider
     // when changing months, set days to monthly maximum
-    // --> validation: min, max, custom
+    // ✓ validation: min, max, custom
     // --> slide, expand with acceleration!
     // --> slide + expand option
     // how to check timezone when comparing models?
