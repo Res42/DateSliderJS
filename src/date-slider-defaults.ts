@@ -77,7 +77,18 @@ module DateSlider {
         type: "year",
     };
 
+    export let dayDefaults: SliderOptions = {
+        markers: {
+            perpendicularOffset: 20,
+            showValueMarker: (value: number, minimum: number, maximum: number): string | string[] => {
+                return "";
+            },
+        },
+        type: "day",
+    };
+
     export let defaultSilderOptions: {[key: string]: SliderOptions} = {
+        "day": dayDefaults,
         "month": monthDefaults,
         "universal-date": universalDateDefaults,
         "universal-time": universalTimeDefaults,

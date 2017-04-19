@@ -240,7 +240,17 @@ var DateSlider;
         movementSpeed: 100,
         type: "year",
     };
+    DateSlider.dayDefaults = {
+        markers: {
+            perpendicularOffset: 20,
+            showValueMarker: function (value, minimum, maximum) {
+                return "";
+            },
+        },
+        type: "day",
+    };
     DateSlider.defaultSilderOptions = {
+        "day": DateSlider.dayDefaults,
         "month": DateSlider.monthDefaults,
         "universal-date": DateSlider.universalDateDefaults,
         "universal-time": DateSlider.universalTimeDefaults,
@@ -384,7 +394,7 @@ var DateSlider;
         };
         DateSliderInstance.prototype.updateFromSlider = function (sliderType, newValue, oldValue) {
             var oldModelValue = this.getValue();
-            var newModel = DateSlider.Helpers.deepMerge({}, this.value);
+            var newModel = this.value.copy();
             switch (sliderType) {
                 case "year":
                     newModel.model.year = newValue;
@@ -416,6 +426,7 @@ var DateSlider;
                     // TODO
                     break;
             }
+            newModel.model.setDayOfMonth();
             // check validity
             if (!this.isValid(newModel)) {
                 // rollback to the last valid value if the new model is not valid
@@ -424,6 +435,7 @@ var DateSlider;
             }
             // if the new model is valid, then it is saved as the new value
             this.value = newModel;
+            this.updateDaySliders();
             var newModelValue = this.getValue();
             this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, newValue));
         };
@@ -462,7 +474,7 @@ var DateSlider;
                 case "month":
                     return new DateSlider.Slider.SliderRange(1, 12, this.value.model.month);
                 case "day":
-                    return new DateSlider.Slider.SliderRange(1, 31, this.value.model.day);
+                    return new DateSlider.Slider.SliderRange(1, DateSlider.Helpers.getDaysInMonth(this.value.model.year, this.value.model.month), this.value.model.day);
                 case "hour":
                     return new DateSlider.Slider.SliderRange(0, 23, this.value.model.hour);
                 case "minute":
@@ -485,7 +497,7 @@ var DateSlider;
             for (var _i = 0, _a = this.sliders; _i < _a.length; _i++) {
                 var slider = _a[_i];
                 if (slider.options.type === "day") {
-                    slider.setMaximum(DateSlider.Helpers.getDaysInMonth(this.value.model.year, this.value.model.month));
+                    slider.updateValueWithMaximum(this.value.model.day, DateSlider.Helpers.getDaysInMonth(this.value.model.year, this.value.model.month));
                 }
             }
         };
@@ -500,7 +512,7 @@ var DateSlider;
                         slider.updateValue(this.value.model.month);
                         break;
                     case "day":
-                        slider.updateValue(this.value.model.day);
+                        slider.updateValueWithMaximum(this.value.model.day, DateSlider.Helpers.getDaysInMonth(this.value.model.year, this.value.model.month));
                         break;
                     case "hour":
                         slider.updateValue(this.value.model.hour);
@@ -597,6 +609,9 @@ var DateSlider;
             this.model = model;
             this.rawValue = rawValue;
         }
+        DateSliderModel.prototype.copy = function () {
+            return new DateSliderModel(new InnerModel(this.model.year, this.model.month, this.model.day, this.model.hour, this.model.minute, this.model.second, this.model.timezone), this.rawValue);
+        };
         return DateSliderModel;
     }());
     DateSlider.DateSliderModel = DateSliderModel;
@@ -620,11 +635,14 @@ var DateSlider;
             this.minute = minute;
             this.second = second;
             this.timezone = timezone;
+            this.setDayOfMonth();
+        }
+        InnerModel.prototype.setDayOfMonth = function () {
             var daysInMonth = DateSlider.Helpers.getDaysInMonth(this.year, this.month);
             if (this.day > daysInMonth) {
                 this.day = daysInMonth;
             }
-        }
+        };
         InnerModel.prototype.greaterThan = function (other) {
             return this.compare(other, function (a, b) { return a > b; }, false);
         };
@@ -693,7 +711,7 @@ var DateSlider;
     // slider distance of mouse from handle -> slowness of steps
     // ✓ angular integration
     // --> expanding slider
-    // when changing months, set days to monthly maximum
+    // ✓ when changing years or months, set maximum days to monthly maximum
     // ✓ validation: min, max, custom
     // --> slide, expand with acceleration!
     // --> slide + expand option
@@ -1062,10 +1080,11 @@ var DateSlider;
                     _this.range.value = value;
                 });
             };
-            SliderInstance.prototype.setMaximum = function (maximum) {
+            SliderInstance.prototype.updateValueWithMaximum = function (value, maximum) {
                 var _this = this;
                 this.updateAfter(function () {
                     _this.range.maximum = maximum;
+                    _this.range.value = value;
                 });
                 this.createMarkers();
                 this.updateMarkersPosition();
@@ -1101,9 +1120,10 @@ var DateSlider;
             };
             SliderInstance.prototype.setValue = function (value) {
                 var _this = this;
-                this.updateAfter(function () {
+                var values = this.updateAfter(function () {
                     _this.range.value = value;
                 });
+                this.dateSlider.updateFromSlider(this.options.type, values.newValue, values.oldValue);
             };
             SliderInstance.prototype.updateAfter = function (callback) {
                 var oldValue = this.toDiscrete(this.range.value);
@@ -1111,8 +1131,8 @@ var DateSlider;
                 var newValue = this.toDiscrete(this.range.value);
                 this.updateValueDisplay();
                 this.updateHandlePosition();
-                // this.dateSlider.updateFromSlider(this.options.type, newValue, oldValue);
                 this.onValueChangeEvent.fire(new Slider.Context.SliderValueChangeContext(oldValue, newValue));
+                return { oldValue: oldValue, newValue: newValue };
             };
             SliderInstance.prototype.createMarkers = function () {
                 if (this.markerElement && this.options.markers && this.options.markers.showValueMarker) {

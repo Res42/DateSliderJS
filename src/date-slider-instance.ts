@@ -92,7 +92,8 @@ module DateSlider {
 
         public updateFromSlider(sliderType: SliderType, newValue: number, oldValue: number) {
             let oldModelValue = this.getValue();
-            let newModel = Helpers.deepMerge({}, this.value);
+            let newModel = this.value.copy();
+
             switch (sliderType) {
                 case "year":
                     newModel.model.year = newValue;
@@ -125,14 +126,18 @@ module DateSlider {
                     break;
             }
 
+            newModel.model.setDayOfMonth();
+
             // check validity
             if (!this.isValid(newModel)) {
                 // rollback to the last valid value if the new model is not valid
                 this.updateSliders();
                 return;
             }
+
             // if the new model is valid, then it is saved as the new value
             this.value = newModel;
+            this.updateDaySliders();
 
             let newModelValue = this.getValue();
             this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, newValue));
@@ -178,7 +183,7 @@ module DateSlider {
                 case "month":
                     return new Slider.SliderRange(1, 12, this.value.model.month);
                 case "day":
-                    return new Slider.SliderRange(1, 31, this.value.model.day);
+                    return new Slider.SliderRange(1, Helpers.getDaysInMonth(this.value.model.year, this.value.model.month), this.value.model.day);
                 case "hour":
                     return new Slider.SliderRange(0, 23, this.value.model.hour);
                 case "minute":
@@ -201,7 +206,7 @@ module DateSlider {
         private updateDaySliders(): void {
             for (let slider of this.sliders) {
                 if (slider.options.type === "day") {
-                    slider.setMaximum(Helpers.getDaysInMonth(this.value.model.year, this.value.model.month));
+                    slider.updateValueWithMaximum(this.value.model.day, Helpers.getDaysInMonth(this.value.model.year, this.value.model.month));
                 }
             }
         }
@@ -216,7 +221,7 @@ module DateSlider {
                         slider.updateValue(this.value.model.month);
                         break;
                     case "day":
-                        slider.updateValue(this.value.model.day);
+                        slider.updateValueWithMaximum(this.value.model.day, Helpers.getDaysInMonth(this.value.model.year, this.value.model.month));
                         break;
                     case "hour":
                         slider.updateValue(this.value.model.hour);

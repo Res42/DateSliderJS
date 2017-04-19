@@ -73,9 +73,10 @@ module DateSlider.Slider {
             });
         }
 
-        public setMaximum(maximum: number): void {
+        public updateValueWithMaximum(value: number, maximum: number): void {
             this.updateAfter(() => {
                 this.range.maximum = maximum;
+                this.range.value = value;
             });
             this.createMarkers();
             this.updateMarkersPosition();
@@ -113,9 +114,10 @@ module DateSlider.Slider {
         }
 
         protected setValue(value: number): void {
-            this.updateAfter(() => {
+            let values = this.updateAfter(() => {
                 this.range.value = value;
             });
+            this.dateSlider.updateFromSlider(this.options.type, values.newValue, values.oldValue);
         }
 
         protected updateAfter(callback: () => void) {
@@ -124,8 +126,8 @@ module DateSlider.Slider {
             let newValue = this.toDiscrete(this.range.value);
             this.updateValueDisplay();
             this.updateHandlePosition();
-            // this.dateSlider.updateFromSlider(this.options.type, newValue, oldValue);
             this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(oldValue, newValue));
+            return {oldValue: oldValue, newValue: newValue};
         }
 
         protected createMarkers() {

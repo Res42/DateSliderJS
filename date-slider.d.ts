@@ -53,6 +53,7 @@ declare module DateSlider {
     let monthDefaults: SliderOptions;
     let universalDateDefaults: SliderOptions;
     let yearDefaults: SliderOptions;
+    let dayDefaults: SliderOptions;
     let defaultSilderOptions: {
         [key: string]: SliderOptions;
     };
@@ -106,6 +107,7 @@ declare module DateSlider {
         model: InnerModel | null;
         rawValue: any;
         constructor(model: InnerModel | null, rawValue: any);
+        copy(): DateSliderModel;
     }
     class InnerModel {
         year: number;
@@ -122,6 +124,7 @@ declare module DateSlider {
             month?: number, 
             /** In the range of [1, 31]. */
             day?: number, hour?: number, minute?: number, second?: number, timezone?: string);
+        setDayOfMonth(): void;
         greaterThan(other: InnerModel): boolean;
         greaterThanOrEqual(other: InnerModel): boolean;
         lessThan(other: InnerModel): boolean;
@@ -356,12 +359,15 @@ declare module DateSlider.Slider {
         constructor(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange);
         getValue(): number;
         updateValue(value: number): void;
-        setMaximum(maximum: number): void;
+        updateValueWithMaximum(value: number, maximum: number): void;
         setMininum(minimum: number): void;
         on(eventName: SliderEvent, callback: (context: DateSliderEventContext) => void): void;
         destroy(event?: Event): void;
         protected setValue(value: number): void;
-        protected updateAfter(callback: () => void): void;
+        protected updateAfter(callback: () => void): {
+            oldValue: number;
+            newValue: number;
+        };
         protected createMarkers(): void;
         protected updateMarkerValue(marker: {
             element: HTMLElement;

@@ -5,6 +5,11 @@ module DateSlider {
             public rawValue: any,
         ) {
         }
+
+        public copy(): DateSliderModel {
+            return new DateSliderModel(new InnerModel(this.model.year, this.model.month, this.model.day,
+                this.model.hour, this.model.minute, this.model.second , this.model.timezone), this.rawValue);
+        }
     }
 
     export class InnerModel {
@@ -19,6 +24,10 @@ module DateSlider {
             public second = 0,
             public timezone = "",
         ) {
+            this.setDayOfMonth();
+        }
+
+        public setDayOfMonth() {
             let daysInMonth = Helpers.getDaysInMonth(this.year, this.month);
             if (this.day > daysInMonth) {
                 this.day = daysInMonth;
