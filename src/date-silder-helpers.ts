@@ -19,6 +19,30 @@ module DateSlider {
             return (endOfYear - startOfYear) / (Constants.MillisecondsInDay);
         }
 
+        public static findChildWithClass(element: HTMLElement, className: string, required = true): HTMLElement {
+            let found = element.getElementsByClassName(className);
+            if (found.length > 0) {
+                return found[0] as HTMLElement;
+            }
+
+            if (required) {
+                throw new Error(`Cannot find DOM element with class: '${className}' in the template.`);
+            }
+
+            return null;
+        }
+
+        public static calculateCenterPosition(element: HTMLElement | ClientRect): Vector {
+            if (element instanceof HTMLElement) {
+                return new Vector(element.offsetLeft + element.offsetWidth / 2,
+                    element.offsetTop + element.offsetHeight / 2);
+            } else if (element instanceof ClientRect) {
+                return new Vector(element.left + element.width / 2,
+                    element.top + element.height / 2);
+            }
+            throw new Error("Invalid parameter.");
+        }
+
         /**
          * Registers a listener to the element's destroy.
          * @param element The element whose destroy event should be watched.

@@ -108,27 +108,14 @@ module DateSlider.Slider {
         private bootstrapSliderToTemplate(): void {
             this.element = (this.options.template as HTMLElement).cloneNode(true) as HTMLElement;
 
-            this.sliderElement = this.findElementInSlider("slider-control-template");
-            this.handleElement = this.findElementInSlider("slider-handle-template");
-            this.sliderLineStart = this.findElementInSlider("slider-control-start-template");
-            this.sliderLineEnd = this.findElementInSlider("slider-control-end-template");
+            this.sliderElement = Helpers.findChildWithClass(this.element, "slider-control-template");
+            this.handleElement = Helpers.findChildWithClass(this.element, "slider-handle-template");
+            this.sliderLineStart = Helpers.findChildWithClass(this.element, "slider-control-start-template");
+            this.sliderLineEnd = Helpers.findChildWithClass(this.element, "slider-control-end-template");
             // TODO?: multiple value containers? use same class in template and normal?
-            this.valueContainerElement = this.findElementInSlider("slider-value-container-template", false);
-            this.markerElement = this.findElementInSlider("slider-marker-template", false);
+            this.valueContainerElement = Helpers.findChildWithClass(this.element, "slider-value-container-template", false);
+            this.markerElement = Helpers.findChildWithClass(this.element, "slider-marker-template", false);
             this.markerElement.remove();
-        }
-
-        private findElementInSlider(className: string, required = true): HTMLElement {
-            let found = this.element.getElementsByClassName(className);
-            if (found.length > 0) {
-                return found[0] as HTMLElement;
-            }
-
-            if (required) {
-                throw new Error(`Cannot find DOM element with class: '${className}' in the template.`);
-            }
-
-            return null;
         }
 
         private createSliderElement(): void {
@@ -339,8 +326,8 @@ module DateSlider.Slider {
                 return;
             }
 
-            let startCenter = this.calculateCenterPosition(this.sliderLineStart);
-            let endCenter = this.calculateCenterPosition(this.sliderLineEnd);
+            let startCenter = Helpers.calculateCenterPosition(this.sliderLineStart);
+            let endCenter = Helpers.calculateCenterPosition(this.sliderLineEnd);
 
             let se = endCenter.substract(startCenter);
 
@@ -408,8 +395,8 @@ module DateSlider.Slider {
             // V        e  slider end
             let start = this.sliderLineStart.getBoundingClientRect();
             let end = this.sliderLineEnd.getBoundingClientRect();
-            let startCenter = this.calculateCenterPosition(start);
-            let endCenter = this.calculateCenterPosition(end);
+            let startCenter = Helpers.calculateCenterPosition(start);
+            let endCenter = Helpers.calculateCenterPosition(end);
 
             let sp = position.substract(startCenter);
             let se = endCenter.substract(startCenter);
@@ -425,25 +412,14 @@ module DateSlider.Slider {
             // calculates the center of an absolute positioned element
 
             let ratioInSlider = this.range.ratio;
-            let startPosition = this.calculateCenterPosition(this.sliderLineStart);
-            let endPosition = this.calculateCenterPosition(this.sliderLineEnd);
+            let startPosition = Helpers.calculateCenterPosition(this.sliderLineStart);
+            let endPosition = Helpers.calculateCenterPosition(this.sliderLineEnd);
 
             // start the handle at the start
             // the handle's center should be at the start, so it needs an adjustment
             // finally, calculate the handle's position in the line by it's range value (min: 0% -> max: 100%)
             return new Vector(startPosition.x - this.handleElement.offsetWidth / 2 + (endPosition.x - startPosition.x) * ratioInSlider,
                 startPosition.y - this.handleElement.offsetHeight / 2 + (endPosition.y - startPosition.y) * ratioInSlider);
-        }
-
-        private calculateCenterPosition(element: HTMLElement | ClientRect): Vector {
-            if (element instanceof HTMLElement) {
-                return new Vector(element.offsetLeft + element.offsetWidth / 2,
-                    element.offsetTop + element.offsetHeight / 2);
-            } else if (element instanceof ClientRect) {
-                return new Vector(element.left + element.width / 2,
-                    element.top + element.height / 2);
-            }
-            throw new Error("Invalid parameter.");
         }
     }
 }

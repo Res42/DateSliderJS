@@ -33,6 +33,26 @@ var DateSlider;
             var endOfYear = new Date(year + 1, 0, 0).getTime();
             return (endOfYear - startOfYear) / (Constants.MillisecondsInDay);
         };
+        Helpers.findChildWithClass = function (element, className, required) {
+            if (required === void 0) { required = true; }
+            var found = element.getElementsByClassName(className);
+            if (found.length > 0) {
+                return found[0];
+            }
+            if (required) {
+                throw new Error("Cannot find DOM element with class: '" + className + "' in the template.");
+            }
+            return null;
+        };
+        Helpers.calculateCenterPosition = function (element) {
+            if (element instanceof HTMLElement) {
+                return new DateSlider.Vector(element.offsetLeft + element.offsetWidth / 2, element.offsetTop + element.offsetHeight / 2);
+            }
+            else if (element instanceof ClientRect) {
+                return new DateSlider.Vector(element.left + element.width / 2, element.top + element.height / 2);
+            }
+            throw new Error("Invalid parameter.");
+        };
         /**
          * Registers a listener to the element's destroy.
          * @param element The element whose destroy event should be watched.
@@ -988,25 +1008,14 @@ var DateSlider;
             };
             SliderInstance.prototype.bootstrapSliderToTemplate = function () {
                 this.element = this.options.template.cloneNode(true);
-                this.sliderElement = this.findElementInSlider("slider-control-template");
-                this.handleElement = this.findElementInSlider("slider-handle-template");
-                this.sliderLineStart = this.findElementInSlider("slider-control-start-template");
-                this.sliderLineEnd = this.findElementInSlider("slider-control-end-template");
+                this.sliderElement = DateSlider.Helpers.findChildWithClass(this.element, "slider-control-template");
+                this.handleElement = DateSlider.Helpers.findChildWithClass(this.element, "slider-handle-template");
+                this.sliderLineStart = DateSlider.Helpers.findChildWithClass(this.element, "slider-control-start-template");
+                this.sliderLineEnd = DateSlider.Helpers.findChildWithClass(this.element, "slider-control-end-template");
                 // TODO?: multiple value containers? use same class in template and normal?
-                this.valueContainerElement = this.findElementInSlider("slider-value-container-template", false);
-                this.markerElement = this.findElementInSlider("slider-marker-template", false);
+                this.valueContainerElement = DateSlider.Helpers.findChildWithClass(this.element, "slider-value-container-template", false);
+                this.markerElement = DateSlider.Helpers.findChildWithClass(this.element, "slider-marker-template", false);
                 this.markerElement.remove();
-            };
-            SliderInstance.prototype.findElementInSlider = function (className, required) {
-                if (required === void 0) { required = true; }
-                var found = this.element.getElementsByClassName(className);
-                if (found.length > 0) {
-                    return found[0];
-                }
-                if (required) {
-                    throw new Error("Cannot find DOM element with class: '" + className + "' in the template.");
-                }
-                return null;
             };
             SliderInstance.prototype.createSliderElement = function () {
                 this.element = document.createElement("div");
@@ -1126,8 +1135,8 @@ var DateSlider;
                 if (!this.markers || this.markers.length <= 0) {
                     return;
                 }
-                var startCenter = this.calculateCenterPosition(this.sliderLineStart);
-                var endCenter = this.calculateCenterPosition(this.sliderLineEnd);
+                var startCenter = DateSlider.Helpers.calculateCenterPosition(this.sliderLineStart);
+                var endCenter = DateSlider.Helpers.calculateCenterPosition(this.sliderLineEnd);
                 var se = endCenter.substract(startCenter);
                 // with this length, if the overflow is set to hidden,
                 // then the first marker's start will be at the beginning of the slider
@@ -1173,8 +1182,8 @@ var DateSlider;
                 // V        e  slider end
                 var start = this.sliderLineStart.getBoundingClientRect();
                 var end = this.sliderLineEnd.getBoundingClientRect();
-                var startCenter = this.calculateCenterPosition(start);
-                var endCenter = this.calculateCenterPosition(end);
+                var startCenter = DateSlider.Helpers.calculateCenterPosition(start);
+                var endCenter = DateSlider.Helpers.calculateCenterPosition(end);
                 var sp = position.substract(startCenter);
                 var se = endCenter.substract(startCenter);
                 var othogonalProjectionRatio = sp.dot(se) / se.dot(se);
@@ -1186,21 +1195,12 @@ var DateSlider;
             SliderInstance.prototype.calculateHandlePosition = function () {
                 // calculates the center of an absolute positioned element
                 var ratioInSlider = this.range.ratio;
-                var startPosition = this.calculateCenterPosition(this.sliderLineStart);
-                var endPosition = this.calculateCenterPosition(this.sliderLineEnd);
+                var startPosition = DateSlider.Helpers.calculateCenterPosition(this.sliderLineStart);
+                var endPosition = DateSlider.Helpers.calculateCenterPosition(this.sliderLineEnd);
                 // start the handle at the start
                 // the handle's center should be at the start, so it needs an adjustment
                 // finally, calculate the handle's position in the line by it's range value (min: 0% -> max: 100%)
                 return new DateSlider.Vector(startPosition.x - this.handleElement.offsetWidth / 2 + (endPosition.x - startPosition.x) * ratioInSlider, startPosition.y - this.handleElement.offsetHeight / 2 + (endPosition.y - startPosition.y) * ratioInSlider);
-            };
-            SliderInstance.prototype.calculateCenterPosition = function (element) {
-                if (element instanceof HTMLElement) {
-                    return new DateSlider.Vector(element.offsetLeft + element.offsetWidth / 2, element.offsetTop + element.offsetHeight / 2);
-                }
-                else if (element instanceof ClientRect) {
-                    return new DateSlider.Vector(element.left + element.width / 2, element.top + element.height / 2);
-                }
-                throw new Error("Invalid parameter.");
             };
             return SliderInstance;
         }());

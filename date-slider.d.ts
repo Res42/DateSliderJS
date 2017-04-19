@@ -8,6 +8,8 @@ declare module DateSlider {
     }
     class Helpers {
         static getDaysinYear(year?: number): number;
+        static findChildWithClass(element: HTMLElement, className: string, required?: boolean): HTMLElement;
+        static calculateCenterPosition(element: HTMLElement | ClientRect): Vector;
         /**
          * Registers a listener to the element's destroy.
          * @param element The element whose destroy event should be watched.
@@ -328,7 +330,6 @@ declare module DateSlider.Slider {
         on(eventName: SliderEvent, callback: (context: DateSliderEventContext) => void): void;
         destroy: (event?: Event) => void;
         private bootstrapSliderToTemplate();
-        private findElementInSlider(className, required?);
         private createSliderElement();
         private registerListeners();
         private addMovementListeners();
@@ -349,7 +350,6 @@ declare module DateSlider.Slider {
         private calculateValue(position);
         private calculateOrthogonalProjectionRatio(position);
         private calculateHandlePosition();
-        private calculateCenterPosition(element);
     }
 }
 declare module DateSlider.Slider {
