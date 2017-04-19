@@ -5,7 +5,9 @@ module DateSlider.Slider {
             case "none":
                 return new Slider.SliderInstance(dateSlider, options, range);
             case "slide":
-                return new Slider.SliderSlidingInstance(dateSlider, options, range);
+                return new Slider.SlidingSliderInstance(dateSlider, options, range);
+            case "expand":
+                return new Slider.ExpandingSliderInstance(dateSlider, options, range);
         }
     };
 
@@ -127,7 +129,7 @@ module DateSlider.Slider {
             this.updateValueDisplay();
             this.updateHandlePosition();
             this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(oldValue, newValue));
-            return {oldValue: oldValue, newValue: newValue};
+            return { oldValue: oldValue, newValue: newValue };
         }
 
         protected createMarkers() {
@@ -401,8 +403,8 @@ module DateSlider.Slider {
         }
     }
 
-    export class SliderSlidingInstance extends SliderInstance {
-        protected slideIntervalHandle: number;
+    export class SlidingSliderInstance extends SliderInstance {
+        protected borderCheckIntervalHandle: number;
 
         constructor(
             dateSlider: DateSliderInstance,
@@ -410,12 +412,12 @@ module DateSlider.Slider {
             range: SliderRange,
         ) {
             super(dateSlider, options, range);
-            this.slideIntervalHandle = window.setInterval(this.sliding, this.options.movementSpeed || 0);
+            this.borderCheckIntervalHandle = window.setInterval(this.borderCheck, this.options.movementSpeed || 0);
         }
 
         public destroy(event?: Event): void {
             super.destroy(event);
-            window.clearInterval(this.slideIntervalHandle);
+            window.clearInterval(this.borderCheckIntervalHandle);
         }
 
         public updateValue(value: number): void {
@@ -426,7 +428,14 @@ module DateSlider.Slider {
             this.updateMarkersPosition();
         }
 
-        protected sliding = () => {
+        protected onBorder(direction: number): void {
+            this.range.slide(direction * (this.options.movementStep || 1));
+            if (this.isDragging) {
+                this.range.value = this.calculateValue(this.lastPointerPosition);
+            }
+        }
+
+        protected borderCheck = () => {
             let direction: number;
             if (this.range.value === this.range.maximum) {
                 direction = 1;
@@ -438,13 +447,34 @@ module DateSlider.Slider {
 
             if (direction !== 0) {
                 this.updateAfter(() => {
-                    this.range.slide(direction * (this.options.movementStep || 1));
-                    if (this.isDragging) {
-                        this.range.value = this.calculateValue(this.lastPointerPosition);
-                    }
+                    this.onBorder(direction);
                 });
                 this.createMarkers();
                 this.updateMarkersPosition();
+            }
+        }
+    }
+
+    export class ExpandingSliderInstance extends SlidingSliderInstance {
+        constructor(
+            dateSlider: DateSliderInstance,
+            options: SliderOptions,
+            range: SliderRange,
+        ) {
+            super(dateSlider, options, range);
+        }
+
+        protected onBorder(direction: number): void {
+            if (direction === 1) {
+                this.range.maximum = this.range.maximum + (this.options.movementStep || 1);
+            }
+
+            if (direction === -1) {
+                this.range.minimum = this.range.minimum - (this.options.movementStep || 1);
+            }
+
+            if (this.isDragging) {
+                this.range.value = this.calculateValue(this.lastPointerPosition);
             }
         }
     }

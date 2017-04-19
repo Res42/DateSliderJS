@@ -710,7 +710,7 @@ var DateSlider;
     // demo: out of the box, full customization
     // slider distance of mouse from handle -> slowness of steps
     // ✓ angular integration
-    // --> expanding slider
+    // ✓ expanding slider
     // ✓ when changing years or months, set maximum days to monthly maximum
     // ✓ validation: min, max, custom
     // --> slide, expand with acceleration!
@@ -981,7 +981,9 @@ var DateSlider;
                 case "none":
                     return new Slider.SliderInstance(dateSlider, options, range);
                 case "slide":
-                    return new Slider.SliderSlidingInstance(dateSlider, options, range);
+                    return new Slider.SlidingSliderInstance(dateSlider, options, range);
+                case "expand":
+                    return new Slider.ExpandingSliderInstance(dateSlider, options, range);
             }
         }
         Slider.create = create;
@@ -1311,11 +1313,11 @@ var DateSlider;
             return SliderInstance;
         }());
         Slider.SliderInstance = SliderInstance;
-        var SliderSlidingInstance = (function (_super) {
-            __extends(SliderSlidingInstance, _super);
-            function SliderSlidingInstance(dateSlider, options, range) {
+        var SlidingSliderInstance = (function (_super) {
+            __extends(SlidingSliderInstance, _super);
+            function SlidingSliderInstance(dateSlider, options, range) {
                 var _this = _super.call(this, dateSlider, options, range) || this;
-                _this.sliding = function () {
+                _this.borderCheck = function () {
                     var direction;
                     if (_this.range.value === _this.range.maximum) {
                         direction = 1;
@@ -1328,23 +1330,20 @@ var DateSlider;
                     }
                     if (direction !== 0) {
                         _this.updateAfter(function () {
-                            _this.range.slide(direction * (_this.options.movementStep || 1));
-                            if (_this.isDragging) {
-                                _this.range.value = _this.calculateValue(_this.lastPointerPosition);
-                            }
+                            _this.onBorder(direction);
                         });
                         _this.createMarkers();
                         _this.updateMarkersPosition();
                     }
                 };
-                _this.slideIntervalHandle = window.setInterval(_this.sliding, _this.options.movementSpeed || 0);
+                _this.borderCheckIntervalHandle = window.setInterval(_this.borderCheck, _this.options.movementSpeed || 0);
                 return _this;
             }
-            SliderSlidingInstance.prototype.destroy = function (event) {
+            SlidingSliderInstance.prototype.destroy = function (event) {
                 _super.prototype.destroy.call(this, event);
-                window.clearInterval(this.slideIntervalHandle);
+                window.clearInterval(this.borderCheckIntervalHandle);
             };
-            SliderSlidingInstance.prototype.updateValue = function (value) {
+            SlidingSliderInstance.prototype.updateValue = function (value) {
                 var _this = this;
                 this.updateAfter(function () {
                     _this.range.slideTo(value, false);
@@ -1352,9 +1351,34 @@ var DateSlider;
                 this.createMarkers();
                 this.updateMarkersPosition();
             };
-            return SliderSlidingInstance;
+            SlidingSliderInstance.prototype.onBorder = function (direction) {
+                this.range.slide(direction * (this.options.movementStep || 1));
+                if (this.isDragging) {
+                    this.range.value = this.calculateValue(this.lastPointerPosition);
+                }
+            };
+            return SlidingSliderInstance;
         }(SliderInstance));
-        Slider.SliderSlidingInstance = SliderSlidingInstance;
+        Slider.SlidingSliderInstance = SlidingSliderInstance;
+        var ExpandingSliderInstance = (function (_super) {
+            __extends(ExpandingSliderInstance, _super);
+            function ExpandingSliderInstance(dateSlider, options, range) {
+                return _super.call(this, dateSlider, options, range) || this;
+            }
+            ExpandingSliderInstance.prototype.onBorder = function (direction) {
+                if (direction === 1) {
+                    this.range.maximum = this.range.maximum + (this.options.movementStep || 1);
+                }
+                if (direction === -1) {
+                    this.range.minimum = this.range.minimum - (this.options.movementStep || 1);
+                }
+                if (this.isDragging) {
+                    this.range.value = this.calculateValue(this.lastPointerPosition);
+                }
+            };
+            return ExpandingSliderInstance;
+        }(SlidingSliderInstance));
+        Slider.ExpandingSliderInstance = ExpandingSliderInstance;
     })(Slider = DateSlider.Slider || (DateSlider.Slider = {}));
 })(DateSlider || (DateSlider = {}));
 "use strict";
@@ -1390,7 +1414,7 @@ var DateSlider;
                     if (minimum > this._value) {
                         this._value = minimum;
                     }
-                    this._maximum = minimum;
+                    this._minimum = minimum;
                 },
                 enumerable: true,
                 configurable: true

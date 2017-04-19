@@ -29,7 +29,7 @@ module DateSlider.Slider {
                 this._value = minimum;
             }
 
-            this._maximum = minimum;
+            this._minimum = minimum;
         }
 
         public get maximum() { return this._maximum; };

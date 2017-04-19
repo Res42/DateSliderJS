@@ -393,12 +393,17 @@ declare module DateSlider.Slider {
         };
         protected calculateHandlePosition(): Vector;
     }
-    class SliderSlidingInstance extends SliderInstance {
-        protected slideIntervalHandle: number;
+    class SlidingSliderInstance extends SliderInstance {
+        protected borderCheckIntervalHandle: number;
         constructor(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange);
         destroy(event?: Event): void;
         updateValue(value: number): void;
-        protected sliding: () => void;
+        protected onBorder(direction: number): void;
+        protected borderCheck: () => void;
+    }
+    class ExpandingSliderInstance extends SlidingSliderInstance {
+        constructor(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange);
+        protected onBorder(direction: number): void;
     }
 }
 declare module DateSlider.Slider {
