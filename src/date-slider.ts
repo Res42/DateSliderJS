@@ -19,7 +19,7 @@ module DateSlider {
     // TODO
     // date parser / formatter + tests
     // string parser / formatter + tests
-    // range interval
+    // --> range interval
     // test range
     // test model compare methods
     // demo: out of the box, full customization
@@ -30,6 +30,8 @@ module DateSlider {
     // ✓ validation: min, max, custom
     // --> slide, expand with acceleration!
     // --> slide + expand option
-    // how to check timezone when comparing models?
+    // out of scope: how to check timezone when comparing models?
     // ✓ angular integration: fix jumping handle.
+    // --> validation enable wrong values but add invalid classes
+    // --> ppt, docs
 }
