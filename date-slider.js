@@ -338,6 +338,7 @@ var DateSlider;
             else {
                 this.value = new DateSlider.DateSliderModel(new DateSlider.InnerModel, null);
             }
+            var isValid = this.validate(this.value);
             this.sliders = this.createAllSliders();
             this.bootstrapSliders(this.sliders);
             DateSlider.Helpers.registerOnDestroy(element, function (event) {
@@ -349,6 +350,7 @@ var DateSlider;
             if (this.options.callback) {
                 this.onValueChangeEvent.register(this.options.callback.onValueChanged);
             }
+            this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(null, this.getValue(), isValid));
         }
         DateSliderInstance.prototype.parse = function (value) {
             return this.parser.parse(value, this.options.parserOptions);
@@ -362,15 +364,11 @@ var DateSlider;
         DateSliderInstance.prototype.setValue = function (input) {
             var oldValue = this.getValue();
             var newModel = this.parse(input);
-            if (!this.isValid(newModel)) {
-                // alert the outside that their new input is not valid
-                this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, oldValue));
-                return;
-            }
+            var isValid = this.validate(newModel);
             this.value = newModel;
             this.updateSliders();
             var newValue = this.getValue();
-            this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, newValue));
+            this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldValue, newValue, isValid));
         };
         DateSliderInstance.prototype.getOptions = function () {
             return this.options;
@@ -427,28 +425,23 @@ var DateSlider;
                     break;
             }
             newModel.model.setDayOfMonth();
-            // check validity
-            if (!this.isValid(newModel)) {
-                // rollback to the last valid value if the new model is not valid
-                this.updateSliders();
-                return;
-            }
-            // if the new model is valid, then it is saved as the new value
+            var isValid = this.validate(newModel);
             this.value = newModel;
             this.updateDaySliders();
             var newModelValue = this.getValue();
-            this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldModelValue, newModelValue));
+            this.onValueChangeEvent.fire(new DateSlider.Context.ValueChangeContext(oldModelValue, newModelValue, isValid));
         };
-        DateSliderInstance.prototype.createAllSliders = function () {
-            if (!this.options.sliders) {
-                throw new Error("Cannot create sliders because options.sliders is not set.");
+        DateSliderInstance.prototype.validate = function (newModel) {
+            var isValid = this.isValid(newModel);
+            if (isValid) {
+                this.element.classList.add("date-slider-valid");
+                this.element.classList.remove("date-slider-invalid");
             }
-            var sliders = [];
-            for (var _i = 0, _a = this.options.sliders; _i < _a.length; _i++) {
-                var sliderOptions = _a[_i];
-                sliders.push(DateSlider.Slider.create(this, sliderOptions, this.getRangeFromType(sliderOptions)));
+            else {
+                this.element.classList.add("date-slider-invalid");
+                this.element.classList.remove("date-slider-valid");
             }
-            return sliders;
+            return isValid;
         };
         DateSliderInstance.prototype.isValid = function (model) {
             if (!this.options.validation) {
@@ -466,6 +459,17 @@ var DateSlider;
                 return this.options.validation.custom(this.format(model));
             }
             return true;
+        };
+        DateSliderInstance.prototype.createAllSliders = function () {
+            if (!this.options.sliders) {
+                throw new Error("Cannot create sliders because options.sliders is not set.");
+            }
+            var sliders = [];
+            for (var _i = 0, _a = this.options.sliders; _i < _a.length; _i++) {
+                var sliderOptions = _a[_i];
+                sliders.push(DateSlider.Slider.create(this, sliderOptions, this.getRangeFromType(sliderOptions)));
+            }
+            return sliders;
         };
         DateSliderInstance.prototype.getRangeFromType = function (sliderOptions) {
             switch (sliderOptions.type) {
@@ -717,7 +721,7 @@ var DateSlider;
     // --> slide + expand option
     // out of scope: how to check timezone when comparing models?
     // ✓ angular integration: fix jumping handle.
-    // --> validation enable wrong values but add invalid classes
+    // ✓ validation enable wrong values but add invalid classes
     // --> ppt, docs
 })(DateSlider || (DateSlider = {}));
 "use strict";
@@ -775,10 +779,11 @@ var DateSlider;
     (function (Context) {
         var ValueChangeContext = (function (_super) {
             __extends(ValueChangeContext, _super);
-            function ValueChangeContext(oldValue, newValue) {
+            function ValueChangeContext(oldValue, newValue, isValid) {
                 var _this = _super.call(this) || this;
                 _this.oldValue = oldValue;
                 _this.newValue = newValue;
+                _this.isValid = isValid;
                 return _this;
             }
             return ValueChangeContext;

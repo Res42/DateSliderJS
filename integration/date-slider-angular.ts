@@ -86,6 +86,7 @@ module DateSlider.Angular {
             $scope.instance.on("onValueChanged", (context: Context.ValueChangeContext): void => {
                 fromEvent = true;
                 ngModelController.$setViewValue(context.newValue);
+                ngModelController.$setValidity("date-slider", context.isValid);
                 ngModelController.$setTouched();
                 setTimeout(() => { fromEvent = false; });
             });

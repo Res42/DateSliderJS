@@ -24,6 +24,8 @@ module DateSlider {
                 this.value = new DateSliderModel(new InnerModel, null);
             }
 
+            let isValid = this.validate(this.value);
+
             this.sliders = this.createAllSliders();
 
             this.bootstrapSliders(this.sliders);
@@ -36,6 +38,8 @@ module DateSlider {
             if (this.options.callback) {
                 this.onValueChangeEvent.register(this.options.callback.onValueChanged);
             }
+
+            this.onValueChangeEvent.fire(new Context.ValueChangeContext(null, this.getValue(), isValid));
         }
 
         public parse(value: any): DateSliderModel {
@@ -54,16 +58,13 @@ module DateSlider {
             let oldValue = this.getValue();
             let newModel = this.parse(input);
 
-            if (!this.isValid(newModel)) {
-                // alert the outside that their new input is not valid
-                this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, oldValue));
-                return;
-            }
+            let isValid = this.validate(newModel);
+
             this.value = newModel;
 
             this.updateSliders();
             let newValue = this.getValue();
-            this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, newValue));
+            this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, newValue, isValid));
         }
 
         public getOptions(): DateSliderOptions {
@@ -128,33 +129,28 @@ module DateSlider {
 
             newModel.model.setDayOfMonth();
 
-            // check validity
-            if (!this.isValid(newModel)) {
-                // rollback to the last valid value if the new model is not valid
-                this.updateSliders();
-                return;
-            }
+            let isValid = this.validate(newModel);
 
-            // if the new model is valid, then it is saved as the new value
             this.value = newModel;
             this.updateDaySliders();
 
             let newModelValue = this.getValue();
-            this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldModelValue, newModelValue));
+            this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldModelValue, newModelValue, isValid));
         }
 
-        private createAllSliders(): Slider.SliderInstance[] {
-            if (!this.options.sliders) {
-                throw new Error("Cannot create sliders because options.sliders is not set.");
+        public validate(newModel: DateSliderModel): boolean {
+            let isValid = this.isValid(newModel);
+            if (isValid) {
+                this.element.classList.add("date-slider-valid");
+                this.element.classList.remove("date-slider-invalid");
+            } else {
+                this.element.classList.add("date-slider-invalid");
+                this.element.classList.remove("date-slider-valid");
             }
-            let sliders: Slider.SliderInstance[] = [];
-            for (let sliderOptions of this.options.sliders) {
-                sliders.push(Slider.create(this, sliderOptions, this.getRangeFromType(sliderOptions)));
-            }
-            return sliders;
+            return isValid;
         }
 
-        private isValid(model: DateSliderModel): boolean {
+        public isValid(model: DateSliderModel): boolean {
             if (!this.options.validation) {
                 return true;
             }
@@ -174,6 +170,17 @@ module DateSlider {
             }
 
             return true;
+        }
+
+        private createAllSliders(): Slider.SliderInstance[] {
+            if (!this.options.sliders) {
+                throw new Error("Cannot create sliders because options.sliders is not set.");
+            }
+            let sliders: Slider.SliderInstance[] = [];
+            for (let sliderOptions of this.options.sliders) {
+                sliders.push(Slider.create(this, sliderOptions, this.getRangeFromType(sliderOptions)));
+            }
+            return sliders;
         }
 
         private getRangeFromType(sliderOptions: SliderOptions): Slider.SliderRange {

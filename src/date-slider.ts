@@ -32,6 +32,6 @@ module DateSlider {
     // --> slide + expand option
     // out of scope: how to check timezone when comparing models?
     // ✓ angular integration: fix jumping handle.
-    // --> validation enable wrong values but add invalid classes
+    // ✓ validation enable wrong values but add invalid classes
     // --> ppt, docs
 }

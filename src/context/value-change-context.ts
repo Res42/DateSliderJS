@@ -5,6 +5,7 @@ module DateSlider.Context {
         constructor(
             public oldValue: any,
             public newValue: any,
+            public isValid: boolean,
         ) {
             super();
         }

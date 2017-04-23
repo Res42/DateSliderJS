@@ -92,8 +92,9 @@ declare module DateSlider {
         replaceOptions(options: DateSliderOptions): void;
         on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => void): void;
         updateFromSlider(sliderType: SliderType, newValue: number, oldValue: number): void;
+        validate(newModel: DateSliderModel): boolean;
+        isValid(model: DateSliderModel): boolean;
         private createAllSliders();
-        private isValid(model);
         private getRangeFromType(sliderOptions);
         private updateDaySliders();
         private updateSliders();
@@ -216,7 +217,8 @@ declare module DateSlider.Context {
     class ValueChangeContext extends DateSliderEventContext {
         oldValue: any;
         newValue: any;
-        constructor(oldValue: any, newValue: any);
+        isValid: boolean;
+        constructor(oldValue: any, newValue: any, isValid: boolean);
     }
 }
 declare module DateSlider.Formatter {
