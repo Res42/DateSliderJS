@@ -1,25 +1,12 @@
 module DateSlider.Slider {
-    export function create(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange) {
-        switch (options.movement) {
-            default:
-            case "none":
-                return new Slider.SliderInstance(dateSlider, options, range);
-            case "slide":
-                return new Slider.SlidingSliderInstance(dateSlider, options, range);
-            case "expand":
-                return new Slider.ExpandingSliderInstance(dateSlider, options, range);
-            case "slide expand":
-                return new Slider.SlidingExpandingSliderInstance(dateSlider, options, range);
-        }
-    };
-
     export class SliderInstance {
         public element: HTMLElement;
         protected sliderElement: HTMLElement;
         protected sliderLineStart: HTMLElement;
         protected sliderLineElement?: HTMLDivElement;
         protected sliderLineEnd: HTMLElement;
-        protected handleElement: HTMLElement;
+        protected startHandleElement: HTMLElement;
+        protected endHandleElement?: HTMLElement;
         protected valueContainerElement?: HTMLElement;
         protected markerElement?: HTMLElement;
         protected markers: Array<{ element: HTMLElement, valueContainers: NodeListOf<HTMLElement>, value: number }>;
@@ -27,6 +14,7 @@ module DateSlider.Slider {
         protected toDiscrete = Math.round;
         protected lastPointerPosition: Vector;
         protected isDragging = false;
+        protected dragTarget: HTMLElement;
 
         protected onValueChangeEvent = new DateSliderEventHandler();
         protected onSliderHandleGrabEvent = new DateSliderEventHandler();
@@ -34,11 +22,25 @@ module DateSlider.Slider {
         protected onSliderHandleMoveEvent = new DateSliderEventHandler();
 
         protected events = {
-            load: () => { this.updateHandlePosition(); this.updateValueDisplay(); this.createMarkers(); this.updateMarkersPosition(); },
+            load: () => {
+                this.updateHandlePosition(this.startHandleElement);
+                if (this.interval) {
+                    this.updateHandlePosition(this.endHandleElement);
+                }
+                this.updateValueDisplay();
+                this.createMarkers();
+                this.updateMarkersPosition();
+            },
             mousedown: (e: MouseEvent) => this.handleMouseDown(e),
             mousemove: (e: MouseEvent) => this.handleMouseMove(e),
             mouseup: (e: MouseEvent) => this.handleMouseUp(e),
-            resize: () => { this.updateHandlePosition(); this.updateMarkersPosition(); },
+            resize: () => {
+                this.updateHandlePosition(this.startHandleElement);
+                if (this.interval) {
+                    this.updateHandlePosition(this.endHandleElement);
+                }
+                this.updateMarkersPosition();
+            },
             touchend: (e: TouchEvent) => this.handleMouseUp(e),
             touchmove: (e: TouchEvent) => this.handleMouseMove(e),
             touchstart: (e: TouchEvent) => this.handleMouseDown(e),
@@ -48,6 +50,7 @@ module DateSlider.Slider {
             public dateSlider: DateSliderInstance,
             public options: SliderOptions,
             public range: SliderRange,
+            public interval: boolean,
         ) {
             if (options.callback) {
                 this.onValueChangeEvent.register(options.callback.onValueChanged);
@@ -64,23 +67,33 @@ module DateSlider.Slider {
 
             this.registerListeners();
 
-            this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(null, this.range.value));
+            this.onValueChangeEvent.fire(new Context.SliderValueChangeContext({ oldValue: null, newValue: this.toDiscrete(this.range.startValue) }, this.interval ? { oldValue: null, newValue: this.toDiscrete(this.range.endValue) } : null));
         }
 
-        public getValue(): number {
-            return this.toDiscrete(this.range.value);
+        public getStartValue(): number {
+            return this.toDiscrete(this.range.startValue);
         }
 
-        public updateValue(value: number): void {
+        public getEndValue(): number {
+            return this.toDiscrete(this.range.endValue);
+        }
+
+        public updateValue(startValue: number, endValue?: number): void {
             this.updateAfter(() => {
-                this.range.value = value;
+                this.range.startValue = startValue;
+                if (this.interval) {
+                    this.range.endValue = endValue;
+                }
             });
         }
 
-        public updateValueWithMaximum(value: number, maximum: number): void {
+        public updateValueWithMaximum(startValue: number, maximum: number, endValue?: number): void {
             this.updateAfter(() => {
                 this.range.maximum = maximum;
-                this.range.value = value;
+                this.range.startValue = startValue;
+                if (this.interval) {
+                    this.range.endValue = endValue;
+                }
             });
             this.createMarkers();
             this.updateMarkersPosition();
@@ -117,21 +130,29 @@ module DateSlider.Slider {
             this.removeMovementListeners();
         }
 
-        protected setValue(value: number): void {
+        protected setValue(startValue: number, endValue: number): void {
             let values = this.updateAfter(() => {
-                this.range.value = value;
+                this.range.startValue = startValue;
+                if (this.interval) {
+                    this.range.endValue = endValue;
+                }
             });
-            this.dateSlider.updateFromSlider(this.options.type, values.newValue, values.oldValue);
+            this.dateSlider.updateFromSlider(this.options.type, values.start, values.end);
         }
 
         protected updateAfter(callback: () => void) {
-            let oldValue = this.toDiscrete(this.range.value);
+            let startOldValue = this.toDiscrete(this.range.startValue);
+            let endOldValue = this.toDiscrete(this.range.endValue);
             callback();
-            let newValue = this.toDiscrete(this.range.value);
+            let startNewValue = this.toDiscrete(this.range.startValue);
+            let endNewValue = this.toDiscrete(this.range.endValue);
             this.updateValueDisplay();
-            this.updateHandlePosition();
-            this.onValueChangeEvent.fire(new Context.SliderValueChangeContext(oldValue, newValue));
-            return { oldValue: oldValue, newValue: newValue };
+            this.updateHandlePosition(this.startHandleElement);
+            if (this.interval) {
+                this.updateHandlePosition(this.endHandleElement);
+            }
+            this.onValueChangeEvent.fire(new Context.SliderValueChangeContext({ oldValue: startOldValue, newValue: startNewValue }, this.interval ? { oldValue: endOldValue, newValue: endNewValue } : null));
+            return { start: { oldValue: startOldValue, newValue: startNewValue },  end: (this.interval ? { oldValue: endOldValue, newValue: endNewValue } : null) };
         }
 
         protected createMarkers() {
@@ -187,7 +208,10 @@ module DateSlider.Slider {
             this.element = (this.options.template as HTMLElement).cloneNode(true) as HTMLElement;
 
             this.sliderElement = Helpers.findChildWithClass(this.element, "slider-control-template");
-            this.handleElement = Helpers.findChildWithClass(this.element, "slider-handle-template");
+            this.startHandleElement = Helpers.findChildWithClass(this.element, "slider-start-handle-template");
+            if (this.interval) {
+                this.endHandleElement = Helpers.findChildWithClass(this.element, "slider-end-handle-template");
+            }
             this.sliderLineStart = Helpers.findChildWithClass(this.element, "slider-control-start-template");
             this.sliderLineEnd = Helpers.findChildWithClass(this.element, "slider-control-end-template");
             // TODO?: multiple value containers? use same class in template and normal?
@@ -234,14 +258,25 @@ module DateSlider.Slider {
             this.sliderLineEnd.classList.add("slider-control-end");
             this.sliderElement.appendChild(this.sliderLineEnd);
 
-            this.handleElement = document.createElement("div");
-            this.handleElement.classList.add("slider-handle");
-            this.sliderElement.appendChild(this.handleElement);
+            this.startHandleElement = document.createElement("div");
+            this.startHandleElement.classList.add("slider-start-handle");
+            this.sliderElement.appendChild(this.startHandleElement);
+
+            if (this.interval) {
+                this.endHandleElement = document.createElement("div");
+                this.endHandleElement.classList.add("slider-end-handle");
+                this.sliderElement.appendChild(this.endHandleElement);
+            }
         }
 
         protected registerListeners(): void {
-            this.handleElement.addEventListener("mousedown", this.events.mousedown, false);
-            this.handleElement.addEventListener("touchstart", this.events.touchstart, true);
+            this.startHandleElement.addEventListener("mousedown", this.events.mousedown, false);
+            this.startHandleElement.addEventListener("touchstart", this.events.touchstart, true);
+
+            if (this.interval) {
+                this.endHandleElement.addEventListener("mousedown", this.events.mousedown, false);
+                this.endHandleElement.addEventListener("touchstart", this.events.touchstart, true);
+            }
 
             window.addEventListener("load", this.events.load);
             window.addEventListener("resize", this.events.resize);
@@ -274,6 +309,7 @@ module DateSlider.Slider {
 
             this.lastPointerPosition = Helpers.getPositionFromEvent(e);
             this.isDragging = true;
+            this.dragTarget = e.target as HTMLElement;
 
             this.addMovementListeners();
             this.onSliderHandleGrabEvent.fire(new DateSliderEventContext());
@@ -281,9 +317,11 @@ module DateSlider.Slider {
 
         protected handleMouseUp = (e: MouseEvent | TouchEvent): void => {
             this.isDragging = false;
-            this.lastPointerPosition = Helpers.getPositionFromEvent(e);
-            this.setValue(this.toDiscrete(this.calculateValue(this.lastPointerPosition)));
 
+            this.lastPointerPosition = Helpers.getPositionFromEvent(e);
+            this.setValueOfHandleModel(this.dragTarget, this.toDiscrete(this.calculateValue(this.lastPointerPosition)));
+
+            this.dragTarget = null;
             this.removeMovementListeners();
             this.onSliderHandleReleaseEvent.fire(new DateSliderEventContext());
         }
@@ -301,9 +339,20 @@ module DateSlider.Slider {
             }
 
             this.lastPointerPosition = Helpers.getPositionFromEvent(e);
-            this.setValue(this.calculateValue(this.lastPointerPosition));
+            this.setValueOfHandleModel(this.dragTarget, this.toDiscrete(this.calculateValue(this.lastPointerPosition)));
 
             this.onSliderHandleMoveEvent.fire(new DateSliderEventContext());
+        }
+
+        protected setValueOfHandleModel(dragTarget: HTMLElement, value: number) {
+            switch (dragTarget) {
+                case this.startHandleElement:
+                    this.setValue(value, this.range.endValue);
+                    break;
+                case this.endHandleElement:
+                    this.setValue( this.range.startValue, value);
+                    break;
+            }
         }
 
         protected isHandleReleased(e: MouseEvent | TouchEvent): boolean {
@@ -344,19 +393,20 @@ module DateSlider.Slider {
 
         protected updateValueDisplay = (): void => {
             if (this.valueContainerElement) {
-                let value = this.getValue();
+                let startValue = this.getStartValue();
+                let endValue = this.getEndValue();
                 let displayedValue = this.options.displayValueFormatter
-                    ? this.options.displayValueFormatter(value)
-                    : value.toString();
+                    ? this.options.displayValueFormatter(startValue, (this.interval ? endValue : null))
+                    : (this.interval ? `${startValue} - ${endValue}` : startValue.toString());
                 this.valueContainerElement.innerHTML = displayedValue;
             }
         }
 
-        protected updateHandlePosition = (): void => {
-            let position = this.calculateHandlePosition();
-            this.handleElement.style.position = "absolute";
-            this.handleElement.style.left = position.x + "px";
-            this.handleElement.style.top = position.y + "px";
+        protected updateHandlePosition = (handleElement: HTMLElement): void => {
+            let position = this.calculateHandlePosition(handleElement);
+            handleElement.style.position = "absolute";
+            handleElement.style.left = position.x + "px";
+            handleElement.style.top = position.y + "px";
         }
 
         protected calculateValue(position: Vector) {
@@ -390,18 +440,18 @@ module DateSlider.Slider {
             };
         }
 
-        protected calculateHandlePosition(): Vector {
+        protected calculateHandlePosition(handleElement: HTMLElement): Vector {
             // calculates the center of an absolute positioned element
 
-            let ratioInSlider = this.range.ratio;
+            let ratioInSlider = handleElement === this.startHandleElement ? this.range.startRatio : this.range.endRatio;
             let startPosition = Helpers.calculateCenterPosition(this.sliderLineStart);
             let endPosition = Helpers.calculateCenterPosition(this.sliderLineEnd);
 
             // start the handle at the start
             // the handle's center should be at the start, so it needs an adjustment
             // finally, calculate the handle's position in the line by it's range value (min: 0% -> max: 100%)
-            return new Vector(startPosition.x - this.handleElement.offsetWidth / 2 + (endPosition.x - startPosition.x) * ratioInSlider,
-                startPosition.y - this.handleElement.offsetHeight / 2 + (endPosition.y - startPosition.y) * ratioInSlider);
+            return new Vector(startPosition.x - handleElement.offsetWidth / 2 + (endPosition.x - startPosition.x) * ratioInSlider,
+                startPosition.y - handleElement.offsetHeight / 2 + (endPosition.y - startPosition.y) * ratioInSlider);
         }
     }
 
@@ -412,8 +462,9 @@ module DateSlider.Slider {
             dateSlider: DateSliderInstance,
             options: SliderOptions,
             range: SliderRange,
+            interval: boolean,
         ) {
-            super(dateSlider, options, range);
+            super(dateSlider, options, range, interval);
             this.borderCheckIntervalHandle = window.setInterval(this.borderCheck, this.options.movementSpeed || 0);
         }
 
@@ -433,15 +484,15 @@ module DateSlider.Slider {
         protected onBorder(direction: number): void {
             this.range.slide(direction * (this.options.movementStep || 1));
             if (this.isDragging) {
-                this.range.value = this.calculateValue(this.lastPointerPosition);
+                this.range.startValue = this.calculateValue(this.lastPointerPosition);
             }
         }
 
         protected borderCheck = () => {
             let direction: number;
-            if (this.range.value === this.range.maximum) {
+            if (this.range.startValue === this.range.maximum || this.range.endValue === this.range.maximum) {
                 direction = 1;
-            } else if (this.range.value === this.range.minimum) {
+            } else if (this.range.startValue === this.range.minimum || this.range.endValue === this.range.minimum) {
                 direction = -1;
             } else {
                 direction = 0;
@@ -458,14 +509,6 @@ module DateSlider.Slider {
     }
 
     export class ExpandingSliderInstance extends SlidingSliderInstance {
-        constructor(
-            dateSlider: DateSliderInstance,
-            options: SliderOptions,
-            range: SliderRange,
-        ) {
-            super(dateSlider, options, range);
-        }
-
         protected onBorder(direction: number): void {
             if (Helpers.isSet(this.options.expandLimit) && this.options.expandLimit <= this.range.length) {
                 return;
@@ -480,7 +523,7 @@ module DateSlider.Slider {
             }
 
             if (this.isDragging) {
-                this.range.value = this.calculateValue(this.lastPointerPosition);
+                this.range.startValue = this.calculateValue(this.lastPointerPosition);
             }
         }
     }
@@ -501,7 +544,7 @@ module DateSlider.Slider {
             }
 
             if (this.isDragging) {
-                this.range.value = this.calculateValue(this.lastPointerPosition);
+                this.range.startValue = this.calculateValue(this.lastPointerPosition);
             }
         }
     }

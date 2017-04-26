@@ -4,7 +4,7 @@ module DateSlider.Angular {
         max?: any;
         options?: DateSliderOptions;
         instance?: DateSliderInstance;
-        ngModel: any;
+        ngModel: { start: any, end?: any };
     }
 
     export class DateSliderDirective implements ng.IDirective {
@@ -25,7 +25,10 @@ module DateSlider.Angular {
         public link = ($scope: IDateSliderDirectiveScope, $element: ng.IAugmentedJQuery, $attributes: ng.IAttributes, ngModelController: ng.INgModelController) => {
             $scope.options = $scope.options || {};
             $scope.options.validation = $scope.options.validation || {};
-            $scope.options.value = $scope.ngModel;
+            $scope.options.startValue = $scope.ngModel.start;
+            if ($scope.ngModel.end) {
+                $scope.options.endValue = $scope.ngModel.end;
+            }
 
             if (typeof $scope.min !== "undefined") {
                 $scope.options.validation.min = $scope.min;
@@ -85,7 +88,7 @@ module DateSlider.Angular {
 
             $scope.instance.on("onValueChanged", (context: Context.ValueChangeContext): void => {
                 fromEvent = true;
-                ngModelController.$setViewValue(context.newValue);
+                ngModelController.$setViewValue({start: context.start.newValue, end: context.end ? context.end.newValue : null});
                 ngModelController.$setValidity("date-slider", context.isValid);
                 ngModelController.$setTouched();
                 setTimeout(() => { fromEvent = false; });

@@ -3,7 +3,8 @@ module DateSlider {
         public sliders: Slider.SliderInstance[];
         public parser: Parser.IParser;
         public formatter: Formatter.IFormatter;
-        public value: DateSliderModel;
+        public startValue: DateSliderModel;
+        public endValue?: DateSliderModel;
 
         private onValueChangeEvent = new DateSliderEventHandler();
 
@@ -18,13 +19,21 @@ module DateSlider {
             this.bindParser();
             this.bindFormatter();
 
-            if (Helpers.isSet(this.options.value)) {
-                this.value = this.parse(this.options.value);
+            if (Helpers.isSet(this.options.startValue)) {
+                this.startValue = this.parse(this.options.startValue);
             } else {
-                this.value = new DateSliderModel(new InnerModel, null);
+                this.startValue = new DateSliderModel(new InnerModel(), null);
             }
 
-            let isValid = this.validate(this.value);
+            if (this.options.interval) {
+                if (Helpers.isSet(this.options.endValue)) {
+                    this.endValue = this.parse(this.options.endValue);
+                } else {
+                    this.endValue = new DateSliderModel(new InnerModel(), null);
+                }
+            }
+
+            let isValid = this.validate(this.startValue, this.endValue);
 
             this.sliders = this.createAllSliders();
 
@@ -38,8 +47,9 @@ module DateSlider {
             if (this.options.callback) {
                 this.onValueChangeEvent.register(this.options.callback.onValueChanged);
             }
-
-            this.onValueChangeEvent.fire(new Context.ValueChangeContext(null, this.getValue(), isValid));
+            let value = this.getValue();
+            this.onValueChangeEvent.fire(new Context.ValueChangeContext(isValid, {oldValue: null, newValue: value.start},
+                                                                        this.options.interval ? {oldValue: null, newValue: value.end} : null));
         }
 
         public parse(value: any): DateSliderModel {
@@ -50,21 +60,24 @@ module DateSlider {
             return this.formatter.format(value, this.options.formatterOptions);
         }
 
-        public getValue(): any {
-            return this.format(this.value);
+        public getValue(): {start: any, end?: any} {
+            return {start: this.format(this.startValue), end: this.options.interval ? this.format(this.endValue) : null};
         }
 
-        public setValue(input: any): void {
+        public setValue(input: {start: any, end?: any}): void {
             let oldValue = this.getValue();
-            let newModel = this.parse(input);
+            let newStartModel = this.parse(input.start);
+            let newEndModel = this.options.interval ? this.parse(input.end) : null;
 
-            let isValid = this.validate(newModel);
+            let isValid = this.validate(newStartModel, newEndModel);
 
-            this.value = newModel;
+            this.startValue = newStartModel;
+            this.endValue = newEndModel;
 
             this.updateSliders();
             let newValue = this.getValue();
-            this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldValue, newValue, isValid));
+            this.onValueChangeEvent.fire(new Context.ValueChangeContext(isValid, {oldValue: oldValue.start, newValue: newValue.start},
+                                                                        this.options.interval ? {oldValue: oldValue.end, newValue: newValue.end} : null));
         }
 
         public getOptions(): DateSliderOptions {
@@ -91,55 +104,55 @@ module DateSlider {
             }
         }
 
-        public updateFromSlider(sliderType: SliderType, newValue: number, oldValue: number) {
+        public updateFromSlider(sliderType: SliderType, start: {newValue: number, oldValue: number}, end?: {newValue: number, oldValue: number}) {
             let oldModelValue = this.getValue();
-            let newModel = this.value.copy();
+            let newStartModel = this.startValue.copy();
 
             switch (sliderType) {
                 case "year":
-                    newModel.model.year = newValue;
+                    newStartModel.model.year = start.newValue;
                     break;
                 case "month":
-                    newModel.model.month = newValue;
+                    newStartModel.model.month = start.newValue;
                     break;
                 case "day":
-                    newModel.model.day = newValue;
+                    newStartModel.model.day = start.newValue;
                     break;
                 case "hour":
-                    newModel.model.hour = newValue;
+                    newStartModel.model.hour = start.newValue;
                     break;
                 case "minute":
-                    newModel.model.minute = newValue;
+                    newStartModel.model.minute = start.newValue;
                     break;
                 case "second":
-                    newModel.model.second = newValue;
+                    newStartModel.model.second = start.newValue;
                     break;
                 case "universal-date":
                     // TODO
                     break;
                 case "universal-time":
-                    newModel.model.hour = Math.floor(newValue / 3600);
-                    newModel.model.minute = Math.floor(newValue / 60) % 60;
-                    newModel.model.second = newValue % 60;
+                    newStartModel.model.hour = Math.floor(start.newValue / 3600);
+                    newStartModel.model.minute = Math.floor(start.newValue / 60) % 60;
+                    newStartModel.model.second = start.newValue % 60;
                     break;
                 case "universal":
                     // TODO
                     break;
             }
 
-            newModel.model.setDayOfMonth();
+            newStartModel.model.setDayOfMonth();
 
-            let isValid = this.validate(newModel);
+            let isValid = this.validate(newStartModel);
 
-            this.value = newModel;
+            this.startValue = newStartModel;
             this.updateDaySliders();
 
             let newModelValue = this.getValue();
-            this.onValueChangeEvent.fire(new Context.ValueChangeContext(oldModelValue, newModelValue, isValid));
+            this.onValueChangeEvent.fire(new Context.ValueChangeContext(isValid, {oldValue: oldModelValue.start, newValue: newModelValue.start}, null));
         }
 
-        public validate(newModel: DateSliderModel): boolean {
-            let isValid = this.isValid(newModel);
+        public validate(newStartModel: DateSliderModel, newEndModel?: DateSliderModel): boolean {
+            let isValid = this.isValid(newStartModel, newEndModel);
             if (isValid) {
                 this.element.classList.add("date-slider-valid");
                 this.element.classList.remove("date-slider-invalid");
@@ -150,7 +163,21 @@ module DateSlider {
             return isValid;
         }
 
-        public isValid(model: DateSliderModel): boolean {
+        public isValid(startModel: DateSliderModel, endModel?: DateSliderModel): boolean {
+            let isValid = this.validateModel(startModel);
+
+            if (!isValid) {
+                return false;
+            }
+
+            if (this.options.interval) {
+                return this.validateModel(endModel);
+            }
+
+            return true;
+        }
+
+        private validateModel(model: DateSliderModel): boolean {
             if (!this.options.validation) {
                 return true;
             }
@@ -178,7 +205,7 @@ module DateSlider {
             }
             let sliders: Slider.SliderInstance[] = [];
             for (let sliderOptions of this.options.sliders) {
-                sliders.push(Slider.create(this, sliderOptions, this.getRangeFromType(sliderOptions)));
+                sliders.push(this.createSlider(this, sliderOptions, this.getRangeFromType(sliderOptions), this.options.interval));
             }
             return sliders;
         }
@@ -186,17 +213,17 @@ module DateSlider {
         private getRangeFromType(sliderOptions: SliderOptions): Slider.SliderRange {
             switch (sliderOptions.type) {
                 case "year":
-                    return new Slider.SliderRange(this.value.model.year - 10, this.value.model.year + 10, this.value.model.year);
+                    return new Slider.SliderRange(this.startValue.model.year - 10, (this.endValue ? this.endValue.model.year : this.startValue.model.year) + 10, this.startValue.model.year, this.endValue ? this.endValue.model.year : null);
                 case "month":
-                    return new Slider.SliderRange(1, 12, this.value.model.month);
+                    return new Slider.SliderRange(1, 12, this.startValue.model.month, this.endValue ? this.endValue.model.month : null);
                 case "day":
-                    return new Slider.SliderRange(1, Helpers.getDaysInMonth(this.value.model.year, this.value.model.month), this.value.model.day);
+                    return new Slider.SliderRange(1, Helpers.getDaysInMonth(this.startValue.model.year, this.startValue.model.month), this.startValue.model.day, this.endValue ? this.endValue.model.day : null);
                 case "hour":
-                    return new Slider.SliderRange(0, 23, this.value.model.hour);
+                    return new Slider.SliderRange(0, 23, this.startValue.model.hour, this.endValue ? this.endValue.model.hour : null);
                 case "minute":
-                    return new Slider.SliderRange(0, 59, this.value.model.minute);
+                    return new Slider.SliderRange(0, 59, this.startValue.model.minute, this.endValue ? this.endValue.model.minute : null);
                 case "second":
-                    return new Slider.SliderRange(0, 59, this.value.model.second);
+                    return new Slider.SliderRange(0, 59, this.startValue.model.second, this.endValue ? this.endValue.model.second : null);
                 case "universal":
                     // TODO
                     return new Slider.SliderRange(1, 12);
@@ -213,7 +240,7 @@ module DateSlider {
         private updateDaySliders(): void {
             for (let slider of this.sliders) {
                 if (slider.options.type === "day") {
-                    slider.updateValueWithMaximum(this.value.model.day, Helpers.getDaysInMonth(this.value.model.year, this.value.model.month));
+                    slider.updateValueWithMaximum(this.startValue.model.day, Helpers.getDaysInMonth(this.startValue.model.year, this.startValue.model.month), this.endValue ? this.endValue.model.day : null);
                 }
             }
         }
@@ -222,28 +249,29 @@ module DateSlider {
             for (let slider of this.sliders) {
                 switch (slider.options.type) {
                     case "year":
-                        slider.updateValue(this.value.model.year);
+                        slider.updateValue(this.startValue.model.year, this.endValue ? this.endValue.model.year : null);
                         break;
                     case "month":
-                        slider.updateValue(this.value.model.month);
+                        slider.updateValue(this.startValue.model.month, this.endValue ? this.endValue.model.month : null);
                         break;
                     case "day":
-                        slider.updateValueWithMaximum(this.value.model.day, Helpers.getDaysInMonth(this.value.model.year, this.value.model.month));
+                        slider.updateValueWithMaximum(this.startValue.model.day, Helpers.getDaysInMonth(this.startValue.model.year, this.startValue.model.month), this.endValue ? this.endValue.model.day : null);
                         break;
                     case "hour":
-                        slider.updateValue(this.value.model.hour);
+                        slider.updateValue(this.startValue.model.hour, this.endValue ? this.endValue.model.hour : null);
                         break;
                     case "minute":
-                        slider.updateValue(this.value.model.minute);
+                        slider.updateValue(this.startValue.model.minute, this.endValue ? this.endValue.model.minute : null);
                         break;
                     case "second":
-                        slider.updateValue(this.value.model.second);
+                        slider.updateValue(this.startValue.model.second, this.endValue ? this.endValue.model.second : null);
                         break;
                     case "universal-date":
                         // TODO
                         break;
                     case "universal-time":
-                        slider.updateValue(this.value.model.hour * 3600 + this.value.model.minute * 60 + this.value.model.second);
+                        slider.updateValue(this.startValue.model.hour * 3600 + this.startValue.model.minute * 60 + this.startValue.model.second,
+                                           this.endValue ? this.endValue.model.hour * 3600 + this.endValue.model.minute * 60 + this.endValue.model.second : null);
                         break;
                     case "universal":
                         // TODO
@@ -306,6 +334,20 @@ module DateSlider {
             // also only after this will the sliders' element gain a parent to use the MutationObserver
             for (let slider of sliders) {
                 Helpers.registerOnDestroy(slider.element, (event) => slider.destroy(event));
+            }
+        }
+
+        private createSlider(dateSlider: DateSliderInstance, options: SliderOptions, range: Slider.SliderRange, interval: boolean): Slider.SliderInstance {
+            switch (options.movement) {
+                default:
+                case "none":
+                    return new Slider.SliderInstance(dateSlider, options, range, interval);
+                case "slide":
+                    return new Slider.SlidingSliderInstance(dateSlider, options, range, interval);
+                case "expand":
+                    return new Slider.ExpandingSliderInstance(dateSlider, options, range, interval);
+                case "slide expand":
+                    return new Slider.SlidingExpandingSliderInstance(dateSlider, options, range, interval);
             }
         }
     }

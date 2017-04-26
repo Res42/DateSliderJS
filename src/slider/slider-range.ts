@@ -3,19 +3,24 @@ module DateSlider.Slider {
         constructor(
             private _minimum: number,
             private _maximum: number,
-            private _value?: number,
+            private _startValue?: number,
+            private _endValue?: number,
         ) {
             if (this._minimum === this._maximum) {
                 throw new Error("Range minimum cannot be equal to the maximum.");
             }
 
-            if (typeof this._value === "undefined" || this._value === null) {
-                this._value = this._minimum;
+            if (!Helpers.isSet(this._startValue)) {
+                this._startValue = this._minimum;
             }
         }
 
-        public get ratio() {
-            return (this._value - this._minimum) / (this._maximum - this._minimum);
+        public get startRatio() {
+            return (this._startValue - this._minimum) / (this._maximum - this._minimum);
+        }
+
+        public get endRatio() {
+            return (this._endValue - this._minimum) / (this._maximum - this._minimum);
         }
 
         public get length() {
@@ -29,8 +34,12 @@ module DateSlider.Slider {
                 throw new Error("Range minimum cannot be >= maximum.");
             }
 
-            if (minimum > this._value) {
-                this._value = minimum;
+            if (minimum > this._startValue) {
+                this._startValue = minimum;
+            }
+
+            if (Helpers.isSet(this._endValue) && minimum > this._endValue) {
+                this._endValue = minimum;
             }
 
             this._minimum = minimum;
@@ -43,82 +52,78 @@ module DateSlider.Slider {
                 throw new Error("Range maximum cannot be <= minimum.");
             }
 
-            if (maximum < this._value) {
-                this._value = maximum;
+            if (maximum < this._startValue) {
+                this._startValue = maximum;
+            }
+
+            if (Helpers.isSet(this._endValue) && maximum < this._endValue) {
+                this._endValue = maximum;
             }
 
             this._maximum = maximum;
         }
 
-        public get value() { return this._value; };
+        public get startValue() { return this._startValue; };
 
-        public set value(value: number) {
-            if (typeof value !== "number") {
-                throw new Error("SliderRange.setValue(value): value is not a number");
+        public get endValue() { return this._endValue; };
+
+        public set startValue(startValue: number) {
+            if (typeof startValue !== "number") {
+                throw new Error("SliderRange.setValue(value): value is not a number.");
             }
 
-            if (value < this._minimum) {
-                this._value = this._minimum;
-            } else if (value > this._maximum) {
-                this._value = this._maximum;
+            if (startValue < this._minimum) {
+                this._startValue = this._minimum;
+            } else if (startValue > this._maximum) {
+                this._startValue = this._maximum;
             } else {
-                this._value = value;
+                this._startValue = startValue;
             }
         }
 
-        public increment(by = 1): void {
-            if (typeof by !== "number") {
-                throw new Error("SliderRange.increment(by): by is not a number");
+        public set endValue(endValue: number) {
+            if (typeof endValue !== "number") {
+                throw new Error("SliderRange.setValue(value): value is not a number.");
             }
 
-            if (this._value + by <= this._maximum) {
-                this._value += by;
+            if (endValue < this._minimum) {
+                this._endValue = this._minimum;
+            } else if (endValue > this._maximum) {
+                this._endValue = this._maximum;
             } else {
-                this._value = this._maximum;
+                this._endValue = endValue;
             }
         }
 
-        public decrement(by = 1) {
-            if (typeof by !== "number") {
-                throw new Error("SliderRange.decrement(by): by is not a number");
-            }
+        // public expandMaximum(by = 1): void {
+        //     if (by < 0) {
+        //         throw new Error("Cannot expand by negative values.");
+        //     }
 
-            if (this._value - by >= this._minimum) {
-                this._value -= by;
-            } else {
-                this._value = this._minimum;
-            }
-        }
+        //     if (this._value === this._maximum) {
+        //         this._maximum += by;
+        //         this._value += by;
+        //         return;
+        //     }
 
-        public expandMaximum(by = 1): void {
-            if (by < 0) {
-                throw new Error("Cannot expand by negative values.");
-            }
+        //     this._maximum += by;
+        //     this._minimum += by * ((this._value - this._minimum) / (this._value - this._maximum));
+        // }
 
-            if (this._value === this._maximum) {
-                this._maximum += by;
-                this._value += by;
-                return;
-            }
+        // public expandMinimum(by = -1): void {
+        //     if (by > 0) {
+        //         throw new Error("Cannot expand minimum with positive values.");
+        //     }
 
-            this._maximum += by;
-            this._minimum += by * ((this._value - this._minimum) / (this._value - this._maximum));
-        }
+        //     if (this._value === this._minimum) {
+        //         this._minimum += by;
+        //         this._value += by;
+        //         return;
+        //     }
 
-        public expandMinimum(by = -1): void {
-            if (by > 0) {
-                throw new Error("Cannot expand minimum with positive values.");
-            }
-
-            if (this._value === this._minimum) {
-                this._minimum += by;
-                this._value += by;
-                return;
-            }
-
-            this._minimum += by;
-            this._maximum += by * ((this._value - this._maximum) / (this._value - this._minimum));
-        }
+        //     this._minimum += by;
+        //     this._maximum += by * ((this._value - this._maximum) / (this._value - this._minimum));
+        // }
 
         public slide(by = 1): void {
             if (typeof by !== "number") {
@@ -128,12 +133,12 @@ module DateSlider.Slider {
             this._minimum += by;
             this._maximum += by;
 
-            if (by < 0 && this._value > this._maximum) {
-                this._value = this._maximum;
+            if (by < 0 && this._startValue > this._maximum) {
+                this._startValue = this._maximum;
             }
 
-            if (by > 0 && this._value < this._minimum) {
-                this._value = this._minimum;
+            if (by > 0 && this._startValue < this._minimum) {
+                this._startValue = this._minimum;
             }
         }
 
@@ -143,14 +148,20 @@ module DateSlider.Slider {
             }
 
             if (!mustSlide && this._minimum <= target && target <= this._maximum) {
-                this.value = target;
+                this._startValue = target;
+                if (Helpers.isSet(this._endValue)) {
+                    this._endValue = target;
+                }
                 return;
             }
 
             let distance = this._maximum - this._minimum;
 
             this._minimum = target - distance / 2;
-            this._value = target;
+            this._startValue = target;
+            if (Helpers.isSet(this._endValue)) {
+                    this._endValue = target;
+                }
             this._maximum = target + distance / 2;
         }
     }

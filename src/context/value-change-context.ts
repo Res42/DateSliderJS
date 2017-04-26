@@ -3,9 +3,9 @@
 module DateSlider.Context {
     export class ValueChangeContext extends DateSliderEventContext {
         constructor(
-            public oldValue: any,
-            public newValue: any,
             public isValid: boolean,
+            public start: { oldValue: number, newValue: number},
+            public end?: { oldValue: number, newValue: number},
         ) {
             super();
         }

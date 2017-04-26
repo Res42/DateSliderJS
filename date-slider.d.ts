@@ -80,20 +80,34 @@ declare module DateSlider {
         sliders: Slider.SliderInstance[];
         parser: Parser.IParser;
         formatter: Formatter.IFormatter;
-        value: DateSliderModel;
+        startValue: DateSliderModel;
+        endValue?: DateSliderModel;
         private onValueChangeEvent;
         constructor(element: HTMLElement, options: DateSliderOptions);
         parse(value: any): DateSliderModel;
         format(value: DateSliderModel): any;
-        getValue(): any;
-        setValue(input: any): void;
+        getValue(): {
+            start: any;
+            end?: any;
+        };
+        setValue(input: {
+            start: any;
+            end?: any;
+        }): void;
         getOptions(): DateSliderOptions;
         updateOptions(options: DateSliderOptions): void;
         replaceOptions(options: DateSliderOptions): void;
         on(eventName: DateSliderEvent, callback: (context: DateSliderEventContext) => void): void;
-        updateFromSlider(sliderType: SliderType, newValue: number, oldValue: number): void;
-        validate(newModel: DateSliderModel): boolean;
-        isValid(model: DateSliderModel): boolean;
+        updateFromSlider(sliderType: SliderType, start: {
+            newValue: number;
+            oldValue: number;
+        }, end?: {
+            newValue: number;
+            oldValue: number;
+        }): void;
+        validate(newStartModel: DateSliderModel, newEndModel?: DateSliderModel): boolean;
+        isValid(startModel: DateSliderModel, endModel?: DateSliderModel): boolean;
+        private validateModel(model);
         private createAllSliders();
         private getRangeFromType(sliderOptions);
         private updateDaySliders();
@@ -101,6 +115,7 @@ declare module DateSlider {
         private bindFormatter();
         private bindParser();
         private bootstrapSliders(sliders);
+        private createSlider(dateSlider, options, range, interval);
     }
 }
 declare module DateSlider {
@@ -143,7 +158,8 @@ declare module DateSlider {
     type SliderType = "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
     type SliderMovement = "none" | "slide" | "expand" | "slide expand";
     interface DateSliderOptions {
-        value?: any;
+        startValue?: any;
+        endValue?: any;
         sliders?: SliderOptions[];
         interval?: boolean;
         parser?: "timestamp" | "string" | "date" | ((input: any, options: any) => DateSliderModel);
@@ -166,7 +182,7 @@ declare module DateSlider {
         movementSpeed?: number;
         movementStep?: number;
         expandLimit?: number;
-        displayValueFormatter?: (value: number) => string;
+        displayValueFormatter?: (startValue: number, endValue?: number) => string;
         /** Customize the markers of the slider. */
         markers?: {
             /**
@@ -216,10 +232,22 @@ declare module DateSlider {
 }
 declare module DateSlider.Context {
     class ValueChangeContext extends DateSliderEventContext {
-        oldValue: any;
-        newValue: any;
         isValid: boolean;
-        constructor(oldValue: any, newValue: any, isValid: boolean);
+        start: {
+            oldValue: number;
+            newValue: number;
+        };
+        end: {
+            oldValue: number;
+            newValue: number;
+        };
+        constructor(isValid: boolean, start: {
+            oldValue: number;
+            newValue: number;
+        }, end?: {
+            oldValue: number;
+            newValue: number;
+        });
     }
 }
 declare module DateSlider.Formatter {
@@ -324,17 +352,18 @@ declare module DateSlider.Parser {
     }
 }
 declare module DateSlider.Slider {
-    function create(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange): SliderInstance;
     class SliderInstance {
         dateSlider: DateSliderInstance;
         options: SliderOptions;
         range: SliderRange;
+        interval: boolean;
         element: HTMLElement;
         protected sliderElement: HTMLElement;
         protected sliderLineStart: HTMLElement;
         protected sliderLineElement?: HTMLDivElement;
         protected sliderLineEnd: HTMLElement;
-        protected handleElement: HTMLElement;
+        protected startHandleElement: HTMLElement;
+        protected endHandleElement?: HTMLElement;
         protected valueContainerElement?: HTMLElement;
         protected markerElement?: HTMLElement;
         protected markers: Array<{
@@ -345,6 +374,7 @@ declare module DateSlider.Slider {
         protected toDiscrete: (x: number) => number;
         protected lastPointerPosition: Vector;
         protected isDragging: boolean;
+        protected dragTarget: HTMLElement;
         protected onValueChangeEvent: DateSliderEventHandler;
         protected onSliderHandleGrabEvent: DateSliderEventHandler;
         protected onSliderHandleReleaseEvent: DateSliderEventHandler;
@@ -359,17 +389,24 @@ declare module DateSlider.Slider {
             touchmove: (e: TouchEvent) => void;
             touchstart: (e: TouchEvent) => void;
         };
-        constructor(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange);
-        getValue(): number;
-        updateValue(value: number): void;
-        updateValueWithMaximum(value: number, maximum: number): void;
+        constructor(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange, interval: boolean);
+        getStartValue(): number;
+        getEndValue(): number;
+        updateValue(startValue: number, endValue?: number): void;
+        updateValueWithMaximum(startValue: number, maximum: number, endValue?: number): void;
         setMininum(minimum: number): void;
         on(eventName: SliderEvent, callback: (context: DateSliderEventContext) => void): void;
         destroy(event?: Event): void;
-        protected setValue(value: number): void;
+        protected setValue(startValue: number, endValue: number): void;
         protected updateAfter(callback: () => void): {
-            oldValue: number;
-            newValue: number;
+            start: {
+                oldValue: number;
+                newValue: number;
+            };
+            end: {
+                oldValue: number;
+                newValue: number;
+            };
         };
         protected createMarkers(): void;
         protected updateMarkerValue(marker: {
@@ -385,27 +422,27 @@ declare module DateSlider.Slider {
         protected handleMouseDown: (e: MouseEvent | TouchEvent) => void;
         protected handleMouseUp: (e: MouseEvent | TouchEvent) => void;
         protected handleMouseMove: (e: MouseEvent | TouchEvent) => void;
+        protected setValueOfHandleModel(dragTarget: HTMLElement, value: number): void;
         protected isHandleReleased(e: MouseEvent | TouchEvent): boolean;
         protected updateMarkersPosition(): void;
         protected updateValueDisplay: () => void;
-        protected updateHandlePosition: () => void;
+        protected updateHandlePosition: (handleElement: HTMLElement) => void;
         protected calculateValue(position: Vector): number;
         protected calculateOrthogonalProjectionRatio(position: Vector): {
             ratio: number;
             distance: number;
         };
-        protected calculateHandlePosition(): Vector;
+        protected calculateHandlePosition(handleElement: HTMLElement): Vector;
     }
     class SlidingSliderInstance extends SliderInstance {
         protected borderCheckIntervalHandle: number;
-        constructor(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange);
+        constructor(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange, interval: boolean);
         destroy(event?: Event): void;
         updateValue(value: number): void;
         protected onBorder(direction: number): void;
         protected borderCheck: () => void;
     }
     class ExpandingSliderInstance extends SlidingSliderInstance {
-        constructor(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange);
         protected onBorder(direction: number): void;
     }
     class SlidingExpandingSliderInstance extends SlidingSliderInstance {
@@ -416,25 +453,36 @@ declare module DateSlider.Slider {
     class SliderRange {
         private _minimum;
         private _maximum;
-        private _value;
-        constructor(_minimum: number, _maximum: number, _value?: number);
-        readonly ratio: number;
+        private _startValue;
+        private _endValue;
+        constructor(_minimum: number, _maximum: number, _startValue?: number, _endValue?: number);
+        readonly startRatio: number;
+        readonly endRatio: number;
         readonly length: number;
         minimum: number;
         maximum: number;
-        value: number;
-        increment(by?: number): void;
-        decrement(by?: number): void;
-        expandMaximum(by?: number): void;
-        expandMinimum(by?: number): void;
+        startValue: number;
+        endValue: number;
         slide(by?: number): void;
         slideTo(target: number, mustSlide?: boolean): void;
     }
 }
 declare module DateSlider.Slider.Context {
     class SliderValueChangeContext extends DateSliderEventContext {
-        oldValue: number;
-        newValue: number;
-        constructor(oldValue: number, newValue: number);
+        start: {
+            oldValue: number;
+            newValue: number;
+        };
+        end: {
+            oldValue: number;
+            newValue: number;
+        };
+        constructor(start: {
+            oldValue: number;
+            newValue: number;
+        }, end?: {
+            oldValue: number;
+            newValue: number;
+        });
     }
 }

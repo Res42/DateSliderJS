@@ -17,7 +17,10 @@ var DateSlider;
                 this.link = function ($scope, $element, $attributes, ngModelController) {
                     $scope.options = $scope.options || {};
                     $scope.options.validation = $scope.options.validation || {};
-                    $scope.options.value = $scope.ngModel;
+                    $scope.options.startValue = $scope.ngModel.start;
+                    if ($scope.ngModel.end) {
+                        $scope.options.endValue = $scope.ngModel.end;
+                    }
                     if (typeof $scope.min !== "undefined") {
                         $scope.options.validation.min = $scope.min;
                     }
@@ -65,7 +68,7 @@ var DateSlider;
                     });
                     $scope.instance.on("onValueChanged", function (context) {
                         fromEvent = true;
-                        ngModelController.$setViewValue(context.newValue);
+                        ngModelController.$setViewValue({ start: context.start.newValue, end: context.end ? context.end.newValue : null });
                         ngModelController.$setValidity("date-slider", context.isValid);
                         ngModelController.$setTouched();
                         setTimeout(function () { fromEvent = false; });

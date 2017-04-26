@@ -3,8 +3,8 @@
 module DateSlider.Slider.Context {
     export class SliderValueChangeContext extends DateSliderEventContext {
         constructor(
-            public oldValue: number,
-            public newValue: number,
+            public start: { oldValue: number, newValue: number},
+            public end?: { oldValue: number, newValue: number},
         ) {
             super();
         }

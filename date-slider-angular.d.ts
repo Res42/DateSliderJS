@@ -5,7 +5,10 @@ declare module DateSlider.Angular {
         max?: any;
         options?: DateSliderOptions;
         instance?: DateSliderInstance;
-        ngModel: any;
+        ngModel: {
+            start: any;
+            end?: any;
+        };
     }
     class DateSliderDirective implements ng.IDirective {
         restrict: string;

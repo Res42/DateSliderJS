@@ -5,7 +5,8 @@ module DateSlider {
     export type SliderMovement = "none" | "slide" | "expand" | "slide expand";
 
     export interface DateSliderOptions {
-        value?: any;
+        startValue?: any;
+        endValue?: any;
         sliders?: SliderOptions[];
         interval?: boolean;
         parser?: "timestamp" | "string" | "date" | ((input: any, options: any) => DateSliderModel);
@@ -29,7 +30,7 @@ module DateSlider {
         movementSpeed?: number;
         movementStep?: number;
         expandLimit?: number;
-        displayValueFormatter?: (value: number) => string;
+        displayValueFormatter?: (startValue: number, endValue?: number) => string;
         /** Customize the markers of the slider. */
         markers?: {
             /**
