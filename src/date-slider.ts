@@ -29,7 +29,7 @@ module DateSlider {
     // ✓ when changing years or months, set maximum days to monthly maximum
     // ✓ validation: min, max, custom
     // --> slide, expand with acceleration!
-    // --> slide + expand option
+    // ✓ slide + expand option
     // out of scope: how to check timezone when comparing models?
     // ✓ angular integration: fix jumping handle.
     // ✓ validation enable wrong values but add invalid classes

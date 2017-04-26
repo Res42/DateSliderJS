@@ -8,6 +8,8 @@ module DateSlider.Slider {
                 return new Slider.SlidingSliderInstance(dateSlider, options, range);
             case "expand":
                 return new Slider.ExpandingSliderInstance(dateSlider, options, range);
+            case "slide expand":
+                return new Slider.SlidingExpandingSliderInstance(dateSlider, options, range);
         }
     };
 
@@ -465,6 +467,31 @@ module DateSlider.Slider {
         }
 
         protected onBorder(direction: number): void {
+            if (Helpers.isSet(this.options.expandLimit) && this.options.expandLimit <= this.range.length) {
+                return;
+            }
+
+            if (direction === 1) {
+                this.range.maximum = this.range.maximum + (this.options.movementStep || 1);
+            }
+
+            if (direction === -1) {
+                this.range.minimum = this.range.minimum - (this.options.movementStep || 1);
+            }
+
+            if (this.isDragging) {
+                this.range.value = this.calculateValue(this.lastPointerPosition);
+            }
+        }
+    }
+
+    export class SlidingExpandingSliderInstance extends SlidingSliderInstance {
+        protected onBorder(direction: number): void {
+            if (Helpers.isSet(this.options.expandLimit) && this.options.expandLimit <= this.range.length) {
+                super.onBorder(direction);
+                return;
+            }
+
             if (direction === 1) {
                 this.range.maximum = this.range.maximum + (this.options.movementStep || 1);
             }

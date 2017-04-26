@@ -61,7 +61,7 @@
     </div>
 
     <script type="text/javascript">
-        var TestController = (function(){
+        var TestController = (function () {
             function TestController($scope) {
                 this.$scope = $scope;
                 this.model = 1451606400000;
@@ -77,71 +77,72 @@
     </script>
 
     <script type="text/javascript">
-            var options = {
-                parser: "timestamp",
-                parserOptions: { type: "seconds" },
-                formatter: "timestamp",
-                formatterOptions: { type: "seconds" },
-                sliders: [{
-                    type: "year",
-                    movement: "expand"
-                },{
-                    type: "month"
-                },{
-                    type: "day"
-                }],
-                callback: {
-                    onValueChanged: function (context) {
-                        if (document.getElementById("model").value != context.newValue) {
-                            document.getElementById("model").value = context.newValue;
-                        }
+        document.getElementById("model").value = Math.floor(Date.now() / 1000);
+        var options = {
+            value: parseInt(document.getElementById("model").value),
+            parser: "timestamp",
+            parserOptions: { type: "seconds" },
+            formatter: "timestamp",
+            formatterOptions: { type: "seconds" },
+            sliders: [{
+                type: "year",
+                movement: "slide expand",
+                expandLimit: 30
+            }, {
+                type: "month"
+            }, {
+                type: "day"
+            }],
+            callback: {
+                onValueChanged: function (context) {
+                    if (document.getElementById("model").value != context.newValue) {
+                        document.getElementById("model").value = context.newValue;
                     }
                 }
-            };
-            document.getElementById("model").value = Math.floor(Date.now() / 1000);
-            var instance = DateSlider.create(document.getElementById("demo1"), options);
-            instance.setValue(parseInt(document.getElementById("model").value));
+            }
+        };
+        var instance = DateSlider.create(document.getElementById("demo1"), options);
 
-            document.getElementById("model").addEventListener("change", function (event) {
-                instance.setValue(parseInt(event.currentTarget.value));
-            });
+        document.getElementById("model").addEventListener("change", function (event) {
+            instance.setValue(parseInt(event.currentTarget.value));
+        });
 
-            var options2 = {
-                parser: "timestamp",
-                parserOptions: { type: "seconds" },
-                formatter: "timestamp",
-                formatterOptions: { type: "seconds" },
-                sliders: [{
-                    type: "month",
-                    template: document.getElementById("template2")
-                }]
-            };
-            var instance2 = DateSlider.create(document.getElementById("demo2"), options2);
+        var options2 = {
+            parser: "timestamp",
+            parserOptions: { type: "seconds" },
+            formatter: "timestamp",
+            formatterOptions: { type: "seconds" },
+            sliders: [{
+                type: "month",
+                template: document.getElementById("template2")
+            }]
+        };
+        var instance2 = DateSlider.create(document.getElementById("demo2"), options2);
 
-            var options3 = {
-                parser: "timestamp",
-                parserOptions: { type: "seconds" },
-                formatter: "timestamp",
-                formatterOptions: { type: "seconds" },
-                sliders: [{
-                    type: "universal-time",
-                    template: document.getElementById("template3")
-                }]
-            };
-            var instance3 = DateSlider.create(document.getElementById("demo3"), options3);
+        var options3 = {
+            parser: "timestamp",
+            parserOptions: { type: "seconds" },
+            formatter: "timestamp",
+            formatterOptions: { type: "seconds" },
+            sliders: [{
+                type: "universal-time",
+                template: document.getElementById("template3")
+            }]
+        };
+        var instance3 = DateSlider.create(document.getElementById("demo3"), options3);
 
-            var options4 = {
-                parser: "timestamp",
-                parserOptions: { type: "seconds" },
-                formatter: "timestamp",
-                formatterOptions: { type: "seconds" },
-                sliders: [{
-                    type: "year"
-                }]
-            };
-            $("#demo4").dateSlider(options4);
-            $("#demo4").data("dateSlider").setValue((new Date()).getTime() / 1000);
-            $(".demo5").dateSlider(options4);
+        var options4 = {
+            parser: "timestamp",
+            parserOptions: { type: "seconds" },
+            formatter: "timestamp",
+            formatterOptions: { type: "seconds" },
+            sliders: [{
+                type: "year"
+            }]
+        };
+        $("#demo4").dateSlider(options4);
+        $("#demo4").data("dateSlider").setValue((new Date()).getTime() / 1000);
+        $(".demo5").dateSlider(options4);
     </script>
 </body>
 

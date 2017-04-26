@@ -15,7 +15,11 @@ module DateSlider.Slider {
         }
 
         public get ratio() {
-            return (this.value - this.minimum) / (this.maximum - this.minimum);
+            return (this._value - this._minimum) / (this._maximum - this._minimum);
+        }
+
+        public get length() {
+            return this._maximum - this._minimum;
         }
 
         public get minimum() { return this._minimum; };

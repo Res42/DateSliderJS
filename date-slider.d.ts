@@ -141,7 +141,7 @@ declare module DateSlider {
     type DateSliderEvent = "onValueChanged";
     type SliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
     type SliderType = "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
-    type SliderMovement = "none" | "slide" | "expand";
+    type SliderMovement = "none" | "slide" | "expand" | "slide expand";
     interface DateSliderOptions {
         value?: any;
         sliders?: SliderOptions[];
@@ -162,9 +162,10 @@ declare module DateSlider {
     interface SliderOptions {
         type: SliderType;
         movement?: SliderMovement;
-        /** In milliseconds. Sets the interval's execution frequrency. */
+        /** In milliseconds. Sets the interval's execution frequency. */
         movementSpeed?: number;
         movementStep?: number;
+        expandLimit?: number;
         displayValueFormatter?: (value: number) => string;
         /** Customize the markers of the slider. */
         markers?: {
@@ -407,6 +408,9 @@ declare module DateSlider.Slider {
         constructor(dateSlider: DateSliderInstance, options: SliderOptions, range: SliderRange);
         protected onBorder(direction: number): void;
     }
+    class SlidingExpandingSliderInstance extends SlidingSliderInstance {
+        protected onBorder(direction: number): void;
+    }
 }
 declare module DateSlider.Slider {
     class SliderRange {
@@ -415,6 +419,7 @@ declare module DateSlider.Slider {
         private _value;
         constructor(_minimum: number, _maximum: number, _value?: number);
         readonly ratio: number;
+        readonly length: number;
         minimum: number;
         maximum: number;
         value: number;

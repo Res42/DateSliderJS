@@ -718,7 +718,7 @@ var DateSlider;
     // ✓ when changing years or months, set maximum days to monthly maximum
     // ✓ validation: min, max, custom
     // --> slide, expand with acceleration!
-    // --> slide + expand option
+    // ✓ slide + expand option
     // out of scope: how to check timezone when comparing models?
     // ✓ angular integration: fix jumping handle.
     // ✓ validation enable wrong values but add invalid classes
@@ -991,6 +991,8 @@ var DateSlider;
                     return new Slider.SlidingSliderInstance(dateSlider, options, range);
                 case "expand":
                     return new Slider.ExpandingSliderInstance(dateSlider, options, range);
+                case "slide expand":
+                    return new Slider.SlidingExpandingSliderInstance(dateSlider, options, range);
             }
         }
         Slider.create = create;
@@ -1373,6 +1375,9 @@ var DateSlider;
                 return _super.call(this, dateSlider, options, range) || this;
             }
             ExpandingSliderInstance.prototype.onBorder = function (direction) {
+                if (DateSlider.Helpers.isSet(this.options.expandLimit) && this.options.expandLimit <= this.range.length) {
+                    return;
+                }
                 if (direction === 1) {
                     this.range.maximum = this.range.maximum + (this.options.movementStep || 1);
                 }
@@ -1386,6 +1391,29 @@ var DateSlider;
             return ExpandingSliderInstance;
         }(SlidingSliderInstance));
         Slider.ExpandingSliderInstance = ExpandingSliderInstance;
+        var SlidingExpandingSliderInstance = (function (_super) {
+            __extends(SlidingExpandingSliderInstance, _super);
+            function SlidingExpandingSliderInstance() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            SlidingExpandingSliderInstance.prototype.onBorder = function (direction) {
+                if (DateSlider.Helpers.isSet(this.options.expandLimit) && this.options.expandLimit <= this.range.length) {
+                    _super.prototype.onBorder.call(this, direction);
+                    return;
+                }
+                if (direction === 1) {
+                    this.range.maximum = this.range.maximum + (this.options.movementStep || 1);
+                }
+                if (direction === -1) {
+                    this.range.minimum = this.range.minimum - (this.options.movementStep || 1);
+                }
+                if (this.isDragging) {
+                    this.range.value = this.calculateValue(this.lastPointerPosition);
+                }
+            };
+            return SlidingExpandingSliderInstance;
+        }(SlidingSliderInstance));
+        Slider.SlidingExpandingSliderInstance = SlidingExpandingSliderInstance;
     })(Slider = DateSlider.Slider || (DateSlider.Slider = {}));
 })(DateSlider || (DateSlider = {}));
 "use strict";
@@ -1407,7 +1435,14 @@ var DateSlider;
             }
             Object.defineProperty(SliderRange.prototype, "ratio", {
                 get: function () {
-                    return (this.value - this.minimum) / (this.maximum - this.minimum);
+                    return (this._value - this._minimum) / (this._maximum - this._minimum);
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(SliderRange.prototype, "length", {
+                get: function () {
+                    return this._maximum - this._minimum;
                 },
                 enumerable: true,
                 configurable: true
