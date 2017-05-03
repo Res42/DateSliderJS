@@ -28,7 +28,7 @@
     <div id="demo3"></div>
 
     <div style="display: none">
-        <div id="template2" class="slider-template" style="width: 500px; transform: rotate(20deg)">
+        <div id="template2" class="slider-template rotate" style="width: 500px">
             <div class="slider-marker-template" style="border-left: 1px solid #000; height: 10px;"></div>
             <div class="slider-control-template" style="height: 200px; position: relative">
                 <img class="slider-handle-template" src="https://www.iconexperience.com/_img/g_collection_png/standard/48x48/dog.png">
@@ -36,6 +36,33 @@
                 <div class="slider-control-end-template" style="position: absolute; top: 100px; left: 100px;">CSONT</div>
             </div>
         </div>
+
+        <style>
+            .rotate {
+                -webkit-animation: spin 4s linear infinite;
+                -moz-animation: spin 4s linear infinite;
+                animation: spin 4s linear infinite;
+            }
+            
+            @-moz-keyframes spin {
+                100% {
+                    -moz-transform: rotate(360deg);
+                }
+            }
+            
+            @-webkit-keyframes spin {
+                100% {
+                    -webkit-transform: rotate(360deg);
+                }
+            }
+            
+            @keyframes spin {
+                100% {
+                    -webkit-transform: rotate(360deg);
+                    transform: rotate(360deg);
+                }
+            }
+        </style>
 
         <div id="template3" class="slider-template" style="width: 500px;">
             <div class="slider-marker-template" style="border-left: 1px solid #000; height: 10px;"></div>
