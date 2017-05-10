@@ -27,6 +27,10 @@ module DateSlider {
             this.setDayOfMonth();
         }
 
+        public toDate(): Date {
+            return new Date(this.year, this.month - 1, this.day, this.hour, this.minute, this.second);
+        }
+
         public setDayOfMonth() {
             let daysInMonth = Helpers.getDaysInMonth(this.year, this.month);
             if (this.day > daysInMonth) {

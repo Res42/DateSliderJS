@@ -125,6 +125,7 @@ declare module DateSlider {
             month?: number, 
             /** In the range of [1, 31]. */
             day?: number, hour?: number, minute?: number, second?: number, timezone?: string);
+        toDate(): Date;
         setDayOfMonth(): void;
         greaterThan(other: InnerModel): boolean;
         greaterThanOrEqual(other: InnerModel): boolean;
@@ -141,7 +142,7 @@ declare module DateSlider {
     type DateSliderEvent = "onValueChanged";
     type SliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
     type SliderType = "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
-    type SliderMovement = "none" | "slide" | "expand" | "slide expand";
+    type SliderMovement = "none" | "slide" | "expand" | "slide expand" | "expand slide";
     interface DateSliderOptions {
         value?: any;
         sliders?: SliderOptions[];

@@ -2,7 +2,7 @@ module DateSlider {
     export type DateSliderEvent = "onValueChanged";
     export type SliderEvent = "onSliderBoxGrabbed" | "onSliderBoxReleased" | "onSliderBoxMoved" | "onValueChanged";
     export type SliderType = "year" | "month" | "day" | "hour" | "minute" | "second" | "universal" | "universal-date" | "universal-time";
-    export type SliderMovement = "none" | "slide" | "expand" | "slide expand";
+    export type SliderMovement = "none" | "slide" | "expand" | "slide expand" | "expand slide";
 
     export interface DateSliderOptions {
         value?: any;

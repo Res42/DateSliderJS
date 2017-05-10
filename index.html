@@ -114,11 +114,40 @@
             sliders: [{
                 type: "year",
                 movement: "slide expand",
-                expandLimit: 30
+                expandLimit: 11
             }, {
-                type: "month"
+                type: "month",
+                markers: {
+                    perpendicularOffset: -13,
+                    showValueMarker: function (value, minimum, maximum) {
+                        return "inline-mark";
+                    },
+                    displayValueFormatter: function (value, minimum, maximum) {
+                        var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        return months[value-1];
+                    }
+                }
             }, {
-                type: "day"
+                type: "universal-date",
+                markers: {
+                    perpendicularOffset: -13,
+                    showValueMarker: function (value, minimum, maximum) {
+                        if (value % 10 === 0) {
+                            return "inline-mark";
+                        }
+                        return ["inline-mark", "hidden-mark-value"];
+                    },
+                    displayValueFormatter: function (value, minimum, maximum) {
+                        function leftPad(number) {
+                            if ( 0 <= number && number < 10) {
+                                return "0" + number;
+                            }
+                            return "" + number;
+                        }
+                        var date = new Date(value * 86400000);
+                        return date.getFullYear() + "-" + leftPad(date.getMonth() + 1) + "-" + leftPad(date.getDate());
+                    }
+                }
             }],
             callback: {
                 onValueChanged: function (context) {

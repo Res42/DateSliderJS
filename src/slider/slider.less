@@ -1,7 +1,7 @@
 .slider {
 
     .slider-marker {
-        height: 30px;
+        //height: 30px;
         display: inline-block;
         position: absolute;
 
@@ -22,21 +22,44 @@
         .marker-value-container {
             text-align: center;
         }
+
+        &.inline-mark {
+            .marker-value-container {
+                color: rgb(108, 108, 108);
+            }
+            .marker-mark {
+                height: 25px;
+                border-right: 1px solid rgb(229, 229, 229);
+            }
+        }
+
+        &.hidden-mark-value {
+            .marker-value-container {
+                display: none;
+            }
+
+            .marker-mark {
+                height: 15px;
+                //margin-top: 5px;
+            }
+        }
     }
 
     .slider-control {
         position: relative;
         height: 72px;
-        background-color: lightgray;
+        background-color: white;
 
         .slider-control-line {
             position: absolute;
             //.vertical-center();
-            height: 3px;
-            left: 20px;
+            height: 7px;
+            left: 21px;
             right: 20px;
-            bottom: 21px;
-            background-color: limegreen;
+            bottom: 17px;
+            background-color: rgb(229, 229, 229);
+            border-top: 1px solid rgb(246, 246, 246);
+            border-bottom: 1px solid rgb(246, 246, 246);
         }
 
         .slider-control-start {
@@ -59,10 +82,12 @@
 
         .slider-handle {
             position: absolute;
-            width: 20px;
-            height: 40px;
-            background-color: gray;
-            border-radius: 4px;
+            z-index: 10;
+            width: 7px;
+            height: 19px;
+            background-color: rgb(108, 108, 108);
+            border-left: 1px solid white;
+            border-right: 1px solid white;
         }
     }
 

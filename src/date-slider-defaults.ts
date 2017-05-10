@@ -47,9 +47,9 @@ module DateSlider {
 
     export let monthDefaults: SliderOptions = {
         markers: {
-            perpendicularOffset: 20,
+            perpendicularOffset: -13,
             showValueMarker: (value: number, minimum: number, maximum: number): string | string[] => {
-                return "";
+                return "inline-mark";
             },
         },
         type: "month",
@@ -67,9 +67,9 @@ module DateSlider {
 
     export let yearDefaults: SliderOptions = {
         markers: {
-            perpendicularOffset: 20,
+            perpendicularOffset: -13,
             showValueMarker: (value: number, minimum: number, maximum: number): string | string[] => {
-                return "";
+                return "inline-mark";
             },
         },
         movement: "slide",
@@ -79,9 +79,9 @@ module DateSlider {
 
     export let dayDefaults: SliderOptions = {
         markers: {
-            perpendicularOffset: 20,
+            perpendicularOffset: -13,
             showValueMarker: (value: number, minimum: number, maximum: number): string | string[] => {
-                return "";
+                return "inline-mark";
             },
         },
         type: "day",

@@ -9,6 +9,7 @@ module DateSlider.Slider {
             case "expand":
                 return new Slider.ExpandingSliderInstance(dateSlider, options, range);
             case "slide expand":
+            case "expand slide":
                 return new Slider.SlidingExpandingSliderInstance(dateSlider, options, range);
         }
     };

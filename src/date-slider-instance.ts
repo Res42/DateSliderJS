@@ -186,7 +186,7 @@ module DateSlider {
         private getRangeFromType(sliderOptions: SliderOptions): Slider.SliderRange {
             switch (sliderOptions.type) {
                 case "year":
-                    return new Slider.SliderRange(this.value.model.year - 10, this.value.model.year + 10, this.value.model.year);
+                    return new Slider.SliderRange(this.value.model.year - 2, this.value.model.year + 2, this.value.model.year);
                 case "month":
                     return new Slider.SliderRange(1, 12, this.value.model.month);
                 case "day":
@@ -202,7 +202,9 @@ module DateSlider {
                     return new Slider.SliderRange(1, 12);
                 case "universal-date":
                     // TODO
-                    return new Slider.SliderRange(1, 12);
+                    let unixStart = new Date(1970, 0, 1);
+                    let start = Math.floor((this.value.model.toDate().getTime() - unixStart.getTime()) / Constants.MillisecondsInDay);
+                    return new Slider.SliderRange(start - 31, start + 31, start);
                 case "universal-time":
                     return new Slider.SliderRange(0, Constants.SecondsInDay - 1);
                 default:

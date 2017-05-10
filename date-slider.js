@@ -213,9 +213,9 @@ var DateSlider;
     };
     DateSlider.monthDefaults = {
         markers: {
-            perpendicularOffset: 20,
+            perpendicularOffset: -13,
             showValueMarker: function (value, minimum, maximum) {
-                return "";
+                return "inline-mark";
             },
         },
         type: "month",
@@ -231,9 +231,9 @@ var DateSlider;
     };
     DateSlider.yearDefaults = {
         markers: {
-            perpendicularOffset: 20,
+            perpendicularOffset: -13,
             showValueMarker: function (value, minimum, maximum) {
-                return "";
+                return "inline-mark";
             },
         },
         movement: "slide",
@@ -242,9 +242,9 @@ var DateSlider;
     };
     DateSlider.dayDefaults = {
         markers: {
-            perpendicularOffset: 20,
+            perpendicularOffset: -13,
             showValueMarker: function (value, minimum, maximum) {
-                return "";
+                return "inline-mark";
             },
         },
         type: "day",
@@ -474,7 +474,7 @@ var DateSlider;
         DateSliderInstance.prototype.getRangeFromType = function (sliderOptions) {
             switch (sliderOptions.type) {
                 case "year":
-                    return new DateSlider.Slider.SliderRange(this.value.model.year - 10, this.value.model.year + 10, this.value.model.year);
+                    return new DateSlider.Slider.SliderRange(this.value.model.year - 2, this.value.model.year + 2, this.value.model.year);
                 case "month":
                     return new DateSlider.Slider.SliderRange(1, 12, this.value.model.month);
                 case "day":
@@ -490,7 +490,9 @@ var DateSlider;
                     return new DateSlider.Slider.SliderRange(1, 12);
                 case "universal-date":
                     // TODO
-                    return new DateSlider.Slider.SliderRange(1, 12);
+                    var unixStart = new Date(1970, 0, 1);
+                    var start = Math.floor((this.value.model.toDate().getTime() - unixStart.getTime()) / DateSlider.Constants.MillisecondsInDay);
+                    return new DateSlider.Slider.SliderRange(start - 31, start + 31, start);
                 case "universal-time":
                     return new DateSlider.Slider.SliderRange(0, DateSlider.Constants.SecondsInDay - 1);
                 default:
@@ -641,6 +643,9 @@ var DateSlider;
             this.timezone = timezone;
             this.setDayOfMonth();
         }
+        InnerModel.prototype.toDate = function () {
+            return new Date(this.year, this.month - 1, this.day, this.hour, this.minute, this.second);
+        };
         InnerModel.prototype.setDayOfMonth = function () {
             var daysInMonth = DateSlider.Helpers.getDaysInMonth(this.year, this.month);
             if (this.day > daysInMonth) {
@@ -992,6 +997,7 @@ var DateSlider;
                 case "expand":
                     return new Slider.ExpandingSliderInstance(dateSlider, options, range);
                 case "slide expand":
+                case "expand slide":
                     return new Slider.SlidingExpandingSliderInstance(dateSlider, options, range);
             }
         }
